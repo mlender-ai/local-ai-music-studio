@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-ai-music-studio"
+version = "0.1.0"
+description = "Offline ACE-Step generation, DSP and a local producer MCP"
+requires-python = ">=3.11,<3.13"
+dependencies = ["numpy", "scipy", "soundfile", "pydantic>=2", "psutil", "mcp>=1.20,<2", "fastapi", "uvicorn", "numba"]
+
+[project.scripts]
+music = "app.cli:main"
+music-mcp = "app.mcp_server:main"
+
+[tool.setuptools.packages.find]
+include = ["engine*", "agent*", "app*"]
+
+[tool.setuptools.package-data]
+app = ["player/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

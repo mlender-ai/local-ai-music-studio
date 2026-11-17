@@ -1,0 +1,22 @@
+.venv/
+.bootstrap/
+.runtime/
+vendor/
+outputs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.env
+*.egg-info/
+.codex/
+
+.cache/
+
+# Local QA records can contain machine paths and session metadata
+docs/*-qa.json
+docs/generation-results.json
+docs/disco-quality-comparison.json
+docs/mcp-smoke.json
+docs/codex-mcp-calls.json
+docs/player-qa.jpg
