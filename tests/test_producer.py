@@ -10,7 +10,9 @@ def test_trip_hop_korean_intent():
 
 
 def test_ambient_without_drums_and_requested_duration():
-    p = generation_plan(Generate(prompt="드럼 없음, 우주 앰비언트", duration=15))
+    p = generation_plan(
+        Generate(prompt="드럼 없음, 우주 앰비언트", duration=15, instrumental=True)
+    )
     assert p["duration"] == 15 and "no drums" in p["caption"]
     with pytest.raises(ValueError):
         generation_plan(Generate(prompt="트립합 300초"))
@@ -53,17 +55,17 @@ def test_funky_disco_preserves_tempo_and_expands_rhythm_and_guitar():
     prompt = (
         "90년대 펑키 디스코, MJ 스타일, 124bpm , 신나는 펑키 기타 리프, 디스코 리듬. "
     )
-    plan = generation_plan(Generate(prompt=prompt))
+    plan = generation_plan(Generate(prompt=prompt, instrumental=True))
     assert plan["original_prompt"] == prompt
     assert plan["bpm"] == 124 and plan["timesignature"] == "4"
     for term in [
-        "Funky disco",
+        "funk disco-pop",
         "1990s",
-        "Michael Jackson",
+        "muted clean electric guitar",
         "four-on-the-floor",
-        "guitar riff",
+        "chord chops",
         "syncopated",
-        "energetic",
+        "interlocking",
     ]:
         assert term in plan["caption"]
     assert "[Instrumental]" == plan["lyrics"]
@@ -79,7 +81,9 @@ def test_dance_translation_keeps_unrecognized_modifiers_and_vocal_intent():
 
 
 def test_dance_expansion_does_not_add_explicitly_excluded_instruments():
-    plan = generation_plan(Generate(prompt="펑키 디스코, 드럼 없는, 기타 없이"))
+    plan = generation_plan(
+        Generate(prompt="펑키 디스코, 드럼 없는, 기타 없이", instrumental=True)
+    )
     assert "four-on-the-floor" not in plan["caption"]
     assert "guitar riff" not in plan["caption"]
-    assert "no drums" in plan["caption"]
+    assert "drums and percussion" in plan["intent"]["exclusions"]

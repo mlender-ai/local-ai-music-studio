@@ -55,7 +55,20 @@ def submit(command: Generate, request_key: str | None = None):
                 "SELECT id,request FROM jobs WHERE request_key=?", (request_key,)
             ).fetchone()
             if old:
-                if json.loads(old["request"]) != plan:
+                previous = json.loads(old["request"])
+                comparable = (
+                    "original_prompt",
+                    "duration",
+                    "seed",
+                    "instrumental",
+                    "lyrics",
+                )
+                same = previous == plan or (
+                    "planner" not in previous
+                    and all(previous.get(k) == plan.get(k) for k in comparable)
+                    and command.intent is None
+                )
+                if not same:
                     raise ValueError(
                         "request_key already belongs to a different request."
                     )

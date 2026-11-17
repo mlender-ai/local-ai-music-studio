@@ -8,12 +8,32 @@ class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
+class MusicIntent(Strict):
+    genre: str = Field(default="", max_length=200)
+    subgenre: str = Field(default="", max_length=200)
+    era: str = Field(default="", max_length=200)
+    production_character: str = Field(default="", max_length=400)
+    rhythmic_feel: str = Field(default="", max_length=400)
+    drum_pattern: str = Field(default="", max_length=400)
+    bass_character: str = Field(default="", max_length=400)
+    rhythm_guitar: str = Field(default="", max_length=400)
+    synth_and_keys: str = Field(default="", max_length=400)
+    vocal_character: str = Field(default="", max_length=400)
+    arrangement: str = Field(default="", max_length=600)
+    additional_direction: str = Field(default="", max_length=2000)
+    bpm: int | None = Field(default=None, ge=30, le=300)
+    time_signature: Literal["", "2/4", "3/4", "4/4", "6/8"] = ""
+    exclusions: list[str] = Field(default_factory=list, max_length=20)
+    vocal_mode: Literal["unspecified", "instrumental", "vocal"] = "unspecified"
+
+
 class Generate(Strict):
     prompt: str = Field(min_length=3, max_length=2000)
     duration: float = Field(default=30, ge=15, le=30)
     seed: int = Field(default=42, ge=0, le=2**32 - 1)
     instrumental: bool | None = None
     lyrics: str = Field(default="", max_length=4000)
+    intent: MusicIntent | None = None
 
 
 class EQ(Strict):

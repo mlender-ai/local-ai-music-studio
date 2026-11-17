@@ -29,12 +29,12 @@ def test_idempotency_and_concurrency(job_space, monkeypatch):
     monkeypatch.setattr(
         jobs.subprocess, "Popen", lambda *a, **kw: SimpleNamespace(pid=os.getpid())
     )
-    request = Generate(prompt="따뜻한 딥하우스 음악")
+    request = Generate(prompt="따뜻한 딥하우스 음악", instrumental=True)
     first = jobs.submit(request, "repeat-key")
     again = jobs.submit(request, "repeat-key")
     assert first["id"] == again["id"]
     with pytest.raises(ValueError, match="different request"):
-        jobs.submit(Generate(prompt="앰비언트 음악"), "repeat-key")
+        jobs.submit(Generate(prompt="앰비언트 음악", instrumental=True), "repeat-key")
     with pytest.raises(ValueError, match="busy"):
         jobs.submit(request)
 

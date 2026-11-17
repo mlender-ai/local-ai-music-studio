@@ -56,7 +56,7 @@ def dance_caption(prompt: str) -> str | None:
     return ", ".join(parts)
 
 
-def generation_plan(command: Generate) -> dict:
+def legacy_generation_plan(command: Generate) -> dict:
     text = command.prompt.lower()
     caption, bpm = command.prompt, None
     for words, translated, default_bpm in GENRES:
@@ -204,3 +204,9 @@ def production_plan(text: str) -> dict:
         + ["render_audio", "compare_versions"],
         effects=chain.model_dump()["effects"],
     )
+
+
+def generation_plan(command: Generate) -> dict:
+    from agent.music_intent import compile_plan
+
+    return compile_plan(command)

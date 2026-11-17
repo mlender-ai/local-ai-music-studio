@@ -153,6 +153,8 @@ def main():
         "model_revision": "19671f406d603126926c1b7e2adc169acbcade22",
         "inference": {
             "steps": params.inference_steps,
+            "infer_method": params.infer_method,
+            "thinking": params.thinking,
             "shift": params.shift,
             "guidance_scale": params.guidance_scale,
             "timesignature": params.timesignature,

@@ -36,6 +36,12 @@ async def main():
                 print(name, "OK", flush=True)
                 return data
 
+            draft = await call("music.plan", dict(prompt="펑키 디스코 120BPM"))
+            assert not draft["ready"] and draft["intent"]["vocal_mode"] == "unspecified"
+            draft = await call(
+                "music.plan", dict(prompt="펑키 디스코 120BPM", instrumental=True)
+            )
+            assert draft["ready"] and "muted clean electric guitar" in draft["caption"]
             result = await call(
                 "music.generate",
                 dict(

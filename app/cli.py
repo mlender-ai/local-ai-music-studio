@@ -16,7 +16,10 @@ def main():
     gen.add_argument("--seed", type=int, default=42)
     gen.add_argument("--wait", action="store_true")
     gen.add_argument("--request-key")
-    gen.add_argument("--vocal", action="store_true")
+    mode = gen.add_mutually_exclusive_group()
+    mode.add_argument("--vocal", action="store_true")
+    mode.add_argument("--instrumental", action="store_true")
+    gen.add_argument("--intent", help="Path to editable Music Intent JSON")
     gen.add_argument("--lyrics", default="")
     status = commands.add_parser("status")
     status.add_argument("job_id", nargs="?")
@@ -47,7 +50,16 @@ def main():
                     prompt=args.prompt,
                     duration=args.duration,
                     seed=args.seed,
-                    instrumental=False if args.vocal else None,
+                    instrumental=False
+                    if args.vocal
+                    else True
+                    if args.instrumental
+                    else None,
+                    intent=json.loads(
+                        __import__("pathlib").Path(args.intent).read_text()
+                    )
+                    if args.intent
+                    else None,
                     lyrics=args.lyrics,
                 ),
                 args.request_key,

@@ -2,7 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 from engine import jobs, service, store
-from engine.schema import Generate, Effect
+from engine.schema import Generate, Effect, MusicIntent
 
 server = FastMCP("Local AI Music Studio")
 READ = {
@@ -22,6 +22,7 @@ def generate(
     instrumental: bool | None = None,
     lyrics: str = "",
     request_key: str | None = None,
+    intent: MusicIntent | None = None,
 ) -> dict:
     """Generate real music offline with ACE-Step. Returns a job ID immediately.
 
@@ -35,9 +36,20 @@ def generate(
             seed=seed,
             instrumental=instrumental,
             lyrics=lyrics,
+            intent=intent,
         ),
         request_key,
     )
+
+
+@server.tool(name="music.plan", annotations=READ)
+def plan(
+    prompt: str, instrumental: bool | None = None, intent: MusicIntent | None = None
+) -> dict:
+    """Preview/edit Music Intent and exact caption; ambiguous vocals require a choice before generation."""
+    from agent.music_intent import preview
+
+    return preview(Generate(prompt=prompt, instrumental=instrumental, intent=intent))
 
 
 @server.tool(name="music.apply_effect", annotations=WRITE)

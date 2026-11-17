@@ -96,3 +96,25 @@ def export(command: Version):
 @app.get("/api/compare")
 def compare(original_id: str, modified_id: str):
     return service.compare_versions(original_id, modified_id)
+
+
+@app.post("/api/plan")
+def plan(command: Generate):
+    from agent.music_intent import preview
+
+    return preview(command)
+
+
+@app.get("/fidelity")
+def fidelity_review():
+    from engine.paths import DATA
+
+    path = DATA / "fidelity/listen.html"
+    if not path.is_file():
+        return JSONResponse(
+            {
+                "error": "Run scripts/compare_fidelity.py and scripts/build_fidelity_review.py first."
+            },
+            status_code=404,
+        )
+    return FileResponse(path)
