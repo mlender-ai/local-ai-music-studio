@@ -104,3 +104,7 @@ codex mcp get local_music
 ## Music Intent와 청취 비교
 
 [스타일 충실도 개선 및 사용법](docs/STYLE_FIDELITY.md). 보컬 여부가 불명확한 요청은 생성 유형 선택이 필요합니다. 플레이어에서 Music Intent 초안을 만들어 수정하거나 Codex의 `music.plan` → `music.generate(intent=...)`를 사용하세요. [로컬 A/B 청취 평가](http://127.0.0.1:8795/fidelity)는 실제 비교 실험 실행 후 사용할 수 있습니다. 점수는 자동 부여하지 않습니다.
+
+## Phase 2.1 · 도입부와 구간 전개
+
+자연어 인트로 요청에 장르별 Arrangement Plan을 추가했습니다. [구현·A/B/C 실험 보고서](docs/ARRANGEMENT_INTRO.md)와 [로컬 청취 평가](http://127.0.0.1:8795/arrangement)를 확인하세요. 같은 조건의 30초 A/B 및 공식 Repaint 실험 C를 실제 생성했으나, 음악적 개선은 청취 미검증입니다. 길이 제한과 메모리 보호 정책은 유지합니다.

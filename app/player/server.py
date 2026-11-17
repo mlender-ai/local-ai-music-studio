@@ -118,3 +118,16 @@ def fidelity_review():
             status_code=404,
         )
     return FileResponse(path)
+
+
+@app.get("/arrangement")
+def arrangement_review():
+    from engine.paths import DATA
+
+    path = DATA / "arrangement/listen.html"
+    if not path.is_file():
+        return JSONResponse(
+            {"error": "Run the arrangement experiment and build its review first."},
+            status_code=404,
+        )
+    return FileResponse(path)

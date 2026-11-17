@@ -1,11 +1,56 @@
 """Strict, serializable commands shared by CLI, MCP and player."""
 
 from typing import Annotated, Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
+
+
+class ArrangementSection(Strict):
+    name: Literal["intro", "groove_entry", "main_groove", "outro"]
+    start: float = Field(ge=0, le=30)
+    end: float = Field(gt=0, le=30)
+    instruments: list[Annotated[str, Field(min_length=1, max_length=120)]] = Field(
+        min_length=1, max_length=12
+    )
+    withhold: list[Annotated[str, Field(min_length=1, max_length=120)]] = Field(
+        default_factory=list, max_length=12
+    )
+    development: str = Field(min_length=1, max_length=400)
+
+
+class ArrangementPlan(Strict):
+    sections: list[ArrangementSection] = Field(min_length=3, max_length=4)
+    continuity: str = Field(
+        default="Keep one tempo, tonal center, motif and sonic palette; introduce parts without stopping or restarting.",
+        max_length=500,
+    )
+    timing: Literal["approximate_targets"] = "approximate_targets"
+
+    @model_validator(mode="after")
+    def timeline(self):
+        names = [s.name for s in self.sections]
+        if names not in (
+            ["intro", "groove_entry", "main_groove"],
+            ["intro", "groove_entry", "main_groove", "outro"],
+        ):
+            raise ValueError(
+                "Expected intro → groove_entry → main_groove → optional outro."
+            )
+        end = 0
+        for section in self.sections:
+            if abs(section.start - end) > 1e-6 or section.end <= section.start:
+                raise ValueError(
+                    "Sections must be positive, contiguous and start at zero."
+                )
+            if set(section.instruments) & set(section.withhold):
+                raise ValueError(
+                    "An instrument cannot be present and withheld in one section."
+                )
+            end = section.end
+        return self
 
 
 class MusicIntent(Strict):
@@ -20,6 +65,7 @@ class MusicIntent(Strict):
     synth_and_keys: str = Field(default="", max_length=400)
     vocal_character: str = Field(default="", max_length=400)
     arrangement: str = Field(default="", max_length=600)
+    arrangement_plan: ArrangementPlan | None = None
     additional_direction: str = Field(default="", max_length=2000)
     bpm: int | None = Field(default=None, ge=30, le=300)
     time_signature: Literal["", "2/4", "3/4", "4/4", "6/8"] = ""

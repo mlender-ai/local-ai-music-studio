@@ -90,6 +90,23 @@ def vocal_mode(command, intent):
 def preview(command: Generate) -> dict:
     intent = plan_intent(command)
     intent.vocal_mode = vocal_mode(command, intent)
+    from agent.arrangement import requested, draft_arrangement, arrangement_caption
+    from agent.command_parser import legacy_generation_plan
+
+    duration = legacy_generation_plan(command)["duration"]
+    if (
+        intent.arrangement_plan is None
+        and command.intent is None
+        and requested(command.prompt)
+    ):
+        intent.arrangement_plan = draft_arrangement(
+            command.prompt, duration, intent.exclusions
+        )
+    if (
+        intent.arrangement_plan
+        and abs(intent.arrangement_plan.sections[-1].end - duration) > 1e-6
+    ):
+        raise ValueError("Arrangement end must equal the requested audio duration.")
     for field, terms in {
         "drum_pattern": ["drums", "percussion"],
         "bass_character": ["bass"],
@@ -130,11 +147,24 @@ def preview(command: Generate) -> dict:
             "additional_direction",
         )
         if getattr(intent, k)
+        and not (
+            intent.arrangement_plan and k in ("arrangement", "additional_direction")
+        )
     ]
+    if intent.arrangement_plan:
+        parts = [
+            intent.era,
+            intent.genre,
+            intent.production_character,
+            intent.vocal_character,
+            arrangement_caption(intent.arrangement_plan),
+        ]
     if intent.exclusions:
         parts.append("Exclude: " + ", ".join(intent.exclusions))
     return dict(
-        intent=intent.model_dump(),
+        intent=intent.model_dump(
+            exclude={"arrangement_plan"} if intent.arrangement_plan is None else set()
+        ),
         caption=". ".join(parts),
         ready=intent.vocal_mode != "unspecified",
         notice="규칙 기반 초안입니다. 누락된 음악적 지시는 Music Intent를 직접 수정하세요. 특정 음성·기존 곡을 복제하는 기획은 사용하지 마세요.",
@@ -158,7 +188,9 @@ def compile_plan(command: Generate) -> dict:
         caption=draft["caption"],
         bpm=intent.bpm,
         timesignature=intent.time_signature.split("/")[0],
-        intent=intent.model_dump(),
+        intent=intent.model_dump(
+            exclude={"arrangement_plan"} if intent.arrangement_plan is None else set()
+        ),
         planner="music-intent-v1",
     )
     return base

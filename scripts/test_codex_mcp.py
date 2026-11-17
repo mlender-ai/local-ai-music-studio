@@ -20,6 +20,7 @@ async def main():
         "app-server",
         "--stdio",
         cwd=ROOT,
+        limit=16 * 1024 * 1024,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=log,

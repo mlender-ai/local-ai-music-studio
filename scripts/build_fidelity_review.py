@@ -1,11 +1,17 @@
 """Build local listening sheet; human scores remain blank until entered."""
 
+import argparse
 import html
 import json
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-out = root / "outputs/fidelity"
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--experiment", choices=["fidelity", "arrangement"], default="fidelity"
+)
+experiment = parser.parse_args().experiment
+out = root / "outputs" / experiment
 records = json.loads((out / "results.json").read_text())
 labels = [
     "장르 일치도",
@@ -16,6 +22,14 @@ labels = [
     "편곡 완성도",
     "오디오 음질",
 ]
+if experiment == "arrangement":
+    labels = [
+        "인트로의 명확함",
+        "악기의 점진적 등장",
+        "메인 그루브 변화",
+        "리듬·음색 일관성",
+        "자연스러운 연결",
+    ]
 sections = []
 for record in records:
     if record["job"]["state"] != "succeeded":
@@ -29,7 +43,18 @@ for record in records:
         + "</select></label>"
         for i, label in enumerate(labels)
     )
-    details = html.escape(json.dumps(meta, ensure_ascii=False, indent=2))
+    details = html.escape(
+        json.dumps(
+            dict(
+                metadata=meta,
+                section_analysis=record.get("section_analysis"),
+                conditioning=record.get("conditioning"),
+                source_context_comparison=record.get("source_context_comparison"),
+            ),
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
     sections.append(
         f'<section><h2>{record["label"]} · seed {meta["plan"]["seed"]}</h2><audio controls preload="metadata" src="/audio/{ident}"></audio><p>각 항목 1=매우 부족, 3=부분 충족, 5=매우 잘 충족. 듣지 않은 항목은 미검증으로 남겨주세요.</p>{fields}<label>청취 메모<textarea data-score="{ident}:notes"></textarea></label><details><summary>실제 프롬프트 · 설정 · 자동 측정</summary><pre>{details}</pre></details></section>'
     )
@@ -43,5 +68,13 @@ document.querySelector('#download').onclick=()=>{const scores=Object.fromEntries
 for(const a of document.querySelectorAll('audio'))a.onplay=()=>{for(const b of document.querySelectorAll('audio'))if(a!==b)b.pause()};
 </script></html>"""
 )
+if experiment == "arrangement":
+    page = page.replace("Music Fidelity", "Arrangement & Intro").replace(
+        "A와 B는 동일 시드·모델·설정. B/C2/C3는 새 Intent의 서로 다른 시드 3개입니다.",
+        "A는 기존 일반 생성, B는 구간 전개 지시입니다. 동일 시드·모델·추론 설정의 30초 비교입니다. C는 B의 첫 4초를 공식 Repaint로 다시 생성한 별도 조건부 실험입니다. B와 C 모두 자동 측정상 메인 에너지 상승이 확인되지 않았으며, 음악적 개선은 청취 미검증입니다.",
+    )
+    page = page.replace("fidelity:", "arrangement:").replace(
+        "fidelity-listening.json", "arrangement-listening.json"
+    )
 (out / "listen.html").write_text(page)
-print("http://127.0.0.1:8795/fidelity")
+print("http://127.0.0.1:8795/" + experiment)

@@ -21,6 +21,39 @@ os.environ.update(
 )
 
 
+def conditional_parameters(request):
+    """Experimental official repaint path; unavailable through ordinary Generate input."""
+    task = request.get("task_type", "text2music")
+    if task == "text2music":
+        return {}
+    if task != "repaint":
+        raise ValueError("Only the audited repaint experiment is supported.")
+    from engine.paths import audio_path
+    from engine.rendering.audio import analyze
+    import math
+
+    path = audio_path(request["src_audio"])
+    info = analyze(path)
+    start, end = float(request["repainting_start"]), float(request["repainting_end"])
+    if not (
+        math.isfinite(start)
+        and math.isfinite(end)
+        and 0 <= start < end <= info["duration_seconds"] <= 30
+    ):
+        raise ValueError(
+            "Repaint range must lie inside a source of at most 30 seconds."
+        )
+    if abs(info["duration_seconds"] - request["duration"]) > 0.1:
+        raise ValueError("Repaint must preserve source duration.")
+    return dict(
+        task_type="repaint",
+        src_audio=str(path),
+        repainting_start=start,
+        repainting_end=end,
+        chunk_mask_mode="explicit",
+    )
+
+
 def main():
     request = json.loads(Path(sys.argv[1]).read_text())
     import torch
@@ -113,7 +146,9 @@ def main():
     print(status, flush=True)
     if not ok:
         raise RuntimeError(status)
+    conditional = conditional_parameters(request)
     params = GenerationParams(
+        **conditional,
         caption=request["caption"],
         lyrics=request.get("lyrics", ""),
         instrumental=request.get("instrumental", True),
@@ -152,6 +187,9 @@ def main():
         "backend": f"ACE-Step 1.5 2B Turbo / {device} / MLX DiT 4-bit={handler.use_mlx_dit}",
         "model_revision": "19671f406d603126926c1b7e2adc169acbcade22",
         "inference": {
+            "task_type": params.task_type,
+            "repainting_start": params.repainting_start,
+            "repainting_end": params.repainting_end,
             "steps": params.inference_steps,
             "infer_method": params.infer_method,
             "thinking": params.thinking,
