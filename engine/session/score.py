@@ -1,6 +1,7 @@
 """A 14-bar soul chart. Times are sixteenth notes from each bar's downbeat."""
 
 from engine.music_plan import MusicPlan
+from .harmony import plan_chart
 
 TRACKS = ("drums", "bass", "keys", "guitar")
 SECTIONS = [
@@ -12,11 +13,12 @@ SECTIONS = [
 ]
 # Root MIDI number, two rootless/right-hand voicings. Bass supplies the root.
 CHORDS = {
-    "Dm9": (38, [53, 60, 64, 69], [57, 60, 64, 65]),
+    "Dm9": (38, [53, 60, 64, 69], [53, 57, 60, 64]),
     "G13": (31, [53, 59, 64, 69], [53, 57, 59, 64]),
     "Cmaj9": (36, [52, 59, 62, 67], [55, 59, 62, 64]),
     "A7": (33, [55, 61, 64, 69], [55, 57, 61, 64]),
 }
+GUITAR_REPLY = {"Dm9": 77, "G13": 76, "Cmaj9": 74, "A7": 76}
 CHART = [
     "Dm9",
     "A7",
@@ -36,17 +38,15 @@ CHART = [
 
 
 def compose(plan: MusicPlan, variant=False):
-    if (
-        plan.harmony.key,
-        plan.harmony.progression,
-        plan.rhythm.meter,
-        plan.vocal_mode,
-    ) != ("D minor", "Dm9 G13 Cmaj9 A7", "4/4", "instrumental"):
-        raise ValueError(
-            "V1 supports the instrumental D minor soul chart in 4/4 (Dm9 G13 Cmaj9 A7)."
-        )
+    chart = plan_chart(plan.harmony.progression, 14)
+    if (plan.harmony.key, plan.rhythm.meter, plan.vocal_mode) != (
+        "D minor",
+        "4/4",
+        "instrumental",
+    ) or any(c not in CHORDS for c in chart):
+        raise ValueError("Unsupported harmony for the instrumental soul arrangement.")
     events = []
-    for bar, chord in enumerate(CHART, 1):
+    for bar, chord in enumerate(chart, 1):
         root, v1, v2 = CHORDS[chord]
         late = 7 <= bar <= 12
 
@@ -72,6 +72,11 @@ def compose(plan: MusicPlan, variant=False):
                 (6, 76),
                 (10, 69),
             ]:
+                if chord != ("Dm9" if bar == 1 else "A7"):
+                    pitch = min(
+                        (p for p in range(60, 81) if p % 12 in {n % 12 for n in v1}),
+                        key=lambda p: abs(p - pitch),
+                    )
                 add("keys", step, "keys", [pitch], 82 if step == 0 else 65, 2.3)
             for step in [7, 12, 14, 15] if bar == 1 else [4, 10, 12, 13, 14, 15]:
                 add("drums", step, "snare", [0], 43 + 3 * step, 0.85)
@@ -131,7 +136,7 @@ def compose(plan: MusicPlan, variant=False):
                     "mute" if length < 1 else "normal",
                 )
         if stop == 16:
-            nextroot = CHORDS[CHART[bar % 14]][0]
+            nextroot = CHORDS[chart[bar % len(chart)]][0]
             add(
                 "bass",
                 15,
@@ -143,7 +148,7 @@ def compose(plan: MusicPlan, variant=False):
             )
         keys = v2 if late else v1
         for step, length in [(0, 5), (9, 3.2)] if not late else [(2, 4.5), (10, 3.6)]:
-            if step < stop:
+            if step < stop and not (last and step == 9):
                 pitches = [55, 62, 64, 69] if chord == "A7" and step < 5 else keys
                 add("keys", step, "keys", pitches, 73 if step == 0 else 81, length)
         for i, step in enumerate(([2, 6, 11, 14] if not late else [1, 6, 9, 14])):
@@ -154,7 +159,7 @@ def compose(plan: MusicPlan, variant=False):
                 "guitar",
                 step,
                 "guitar",
-                keys[-3:],
+                [GUITAR_REPLY[chord]],
                 86 if i % 2 == 0 else 73,
                 0.65 if i % 2 else 0.9,
                 "down" if i % 2 == 0 else "up",

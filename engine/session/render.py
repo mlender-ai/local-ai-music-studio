@@ -11,7 +11,8 @@ from engine.paths import DATA, ROOT
 from engine.music_plan import MusicPlan
 from engine.rendering.audio import metrics, write_audio
 from .bank import BANKS, note
-from .score import TRACKS, CHART, SECTIONS, compose
+from .score import TRACKS, SECTIONS, compose
+from .harmony import plan_chart, validate
 from .mixer import MIX, mix
 
 
@@ -21,12 +22,19 @@ def write_json(p, value):
 
 def specification(plan):
     beat = 60 / plan.rhythm.bpm
-    return dict(
+    from . import jazz
+    from engine.daw.instruments import RHODES
+
+    quartet = plan.session_arrangement == "jazz-hip-hop"
+    sections = jazz.SECTIONS if quartet else SECTIONS
+    bars = sections[-1][2]
+    write_score = jazz.compose if quartet else compose
+    spec = dict(
         version=1,
         music_plan=plan.model_dump(),
         sample_rate=48000,
-        frames=round((56 * beat + 1.0344827586) * 48000),
-        mixer=MIX,
+        frames=round((bars * 4 * beat + (0.75 if quartet else 1.0344827586)) * 48000),
+        mixer=jazz.mixer() if quartet else MIX,
         sources={
             k: {a: b for a, b in bank.items() if a != "samples"}
             for k, bank in BANKS.items()
@@ -34,14 +42,22 @@ def specification(plan):
         bank_digest=hashlib.sha256(
             Path(__file__).with_name("banks.json").read_bytes()
         ).hexdigest(),
-        events=compose(plan),
-        variation_events=compose(plan, True),
-        chart=CHART,
+        events=write_score(plan),
+        variation_events=write_score(plan, True),
+        chart=plan_chart(plan.harmony.progression, bars),
         sections=[
             dict(name=name, first=a, last=b, start=(a - 1) * 4 * beat, end=b * 4 * beat)
-            for name, a, b in SECTIONS
+            for name, a, b in sections
         ],
     )
+    if quartet:
+        spec["keyboard_mapping"] = "rhodes-sfz"
+        spec["sources"]["keys"] = RHODES.copy()
+    for part in ("events", "variation_events"):
+        report = validate(dict(spec, events=spec[part]))
+        if not report["passed"]:
+            raise ValueError(f"Unresolved harmony in {part}: {report['issues'][0]}")
+    return spec
 
 
 def voices_for(spec, events, note_renderer=None):
@@ -129,7 +145,9 @@ def bounce(spec, output):
     if spec.get("keyboard_mapping"):
         from engine.daw.instruments import prepare_keys
 
-        prepare_keys(spec["events"] + spec["variation_events"], spec["keyboard_mapping"])
+        prepare_keys(
+            spec["events"] + spec["variation_events"], spec["keyboard_mapping"]
+        )
     with TemporaryDirectory(dir=output.parent) as tmp:
         stage = Path(tmp) / "session"
         stage.mkdir()
@@ -162,9 +180,9 @@ def bounce(spec, output):
         (stage / "qa").mkdir()
         write_json(stage / "qa/audio-analysis.json", reports)
         (stage / "qa/session-report.md").write_text(
-            "# Session Engine V1\n\n14 bars at "
+            f"# Session Engine V1\n\n{len(spec['chart'])} bars at "
             + str(spec["music_plan"]["rhythm"]["bpm"])
-            + " BPM. Wet stems include their room return, before master compression. Dry and produced use the same events. Variation uses the same mixer. Listening verdict pending.\n\nElectric piano samples by Greg Sullivan (Wurlitzer EP200), CC BY 3.0, SFZ mapping by kinwie. Samples pitched, enveloped and mixed. See session.json for pinned source repositories.\n"
+            + " BPM. Wet stems include their room return, before master compression. Dry and produced use the same events. Variation uses the same mixer. Listening verdict pending.\n\nSee session.json for the keyboard mapping and pinned sample sources.\n"
         )
         stage.rename(output)
 

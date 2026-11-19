@@ -14,8 +14,16 @@ from engine.session.bank import BANKS, CACHE, fetch, note
 # Greg Sullivan, Wurlitzer EP200. Mapping by kinwie. See docs/DAW.md.
 REGIONS = {
     name + "-sfz": json.loads(Path(__file__).with_name(name + ".json").read_text())
-    for name in ("ep200", "cp80")
+    for name in ("ep200", "cp80", "rhodes")
 }
+
+
+RHODES = dict(
+    repo="sfzinstruments/jlearman.jRhodes3d",
+    revision="aea5b8d3e11e2f7102593789a4e0a0e41b30271a",
+    author="Jeff Learman",
+    license="See upstream LICENSE for recordings and musical works",
+)
 
 
 def key_region(pitch, velocity, mapping):
@@ -34,7 +42,7 @@ def prepare_keys(events, mapping):
     }
     CACHE.mkdir(parents=True, exist_ok=True)
     for _, _, _, path, digest in sorted(sources):
-        fetch((BANKS["keys"], path, digest))
+        fetch((RHODES if mapping == "rhodes-sfz" else BANKS["keys"], path, digest))
 
 
 @lru_cache(maxsize=48)
@@ -73,7 +81,7 @@ def audition(spec):
 
     keys = [e for e in spec["events"] if e["track"] == "keys"]
     candidates = {}
-    for mapping in ("session-v1", *REGIONS):
+    for mapping in ("session-v1", "ep200-sfz", "cp80-sfz"):
         renderer = note
         if mapping != "session-v1":
             prepare_keys(keys, mapping)

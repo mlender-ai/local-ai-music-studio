@@ -1,0 +1,64 @@
+{
+  "version": "director-v1",
+  "source": "codex",
+  "style": "1990s East Coast jazz hip-hop with a warm West Coast pocket",
+  "rhythm": {
+    "bpm": 90,
+    "meter": "4/4",
+    "pattern": "Swung eighth hats, delayed backbeat and staggered kicks",
+    "accents_and_space": "Ghost snares and stops frame the Rhodes motif"
+  },
+  "harmony": {
+    "key": "F major",
+    "progression": "Fmaj9 Bbmaj9 Gm9 C13 Fmaj9 Dm9 Gm9 C13 Am7 Dm9 C13 F6/9",
+    "voicing": "Upper extensions spread above a moving electric bass"
+  },
+  "sessions": [
+    {
+      "instrument": "Rhodes",
+      "role_and_interaction": "Descending motif and short chord answers"
+    },
+    {
+      "instrument": "Bass",
+      "role_and_interaction": "Fills the gaps around the kick"
+    },
+    {
+      "instrument": "Drums",
+      "role_and_interaction": "Dry swung backbeat and ghost pickups"
+    },
+    {
+      "instrument": "Guitar",
+      "role_and_interaction": "Single plucked replies in comping rests"
+    }
+  ],
+  "events": [
+    {
+      "at_fraction": 0,
+      "action": "Rhodes motif and hat pickup"
+    },
+    {
+      "at_fraction": 0.1667,
+      "action": "Bass and full backbeat enter"
+    },
+    {
+      "at_fraction": 0.5,
+      "action": "Revoice comping and change bass phrasing"
+    },
+    {
+      "at_fraction": 0.8333,
+      "action": "Stop after a short chord"
+    },
+    {
+      "at_fraction": 0.9167,
+      "action": "Return to motif and land on F6/9"
+    }
+  ],
+  "production": {
+    "tone": "Recorded electric instruments",
+    "dynamics": "Preserve transients and leave a quiet break",
+    "space": "Centered rhythm, short room and offset comping"
+  },
+  "exclusions": [],
+  "vocal_mode": "instrumental",
+  "session_arrangement": "jazz-hip-hop"
+}
