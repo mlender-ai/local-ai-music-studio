@@ -59,7 +59,7 @@ def pcm(digest):
     return x / max(0.005, float(np.max(abs(x)))), sr
 
 
-def note(track, voice, pitch, velocity, take, duration, release, sr, slide=False):
+def select_sample(track, voice, pitch, velocity, take):
     rows = [r for r in BANKS[track]["samples"] if r[0] == voice]
     layers = sorted({r[2] for r in rows})
     layer = layers[min(len(layers) - 1, int(velocity / 128 * len(layers)))]
@@ -67,6 +67,11 @@ def note(track, voice, pitch, velocity, take, duration, release, sr, slide=False
         (r for r in rows if r[2] == layer),
         key=lambda r: (abs(r[1] - pitch), r[3] != (1 + take % 2)),
     )
+    return selected
+
+
+def note(track, voice, pitch, velocity, take, duration, release, sr, slide=False):
+    selected = select_sample(track, voice, pitch, velocity, take)
     data, rate = pcm(selected[-1])
     speed = rate / sr * 2 ** ((pitch - selected[1]) / 12)
     t = np.arange(round((duration + release) * sr)) / sr

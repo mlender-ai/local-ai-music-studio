@@ -90,6 +90,38 @@ def session_lab() -> dict:
     return manifest()
 
 
+@server.tool(name="music.session.inspect", annotations=READ)
+def daw_inspect(version: str = "01-reference") -> dict:
+    """Inspect an immutable MIDI snapshot and its playable Session Engine preview."""
+    from engine.daw.controller import inspect
+
+    return inspect(version)
+
+
+@server.tool(name="music.region.inspect", annotations=READ)
+def daw_region(first: int, last: int, version: str = "01-reference") -> dict:
+    """Return the actual score events and chord names in an inclusive bar range."""
+    from engine.daw.controller import region
+
+    return region(version, first, last)
+
+
+@server.tool(name="music.region.edit", annotations=WRITE)
+def daw_edit(command: str, version: str = "01-reference") -> dict:
+    """Apply a supported guitar/bass region edit or keyboard clarity edit to a new MIDI and WAV snapshot."""
+    from engine.daw.controller import modify
+
+    return modify(version, command)
+
+
+@server.tool(name="music.session.undo", annotations=READ)
+def daw_undo(version: str) -> dict:
+    """Select this snapshot's parent for playback or the next edit."""
+    from engine.daw.controller import undo
+
+    return undo(version)
+
+
 @server.tool(name="music.apply_effect", annotations=WRITE)
 def apply_effect(version_id: str, effect: Effect) -> dict:
     """Apply one validated effect to a stored WAV; preserve its original.
