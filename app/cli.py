@@ -20,6 +20,12 @@ def main():
     mode.add_argument("--vocal", action="store_true")
     mode.add_argument("--instrumental", action="store_true")
     gen.add_argument("--intent", help="Path to editable Music Intent JSON")
+    gen.add_argument("--music-plan", help="Path to validated Music Plan JSON")
+    gen.add_argument(
+        "--inference-profile",
+        choices=["turbo_4bit", "turbo_8bit"],
+        default="turbo_4bit",
+    )
     gen.add_argument("--lyrics", default="")
     status = commands.add_parser("status")
     status.add_argument("job_id", nargs="?")
@@ -60,6 +66,12 @@ def main():
                     )
                     if args.intent
                     else None,
+                    music_plan=json.loads(
+                        __import__("pathlib").Path(args.music_plan).read_text()
+                    )
+                    if args.music_plan
+                    else None,
+                    inference_profile=args.inference_profile,
                     lyrics=args.lyrics,
                 ),
                 args.request_key,

@@ -45,6 +45,19 @@ def recover_jobs():
 
 def submit(command: Generate, request_key: str | None = None):
     plan = generation_plan(command)
+    return submit_plan(
+        plan,
+        request_key,
+        legacy_compatible=(
+            command.intent is None
+            and command.music_plan is None
+            and command.inference_profile == "turbo_4bit"
+        ),
+    )
+
+
+def submit_plan(plan: dict, request_key=None, *, legacy_compatible=False):
+    """Internal experiment seam; transports must validate through Generate first."""
     recover_jobs()
     if request_key and (not 1 <= len(request_key) <= 128):
         raise ValueError("request_key must be 1–128 characters.")
@@ -66,7 +79,7 @@ def submit(command: Generate, request_key: str | None = None):
                 same = previous == plan or (
                     "planner" not in previous
                     and all(previous.get(k) == plan.get(k) for k in comparable)
-                    and command.intent is None
+                    and legacy_compatible
                 )
                 if not same:
                     raise ValueError(
@@ -130,6 +143,7 @@ def run(job_id):
             output["path"],
             dict(
                 kind="generation",
+                source_type="model_full_mix",
                 plan=job["request"],
                 generation=output,
                 analysis=analysis,

@@ -37,6 +37,8 @@ class ACEStepBackend:
             k: v for k, v in plan.items() if k not in ("action", "original_prompt")
         }
         settings = RuntimeSettings.from_environment()
+        if plan.get("inference_profile") == "turbo_8bit" and not settings.mlx:
+            raise ValueError("turbo_8bit requires the MLX decoder.")
         request.update(
             save_dir=str(directory),
             result_path=str(RUNTIME / f"{job_id}.result.json"),

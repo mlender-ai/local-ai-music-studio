@@ -3,6 +3,8 @@
 from mcp.server.fastmcp import FastMCP
 from engine import jobs, service, store
 from engine.schema import Generate, Effect, MusicIntent
+from engine.music_plan import MusicPlan
+from typing import Literal
 
 server = FastMCP("Local AI Music Studio")
 READ = {
@@ -23,6 +25,8 @@ def generate(
     lyrics: str = "",
     request_key: str | None = None,
     intent: MusicIntent | None = None,
+    music_plan: MusicPlan | None = None,
+    inference_profile: Literal["turbo_4bit", "turbo_8bit"] = "turbo_4bit",
 ) -> dict:
     """Generate real music offline with ACE-Step. Returns a job ID immediately.
 
@@ -37,6 +41,8 @@ def generate(
             instrumental=instrumental,
             lyrics=lyrics,
             intent=intent,
+            music_plan=music_plan,
+            inference_profile=inference_profile,
         ),
         request_key,
     )
@@ -50,6 +56,30 @@ def plan(
     from agent.music_intent import preview
 
     return preview(Generate(prompt=prompt, instrumental=instrumental, intent=intent))
+
+
+@server.tool(name="music.director_plan", annotations=READ)
+def director_plan(
+    prompt: str,
+    duration: float = 30,
+    instrumental: bool | None = None,
+    music_plan: MusicPlan | None = None,
+) -> dict:
+    """Validate Codex/user Music Plan JSON, or draft an explicit offline preset.
+
+    Reports exact caption/token budget and soft targets vs actual parameters.
+    Pass returned music_plan to music.generate. No LLM download or track mixing.
+    """
+    from agent.director import preview
+
+    return preview(
+        Generate(
+            prompt=prompt,
+            duration=duration,
+            instrumental=instrumental,
+            music_plan=music_plan,
+        )
+    )
 
 
 @server.tool(name="music.apply_effect", annotations=WRITE)

@@ -1,0 +1,51 @@
+{
+  "version": "director-v1",
+  "source": "codex",
+  "style": "Warm late-1970s smooth soul disco",
+  "rhythm": {
+    "bpm": 116,
+    "meter": "4/4",
+    "pattern": "Four-floor kick, snare 2/4, light sixteenth hats",
+    "accents_and_space": "Ghost notes, syncopated rests"
+  },
+  "harmony": {
+    "key": "D minor",
+    "progression": "Dm9 G13 Cmaj9 A7",
+    "voicing": "Airy upper voicings, tension resolves"
+  },
+  "sessions": [
+    {
+      "instrument": "Bass",
+      "role_and_interaction": "short syncopations answer muted guitar"
+    },
+    {
+      "instrument": "Rhodes",
+      "role_and_interaction": "warm chords leave brass response gaps"
+    }
+  ],
+  "events": [
+    {
+      "at_fraction": 0.0,
+      "action": "Rhodes pickup alone"
+    },
+    {
+      "at_fraction": 0.15,
+      "action": "bass and drums enter"
+    },
+    {
+      "at_fraction": 0.5,
+      "action": "short fill, guitar answers brass"
+    },
+    {
+      "at_fraction": 0.75,
+      "action": "return motif with passing bass notes"
+    }
+  ],
+  "production": {
+    "tone": "Warm tape color",
+    "dynamics": "Dry punch, breathing accents",
+    "space": "Centered bass, wide keys, short room"
+  },
+  "exclusions": [],
+  "vocal_mode": "instrumental"
+}

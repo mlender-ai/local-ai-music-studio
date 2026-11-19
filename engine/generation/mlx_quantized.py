@@ -32,7 +32,9 @@ def _mapped(key, value):
     return key, data
 
 
-def load_decoder(pytorch_model, config, cache: Path):
+def load_decoder(pytorch_model, config, cache: Path, bits: int = 4):
+    if bits not in (4, 8):
+        raise ValueError("Only audited 4/8-bit profiles are supported.")
     import mlx.core as mx
     import mlx.nn as nn
     from mlx.utils import tree_flatten
@@ -44,10 +46,10 @@ def load_decoder(pytorch_model, config, cache: Path):
         return isinstance(module, nn.Linear) and module.weight.shape[-1] % 64 == 0
 
     if cache.is_file():
-        nn.quantize(decoder, group_size=64, bits=4, class_predicate=predicate)
+        nn.quantize(decoder, group_size=64, bits=bits, class_predicate=predicate)
         decoder.load_weights(str(cache), strict=True)
         mx.eval(decoder.parameters())
-        print("Loaded local MLX 4-bit decoder cache", flush=True)
+        print(f"Loaded local MLX {bits}-bit decoder cache", flush=True)
     else:
         source = pytorch_model.decoder.state_dict()
         expected = set(dict(tree_flatten(decoder.parameters())))
@@ -65,7 +67,7 @@ def load_decoder(pytorch_model, config, cache: Path):
                     source[name + ".bias"].detach().cpu().float().numpy()
                 )
                 consumed.add(name + ".bias")
-            quantized = nn.QuantizedLinear.from_linear(module, group_size=64, bits=4)
+            quantized = nn.QuantizedLinear.from_linear(module, group_size=64, bits=bits)
             mx.eval(quantized.parameters())
             _replace(decoder, name, quantized)
             # named_modules() snapshot retains old Linear objects: release their
@@ -92,11 +94,11 @@ def load_decoder(pytorch_model, config, cache: Path):
             dict(tree_flatten(decoder.parameters())),
             metadata={
                 "source": "ACE-Step/Ace-Step1.5@19671f406d603126926c1b7e2adc169acbcade22",
-                "conversion": "linear affine 4-bit, group 64; native convolution layouts",
+                "conversion": f"linear affine {bits}-bit, group 64; native convolution layouts",
             },
         )
         temporary.replace(cache)
-        print("Created local MLX 4-bit decoder cache", flush=True)
+        print(f"Created local MLX {bits}-bit decoder cache", flush=True)
         del source
     decoder.materialize_static_buffers()
     gc.collect()

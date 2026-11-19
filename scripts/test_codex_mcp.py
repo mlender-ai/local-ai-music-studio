@@ -98,6 +98,14 @@ async def main():
                 next(c["text"] for c in result["content"] if c["type"] == "text")
             )
 
+        director = await call(
+            "music.director_plan",
+            dict(prompt="부드러운 소울 디스코 116BPM", instrumental=True),
+        )
+        assert director["music_plan"]["source"] == "preset_fallback"
+        assert director["conditioning"]["tokens"] <= 256
+        assert "per-track DSP" in director["capabilities"]["not_executed"]
+
         # Replay the successful SDK generation to verify cross-client idempotency.
         replay = await call(
             "music.generate",

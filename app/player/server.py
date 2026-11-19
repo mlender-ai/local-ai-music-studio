@@ -100,7 +100,10 @@ def compare(original_id: str, modified_id: str):
 
 @app.post("/api/plan")
 def plan(command: Generate):
-    from agent.music_intent import preview
+    if command.music_plan is not None:
+        from agent.director import preview
+    else:
+        from agent.music_intent import preview
 
     return preview(command)
 
@@ -128,6 +131,26 @@ def arrangement_review():
     if not path.is_file():
         return JSONResponse(
             {"error": "Run the arrangement experiment and build its review first."},
+            status_code=404,
+        )
+    return FileResponse(path)
+
+
+@app.post("/api/director")
+def director_plan(command: Generate):
+    from agent.director import preview
+
+    return preview(command)
+
+
+@app.get("/producer")
+def producer_review():
+    from engine.paths import DATA
+
+    path = DATA / "producer/listen.html"
+    if not path.is_file():
+        return JSONResponse(
+            {"error": "Run compare_producer.py and build_producer_review.py first."},
             status_code=404,
         )
     return FileResponse(path)

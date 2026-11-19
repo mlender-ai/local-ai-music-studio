@@ -174,6 +174,9 @@ def preview(command: Generate) -> dict:
 def compile_plan(command: Generate) -> dict:
     from agent.command_parser import legacy_generation_plan
 
+    if command.music_plan is not None:
+        from agent.director import compile_director
+        return compile_director(command)
     draft = preview(command)
     if not draft["ready"]:
         raise ValueError(
@@ -193,4 +196,6 @@ def compile_plan(command: Generate) -> dict:
         ),
         planner="music-intent-v1",
     )
+    if command.inference_profile != "turbo_4bit":
+        base["inference_profile"] = command.inference_profile
     return base
