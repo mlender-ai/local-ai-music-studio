@@ -98,6 +98,14 @@ def daw_inspect(version: str = "01-reference") -> dict:
     return inspect(version)
 
 
+@server.tool(name="music.session.export", annotations=WRITE)
+def daw_export(version: str = "03-keys") -> dict:
+    """Export an attributed ZIP containing the editable score, sample recordings, host setup and preview WAV."""
+    from engine.daw.controller import export
+
+    return export(version)
+
+
 @server.tool(name="music.region.inspect", annotations=READ)
 def daw_region(first: int, last: int, version: str = "01-reference") -> dict:
     """Return the actual score events and chord names in an inclusive bar range."""

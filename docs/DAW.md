@@ -43,6 +43,7 @@ Session Engine V1의 116 BPM, D minor, 4/4 세션을 기준으로 삼았다. 14�
 | music.session.inspect | 버전 ID를 받아 템포·키·구간·스코어·미리듣기 WAV 반환. 기본값은 01-reference |
 | music.region.inspect | first, last, version으로 실제 마디의 이벤트와 코드를 반환 |
 | music.region.edit | command, version으로 두 유형의 한국어 지시를 적용하고 새로운 MIDI/WAV 버전 반환 |
+| music.session.export | 스코어·샘플 원음·호스트 준비 스크립트·WAV·출처를 ZIP 한 개로 내보냄 |
 | music.session.undo | version의 부모 버전을 반환. 반환한 ID로 재생하거나 편집 가능 |
 
 실제 STDIO 세션에서 «9~12마디의 기타를 쉬게 하고 베이스를 변주해줘.»를 적용한 후 그 결과에 «키보드가 먹먹하니까 악기 소스를 점검하고 더 명료하게 믹싱해줘.»를 적용했다. 두 결과의 WAV가 데모에서 독립 생성한 파일과 바이트 단위로 일치했다. 기존 music.session_lab 조회도 통과했다. 지원되는 자연어는 위 두 명령 계열로 제한한다.

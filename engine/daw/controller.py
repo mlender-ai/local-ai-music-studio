@@ -76,3 +76,55 @@ def undo(version):
         else json.loads((path / "parent.json").read_text())["version"]
     )
     return inspect(parent)
+
+
+def export(version):
+    """Bundle the MIDI score, separate sample recordings, attributions and preview."""
+    from zipfile import ZipFile, ZIP_STORED
+
+    path = folder(version)
+    archive = path / "soul-session.zip"
+    if not archive.exists():
+        spec = json.loads((path / "session.json").read_text())
+        with TemporaryDirectory(dir=path) as temp:
+            target = Path(temp) / archive.name
+            with ZipFile(target, "x", compression=ZIP_STORED) as bundle:
+                for name in (
+                    "Score.RPP",
+                    "session.json",
+                    "session-preview.wav",
+                    "zones.tsv",
+                    "mix.tsv",
+                ):
+                    bundle.write(path / name, name)
+                # Always include the shipped bridge, even for an earlier snapshot.
+                bundle.write(Path(__file__).with_name("build.lua"), "build.lua")
+                for sample in sorted((path / "Samples").iterdir()):
+                    bundle.write(sample, "Samples/" + sample.name)
+                credits = [
+                    "Session Engine preview. Score.RPP contains editable MIDI.",
+                    "Run build.lua within an approved REAPER installation to build the instrument project.",
+                    "Host playback remains unverified. The WAV was rendered using Session Engine.",
+                    "Sources were mapped, transposed, enveloped and mixed for this arrangement.",
+                ]
+                for info in spec["sources"].values():
+                    credits.append(
+                        f"{info['author']} | {info['license']} | https://github.com/{info['repo']}/tree/{info['revision']}"
+                    )
+                credits.append(
+                    "Wurlitzer EP200 and CP80 by Greg Sullivan. SFZ mapping by kinwie. https://creativecommons.org/licenses/by/3.0/"
+                )
+                bundle.writestr("CREDITS.txt", "\n".join(credits) + "\n")
+                if (path / "edit.json").is_file():
+                    bundle.write(path / "edit.json", "edit.json")
+            with ZipFile(target) as verify:
+                if verify.testzip():
+                    raise ValueError("Archive integrity check failed")
+            # Independent concurrent exports publish the same immutable score.
+            target.replace(archive)
+    return {
+        "version": version,
+        "archive": str(archive),
+        "audio": str(path / "session-preview.wav"),
+        "backend": "session-preview",
+    }
