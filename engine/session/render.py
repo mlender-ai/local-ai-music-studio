@@ -44,12 +44,21 @@ def specification(plan):
     )
 
 
-def voices_for(spec, events):
+def voices_for(spec, events, note_renderer=None):
+    if note_renderer is None:
+        if spec.get("keyboard_mapping"):
+            from engine.daw.instruments import renderer_for
+
+            note_renderer = renderer_for(spec["keyboard_mapping"])
+        else:
+            note_renderer = note
     sr = spec["sample_rate"]
     frames = spec["frames"]
     step = 15 / spec["music_plan"]["rhythm"]["bpm"]
     voices = {v: np.zeros(frames) for v in spec["mixer"]["levels"]}
     for i, e in enumerate(events):
+        if e.get("muted"):
+            continue
         duration = e["length"] * step
         rel = {"drums": 0.067, "guitar": 0.018, "keys": 0.21, "bass": 0.036}[e["track"]]
         pitches = e["notes"][::-1] if e["art"] == "up" else e["notes"]
@@ -62,7 +71,7 @@ def voices_for(spec, events):
                 else 0
             )
             start = round((((e["bar"] - 1) * 16 + e["step"]) * step + offset) * sr)
-            y = note(
+            y = note_renderer(
                 e["track"],
                 e["voice"],
                 pitch,
@@ -117,6 +126,10 @@ def bounce(spec, output):
         ).hexdigest()
     ):
         raise ValueError("Sample bank changed.")
+    if spec.get("keyboard_mapping"):
+        from engine.daw.instruments import prepare_keys
+
+        prepare_keys(spec["events"] + spec["variation_events"], spec["keyboard_mapping"])
     with TemporaryDirectory(dir=output.parent) as tmp:
         stage = Path(tmp) / "session"
         stage.mkdir()
