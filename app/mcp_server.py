@@ -82,6 +82,14 @@ def director_plan(
     )
 
 
+@server.tool(name="music.session_lab", annotations=READ)
+def session_lab() -> dict:
+    """Get playable A/B/C/D, independent stem version IDs, sources, sections and mixer settings."""
+    from engine.session.catalog import manifest
+
+    return manifest()
+
+
 @server.tool(name="music.apply_effect", annotations=WRITE)
 def apply_effect(version_id: str, effect: Effect) -> dict:
     """Apply one validated effect to a stored WAV; preserve its original.

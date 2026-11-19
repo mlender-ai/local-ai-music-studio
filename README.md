@@ -114,3 +114,5 @@ codex mcp get local_music
 [기술 검토·구현·실제 측정 보고서](docs/PRODUCER_V2.md). 기존 기능을 유지하면서 검증 가능한 Music Plan, 실제 키 조건, 4/8-bit 비교, 3장르 청취 평가를 추가했습니다. [조건을 가린 청취 비교](http://127.0.0.1:8795/producer)에서 평가하세요. 음악적 개선은 사용자 청취 승인 전 미검증입니다.
 
 플레이어의 기획 방식에서 `Music Director · 실험`을 선택하면 명시적 프리셋 초안으로 독립 실행됩니다. Codex는 `music.director_plan`에 Music Plan JSON을 전달하고 `music.generate(music_plan=...)`로 생성할 수 있습니다. 추가 LLM/유료 API는 필수가 아닙니다. 독립 트랙이나 트랙별 믹싱을 구현한 상태는 아닙니다. 60초는 별도 실험 결과만 제공하며 일반 생성 길이는 15~30초를 유지합니다.
+
+[Session Engine V1 제작·재현 보고서](docs/SESSION_ENGINE.md) · [소울 세션의 A/B/C/D와 독립 트랙 청취](http://127.0.0.1:8795/session-lab)

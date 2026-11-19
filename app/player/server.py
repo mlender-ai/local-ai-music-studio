@@ -154,3 +154,24 @@ def producer_review():
             status_code=404,
         )
     return FileResponse(path)
+
+
+@app.get("/session-lab")
+def session_lab_page():
+    return FileResponse(Path(__file__).with_name("session.html"))
+
+
+@app.get("/api/session-lab")
+def session_lab_manifest():
+    from engine.session.catalog import manifest
+
+    return manifest()
+
+
+@app.get("/session-audio/{label}")
+def session_audio(label: str):
+    from engine.session.catalog import FILES, folder
+
+    if label not in FILES or not (folder() / FILES[label]).is_file():
+        return JSONResponse({"error": "Unknown session audio"}, status_code=404)
+    return FileResponse(audio_path(folder() / FILES[label]), media_type="audio/wav")
