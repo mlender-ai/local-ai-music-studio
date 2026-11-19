@@ -56,6 +56,9 @@ def conditional_parameters(request):
 
 def main():
     request = json.loads(Path(sys.argv[1]).read_text())
+    bits = {"turbo_4bit": 4, "turbo_8bit": 8}[
+        request.get("inference_profile", "turbo_4bit")
+    ]
     import torch
 
     torch.set_num_threads(4)
@@ -66,6 +69,25 @@ def main():
     from acestep.inference import GenerationParams, GenerationConfig, generate_music
 
     class OfflineHandler(AceStepHandler):
+        def _prepare_text_conditioning_inputs(self, *args, **kwargs):
+            result = super()._prepare_text_conditioning_inputs(*args, **kwargs)
+            if request.get("music_plan"):
+                # Preflight compilation includes the exact instruction and metadata.
+                from agent.director import conditioning_budget
+
+                audit = conditioning_budget(
+                    request["caption"],
+                    request["bpm"],
+                    request["timesignature"],
+                    request["keyscale"],
+                    request["duration"],
+                )
+                if audit["tokens"] > 256:
+                    raise ValueError(
+                        "Director conditioning exceeds the model's 256-token budget."
+                    )
+            return result
+
         def _load_main_model_from_checkpoint(self, **kwargs):
             # Upstream defaults MPS to float32, doubling 2B weights during load.
             # On supported Apple Silicon, keep checkpoint-native bfloat16.
@@ -93,7 +115,9 @@ def main():
             self.mlx_decoder = load_decoder(
                 self.model,
                 self.config,
-                ROOT / ".runtime/models/derived/dit-4bit-ca1e85fe-19671f40.safetensors",
+                ROOT
+                / f".runtime/models/derived/dit-{bits}bit-ca1e85fe-19671f40.safetensors",
+                bits=bits,
             )
 
             class UnavailableDecoder(torch.nn.Module):
@@ -106,7 +130,10 @@ def main():
             self.use_mlx_dit = True
             self.mlx_dit_compiled = False
             self._release_system_memory()
-            return "Active (local 4-bit Linear weights)", "Disabled; tiled PyTorch VAE"
+            return (
+                f"Active (local {bits}-bit Linear weights)",
+                "Disabled; tiled PyTorch VAE",
+            )
 
         def _ensure_models_present(self, *, checkpoint_path, **kwargs):
             # Upstream's precheck also requires the unused 1.7B LM. Only this
@@ -153,6 +180,7 @@ def main():
         lyrics=request.get("lyrics", ""),
         instrumental=request.get("instrumental", True),
         bpm=request.get("bpm"),
+        keyscale=request.get("keyscale", ""),
         timesignature=request.get("timesignature", ""),
         duration=request["duration"],
         seed=request["seed"],
@@ -184,9 +212,11 @@ def main():
     record = {
         "path": result.audios[0]["path"],
         "elapsed_seconds": time.monotonic() - started,
-        "backend": f"ACE-Step 1.5 2B Turbo / {device} / MLX DiT 4-bit={handler.use_mlx_dit}",
+        "backend": f"ACE-Step 1.5 2B Turbo / {device} / MLX DiT {bits}-bit={handler.use_mlx_dit}",
         "model_revision": "19671f406d603126926c1b7e2adc169acbcade22",
         "inference": {
+            "quantization_bits": bits if handler.use_mlx_dit else None,
+            "keyscale": params.keyscale,
             "task_type": params.task_type,
             "repainting_start": params.repainting_start,
             "repainting_end": params.repainting_end,

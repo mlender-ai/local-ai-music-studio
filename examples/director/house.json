@@ -1,0 +1,51 @@
+{
+  "version": "director-v1",
+  "source": "codex",
+  "style": "Deep house",
+  "rhythm": {
+    "bpm": 122,
+    "meter": "4/4",
+    "pattern": "Steady four-floor kick, offbeat hats",
+    "accents_and_space": "Subtle swung percussion, uncluttered pulse"
+  },
+  "harmony": {
+    "key": "F minor",
+    "progression": "Fm9 Dbmaj7 Eb6",
+    "voicing": "Slow inversions, warm extensions"
+  },
+  "sessions": [
+    {
+      "instrument": "Sub bass",
+      "role_and_interaction": "short offbeat answers to kick"
+    },
+    {
+      "instrument": "Keys",
+      "role_and_interaction": "velvety chord stabs with rests"
+    }
+  ],
+  "events": [
+    {
+      "at_fraction": 0.0,
+      "action": "filtered beat and bass groove"
+    },
+    {
+      "at_fraction": 0.25,
+      "action": "open chord filter gradually"
+    },
+    {
+      "at_fraction": 0.6,
+      "action": "one-beat bass rest, percussion fill"
+    },
+    {
+      "at_fraction": 0.75,
+      "action": "return groove with altered hat accents"
+    }
+  ],
+  "production": {
+    "tone": "Rounded analog texture",
+    "dynamics": "Firm kick, gentle pumping",
+    "space": "Mono low end, wide chord echoes"
+  },
+  "exclusions": [],
+  "vocal_mode": "instrumental"
+}

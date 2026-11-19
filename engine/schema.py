@@ -2,6 +2,7 @@
 
 from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from engine.music_plan import MusicPlan
 
 
 class Strict(BaseModel):
@@ -80,6 +81,14 @@ class Generate(Strict):
     instrumental: bool | None = None
     lyrics: str = Field(default="", max_length=4000)
     intent: MusicIntent | None = None
+    music_plan: MusicPlan | None = None
+    inference_profile: Literal["turbo_4bit", "turbo_8bit"] = "turbo_4bit"
+
+    @model_validator(mode="after")
+    def one_plan(self):
+        if self.intent is not None and self.music_plan is not None:
+            raise ValueError("Use Music Intent or Music Plan, not both.")
+        return self
 
 
 class EQ(Strict):

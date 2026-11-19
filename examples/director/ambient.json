@@ -1,0 +1,51 @@
+{
+  "version": "director-v1",
+  "source": "codex",
+  "style": "Organic ambient cinematic",
+  "rhythm": {
+    "bpm": 72,
+    "meter": "4/4",
+    "pattern": "Free flowing sustained pulse, no drums",
+    "accents_and_space": "Long breaths and silence"
+  },
+  "harmony": {
+    "key": "C major",
+    "progression": "Cmaj9 Am11 Fmaj9 Gsus4",
+    "voicing": "Slow voice leading, suspended resolution"
+  },
+  "sessions": [
+    {
+      "instrument": "Felt piano",
+      "role_and_interaction": "sparse motif answered by cello"
+    },
+    {
+      "instrument": "Pads",
+      "role_and_interaction": "slow swells behind foreground piano"
+    }
+  ],
+  "events": [
+    {
+      "at_fraction": 0.0,
+      "action": "soft distant pad emerges"
+    },
+    {
+      "at_fraction": 0.2,
+      "action": "piano motif enters"
+    },
+    {
+      "at_fraction": 0.55,
+      "action": "cello counterline, harmonic bloom"
+    },
+    {
+      "at_fraction": 0.85,
+      "action": "piano returns, textures recede"
+    }
+  ],
+  "production": {
+    "tone": "Soft organic grain",
+    "dynamics": "Broad unhurried swells",
+    "space": "Dry near piano, deep diffuse pads"
+  },
+  "exclusions": [],
+  "vocal_mode": "instrumental"
+}
