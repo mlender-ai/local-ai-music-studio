@@ -98,9 +98,21 @@ def daw_inspect(version: str = "01-reference") -> dict:
     return inspect(version)
 
 
+@server.tool(name="music.mix.render", annotations=WRITE)
+def daw_mix_render(version: str = "03-keys") -> dict:
+    """Return a verified REAPER render of this immutable version, producing it if needed."""
+    from engine.daw.controller import folder, inspect, verified_host
+    from engine.daw.host import render
+
+    snapshot = folder(version)
+    if not verified_host(snapshot):
+        render(snapshot)
+    return inspect(version)["reaper"]
+
+
 @server.tool(name="music.session.export", annotations=WRITE)
 def daw_export(version: str = "03-keys") -> dict:
-    """Export an attributed ZIP containing the editable score, sample recordings, host setup and preview WAV."""
+    """Export the verified REAPER project and masters when available, or the attributed score and preview."""
     from engine.daw.controller import export
 
     return export(version)

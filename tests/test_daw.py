@@ -66,3 +66,31 @@ def test_host_absence_does_not_create_files(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="not found"):
         host.render(tmp_path)
     assert not list(tmp_path.iterdir())
+
+
+def test_portable_rs5k_keeps_sample_params_and_other_fx(tmp_path):
+    import base64
+    import struct
+
+    from engine.daw.portable import make_portable
+
+    fn = b"a" * 40 + b".flac"
+    tail = b"\0\xff\x19\x00"
+    payload = bytes(tmp_path / "Samples") + b"/" + fn + tail
+    header = bytearray(44)
+    header[:4] = b"mosr"
+    struct.pack_into("<I", header, 32, len(payload))
+    vst = '      <VST "VSTi: ReaSamplOmatic5000 (Cockos)" sampler 0 "" 1 ""\n'
+    block = lambda b: "        " + base64.b64encode(b).decode() + "\n"
+    suffix = '      >\n      <VST "VST: ReaEQ (Cockos)" other\n        YQ==\n      >\n'
+    file = tmp_path / "Studio.RPP"
+    file.write_text(vst + block(header) + block(payload) + block(b"trailer") + suffix)
+    make_portable(file, 1)
+    data = file.read_text()
+    assert data.endswith(suffix)
+    lines = data[len(vst) :].splitlines()
+    new = base64.b64decode(lines[1])
+    assert new == b"Samples/" + fn + tail
+    assert struct.unpack_from("<I", base64.b64decode(lines[0]), 32)[0] == len(new)
+    with pytest.raises(ValueError):
+        make_portable(file, 1)

@@ -23,10 +23,34 @@ def folder(version):
     return path
 
 
+def verified_host(snapshot):
+    # Incomplete jobs and projects built by older versions have no replay proof.
+    for report in sorted(
+        snapshot.glob("host-*/render.json"),
+        key=lambda p: p.stat().st_mtime_ns,
+        reverse=True,
+    ):
+        try:
+            qa = json.loads(report.read_text())
+        except (OSError, ValueError):
+            continue
+        if qa.get("reopen_pcm_identical") and all(
+            (report.parent / name).is_file()
+            for name in (
+                "Studio.RPP",
+                "master.wav",
+                "dry-Master.wav",
+                "reaper-mixed.wav",
+            )
+        ):
+            return report.parent
+    return None
+
+
 def inspect(version):
     path = folder(version)
     spec = json.loads((path / "session.json").read_text())
-    return {
+    result = {
         "version": version,
         "backend": "session-preview",
         "score": str(path / "Score.RPP"),
@@ -37,6 +61,15 @@ def inspect(version):
         "sections": spec["sections"],
         "keyboard_mapping": spec.get("keyboard_mapping", "session-v1"),
     }
+    host = verified_host(path)
+    if host:
+        result["reaper"] = {
+            "project": str(host / "Studio.RPP"),
+            "master": str(host / "master.wav"),
+            "mix": str(host / "reaper-mixed.wav"),
+            "dry": str(host / "dry-Master.wav"),
+        }
+    return result
 
 
 def region(version, first, last):
@@ -80,10 +113,11 @@ def undo(version):
 
 def export(version):
     """Bundle the MIDI score, separate sample recordings, attributions and preview."""
-    from zipfile import ZipFile, ZIP_STORED
+    from zipfile import ZIP_STORED, ZipFile
 
     path = folder(version)
-    archive = path / "soul-session.zip"
+    host = verified_host(path)
+    archive = host / "reaper-session.zip" if host else path / "soul-session.zip"
     if not archive.exists():
         spec = json.loads((path / "session.json").read_text())
         with TemporaryDirectory(dir=path) as temp:
@@ -96,10 +130,25 @@ def export(version):
                     "zones.tsv",
                     "mix.tsv",
                 ):
-                    bundle.write(path / name, name)
-                # Always include the shipped bridge, even for an earlier snapshot.
-                bundle.write(Path(__file__).with_name("build.lua"), "build.lua")
-                for sample in sorted((path / "Samples").iterdir()):
+                    source = (
+                        host
+                        if host and name in ("Score.RPP", "zones.tsv", "mix.tsv")
+                        else path
+                    )
+                    bundle.write(source / name, name)
+                if host:
+                    for name in (
+                        "Studio.RPP",
+                        "Dry.RPP",
+                        "dry-Master.wav",
+                        "reaper-mixed.wav",
+                        "master.wav",
+                        "render.json",
+                    ):
+                        bundle.write(host / name, name)
+                # The script and TSV parameter layout must come from the same export.
+                bundle.write((host or path) / "build.lua", "build.lua")
+                for sample in sorted(((host or path) / "Samples").iterdir()):
                     bundle.write(sample, "Samples/" + sample.name)
                 credits = [
                     "Session Engine preview. Score.RPP contains editable MIDI.",
@@ -107,6 +156,12 @@ def export(version):
                     "Host playback remains unverified. The WAV was rendered using Session Engine.",
                     "Sources were mapped, transposed, enveloped and mixed for this arrangement.",
                 ]
+                if host:
+                    credits[:3] = [
+                        "Open Studio.RPP in REAPER with Samples/ alongside it.",
+                        "REAPER rendered dry-Master.wav and reaper-mixed.wav. master.wav includes the Session Engine master chain.",
+                        "session-preview.wav is the Python preview of the arrangement.",
+                    ]
                 for info in spec["sources"].values():
                     credits.append(
                         f"{info['author']} | {info['license']} | https://github.com/{info['repo']}/tree/{info['revision']}"
@@ -125,6 +180,6 @@ def export(version):
     return {
         "version": version,
         "archive": str(archive),
-        "audio": str(path / "session-preview.wav"),
-        "backend": "session-preview",
+        "audio": str(host / "master.wav" if host else path / "session-preview.wav"),
+        "backend": "reaper" if host else "session-preview",
     }

@@ -1,6 +1,6 @@
 # 소울 디스코 DAW 제작 실험
 
-Session Engine V1의 116 BPM, D minor, 4/4 세션을 기준으로 삼았다. 14마디 뒤의 잔향을 포함해 30초다. 실제 렌더를 완료한 백엔드는 Session Engine이다. REAPER 호스트 검증은 설치 승인 대기 상태다.
+Session Engine V1의 116 BPM, D minor, 4/4 세션을 기준으로 삼았다. 14마디 뒤의 잔향을 포함해 30초다. Session Engine 미리듣기와 REAPER 7.86의 실제 MIDI 렌더를 각각 검증했다. 아래 첫 표는 Python 미리듣기에서 측정한 값이다. REAPER 결과는 뒤의 호스트 검증 표에 있다.
 
 ## 들을 파일
 
@@ -48,17 +48,35 @@ Session Engine V1의 116 BPM, D minor, 4/4 세션을 기준으로 삼았다. 14�
 
 실제 STDIO 세션에서 «9~12마디의 기타를 쉬게 하고 베이스를 변주해줘.»를 적용한 후 그 결과에 «키보드가 먹먹하니까 악기 소스를 점검하고 더 명료하게 믹싱해줘.»를 적용했다. 두 결과의 WAV가 데모에서 독립 생성한 파일과 바이트 단위로 일치했다. 기존 music.session_lab 조회도 통과했다. 지원되는 자연어는 위 두 명령 계열로 제한한다.
 
-## REAPER 호스트 상태
+## REAPER 호스트 검증
 
-이 Mac에서 Logic Pro와 GarageBand, Apple AUSampler와 DLSMusicDevice, 48 kHz 스테레오 내장 출력을 확인했다. 점검 당시 REAPER 설치본, 사용자·시스템 추가 AU/VST3 및 실행 중인 Logic/GarageBand/REAPER 프로세스는 발견되지 않았다. 기존 상용 앱의 구입 계정·사용권 보유 여부는 확인하지 않았다. 공식 macOS Universal 배포본은 Apple Silicon과 60일 평가 사용을 지원한다. 외부 플러그인이나 ReaPack은 이 경로에 필요하지 않다. [REAPER 다운로드](https://www.reaper.fm/download.php) · [공식 ReaScript API](https://www.reaper.fm/sdk/reascript/reascript.php)
+사용자가 마운트한 Cockos 서명 macOS Universal 앱을 프로젝트의 `.runtime/REAPER.app`에 복사하고 Apple Silicon 네이티브 버전 7.86에서 실행했다. 오프라인 렌더는 전용 프로필과 파일 잠금을 사용한다. 시스템 기본 장치를 선택하고 하드웨어 샘플레이트와 버퍼 크기는 요청하지 않는다. 실행 중인 다른 인스턴스와 프로젝트는 대상에 포함되지 않는다. [REAPER](https://www.reaper.fm/download.php) · [공식 ReaScript API](https://www.reaper.fm/sdk/reascript/reascript.php)
 
-`Score.RPP`는 8개 악기 레인, 마디별 MIDI 아이템 112개, 마디와 섹션 마커를 포함하는 **악보 단계**다. 별도 샘플 파일과 존 배치를 함께 내보낸다. REAPER 설치 및 사용 동의 후 아래 명령으로 전용 인스턴스의 내장 Lua에서 샘플러·룸·EQ·라우팅을 구성하고 별도 프로젝트로 저장하도록 구현했다. 입력은 고정된 작업 양식이며 외부 Lua를 실행하는 MCP 도구는 없다.
+| 동일한 30초 소울 세션 | 기준 | 기타·베이스 편곡 | 편곡 + 건반 수정 |
+|---|---:|---:|---:|
+| MIDI 아이템 / 노트 | 112 / 518 | 112 / 480 | 112 / 480 |
+| 샘플러 존 / 고유 녹음 | 97 / 63 | 96 / 63 | 97 / 66 |
+| Dry LUFS-I | −20.65 | −20.68 | −20.61 |
+| REAPER Mixed LUFS-I | −21.87 | −21.90 | −22.33 |
+| Master LUFS-I | −22.38 | −22.41 | −22.82 |
+| Master dBTP | −5.80 | −5.80 | −5.62 |
+
+- REAPER의 샘플러에서 기존 마디별 MIDI를 연주한다. 저장된 프로젝트에 드럼 버스, 룸 센드와 리턴 자동화, 드럼 및 베이스 ReaComp, 기타 하이패스와 건반 ReaEQ, ReaVerbate를 포함했다. 마스터 WAV에는 기존 Python EQ·컴프레서·리미터 체인을 추가 적용했다.
+- 첫 호스트 실행에서 기본 릴리스가 1 ms였고, 코드의 음 개수에 대한 레벨 보정이 누락돼 수정본의 Dry 합산 파형이 1.035까지 올라갔다. 악기별 18–210 ms 릴리스를 설정하고 MIDI 벨로시티를 보존하면서 기존 코드 보정을 각 샘플러 존의 게인에 반영했다.
+- 세 버전 모두 48 kHz 스테레오 24-bit PCM 1,440,000프레임이다. 각 버전을 별도 경로에서 다시 열어 재렌더한 Mixed PCM이 일치했다. 여덟 Dry 스템의 합과 Dry 마스터의 최대 샘플차는 0.000000358이다.
+- 9~12마디(16.55~24.83초)에서 기타 및 뮤트 스트로크는 무음이다. 베이스 스템은 122,177프레임에서 바뀌었다. 구간 밖의 세 스템과 구간 전체의 다른 다섯 스템은 샘플 단위로 동일하다. 다음 건반 수정은 Dry 건반 994,889프레임을 바꿨으며 다른 일곱 Dry 스템은 동일하다.
+- 건반 변경 후 전체 REAPER 믹스의 180–500 Hz 에너지 비율은 22.93%에서 19.27%로 줄었고 전체 음량도 0.43 LU 낮아졌다. 최종 마스터 좌우 상관도는 0.992다. 이 측정만으로 공간이 더 넓거나 기타가 더 자연스럽게 들린다는 결론은 내릴 수 없다. 기타 코드에는 원래의 단음 스트럼 근사를 쓴다. 청취 승인은 보류 중이다.
 
 ```sh
+.venv/bin/python -m engine.daw.host outputs/daw-session/01-reference
+.venv/bin/python -m engine.daw.host outputs/daw-session/02-region
 .venv/bin/python -m engine.daw.host outputs/daw-session/03-keys
+.venv/bin/python -m scripts.verify_daw
 ```
 
-호스트 실행 시 고유 작업 폴더에 Studio.RPP 및 REAPER Mixed, 후단 Python DSP Master, 호스트 상태와 렌더 검증 기록을 남기는 경로다. 이 장비에서 현재까지 실증한 범위는 호스트 부재 오류 반환까지다. 샘플러 로딩, 프로젝트 재열기·재생과 REAPER 렌더는 미검증이며 해당 결과 파일은 아직 없다. DAW 연동 화면과 일반 목적의 FX 편집은 후속 검증 대상이다.
+각 실행은 별도 작업 폴더에 Studio.RPP, Dry.RPP, dry-Master.wav, dry-트랙명.wav, reaper-mixed.wav, master.wav와 render.json을 보관한다. Studio.RPP와 Dry.RPP는 Samples 폴더를 기준으로 샘플을 찾는다. 프로젝트가 만든 RS5K 상태 중 확인된 형식만 상대 경로로 저장하고 이를 실제 재렌더로 검증한다.
+
+MCP `music.mix.render(version)`는 해당 버전을 REAPER로 렌더하고 재생 가능한 결과 경로를 반환한다. 검증된 렌더가 이미 있으면 재사용한다. `music.session.inspect`는 기존 미리듣기 정보와 별도로 reaper 필드를 제공한다. `music.session.export`는 검증된 버전에서 Studio.RPP, 녹음, Dry·Mixed·Master WAV와 출처를 포함하는 ZIP을 반환한다. 사용자가 두 수정 명령을 연속 실행할 때는 첫 명령의 버전 ID를 다음 명령에 전달한다.
 
 ## 음원 출처
 

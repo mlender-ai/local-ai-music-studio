@@ -1,6 +1,7 @@
 """Prepare immutable bar MIDI and sample assignments for REAPER's stock sampler."""
 
 import hashlib
+import math
 from collections import defaultdict
 from pathlib import Path
 
@@ -34,6 +35,9 @@ def assignments(spec):
                     e["track"], voice, p, e["velocity"], i + j
                 )
                 cents = gain = 0
+            # Match the Session Engine chord fader without changing the MIDI
+            # velocity or the recorded attack selected for this note.
+            gain -= 11 * math.log10(len(pitches))
             midi = PERCUSSION.get(voice, p)
             zone = (digest, source, e["track"], p - root + cents / 100, gain)
             bucket = zones[voice, midi]
@@ -77,8 +81,7 @@ def export(spec, folder):
         '<REAPER_PROJECT 0.1 "7" 0',
         f"TEMPO {bpm} 4 4",
         "SAMPLERATE 48000 1 0",
-        "RENDER_SRATE 48000",
-        "RENDER_CHANNELS 2",
+        "RENDER_FMT 0 2 48000",
     ]
     for bar, chord in enumerate(spec["chart"], 1):
         lines.append(f'MARKER {bar} {(bar - 1) * bar_seconds} "{bar} {chord}" 0 0 1')
@@ -132,6 +135,13 @@ def export(spec, folder):
         duration=spec["frames"] / spec["sample_rate"],
         keys_bell_db=mix["keys"]["chain"][0]["gain_db"],
     )
+    settings["guitar_highpass_hz"] = mix["guitar"]["highpass_hz"]
+    for group in ("drums", "bass"):
+        compressor = next(
+            fx for fx in mix[group]["chain"] if fx["type"] == "compressor"
+        )
+        for field in ("threshold_db", "ratio", "attack_ms", "release_ms"):
+            settings[f"{group}_{field}"] = compressor[field]
     for voice in LANES:
         group = (
             "drums"
