@@ -132,7 +132,11 @@ def _render(snapshot, binary, config):
     if stem_error > 2e-6:
         raise RuntimeError(f"Dry stems do not sum to the dry mix: {stem_error}")
     final = job / "master.wav"
-    write_audio(final, process(x, rate, spec["mixer"]["master"]), rate)
+    in_host = "host_master_gain_db" in spec["mixer"]
+    if in_host:
+        shutil.copyfile(path, final)
+    else:
+        write_audio(final, process(x, rate, spec["mixer"]["master"]), rate)
     mixed, master = (
         qa.levels(path, spec["sections"]),
         qa.levels(final, spec["sections"]),
@@ -148,7 +152,8 @@ def _render(snapshot, binary, config):
             "mix": mixed,
             "master": master,
             "master_chain": spec["mixer"]["master"],
-            "applied": mixed["pcm_sha256"] != master["pcm_sha256"],
+            "master_location": "Studio.RPP" if in_host else "offline DSP",
+            "applied": in_host or mixed["pcm_sha256"] != master["pcm_sha256"],
         },
     )
     return job

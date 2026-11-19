@@ -45,7 +45,7 @@ local function build()
     local t=r.GetTrack(proj,i)
     local _,name=r.GetTrackName(t)
     tracks[name]=t
-    assert(r.TrackFX_GetCount(t)==0 and r.CountTrackMediaItems(t)==14,"Unexpected score layout")
+    assert(r.TrackFX_GetCount(t)==0 and r.CountTrackMediaItems(t)==(cfg.bars or 14),"Unexpected score layout")
   end
   local zone_count=0
   for line in io.lines(dir.."zones.tsv") do
@@ -71,7 +71,8 @@ local function build()
     if tonumber(db) ~= 0 then displayparam(track,id,0,tonumber(db)) end
     zone_count=zone_count+1
   end
-  r.GetSetProjectNotes(proj,true,"Soul Disco | D minor | 4/4")
+  local info=io.open(dir.."project-notes.txt","r")
+  if info then r.GetSetProjectNotes(proj,true,info:read("*a")); info:close() end
   r.GetSetProjectInfo(proj,"RENDER_BOUNDSFLAG",0,true)
   r.GetSetProjectInfo(proj,"RENDER_STARTPOS",0,true)
   r.GetSetProjectInfo(proj,"RENDER_ENDPOS",cfg.duration,true)
@@ -125,7 +126,7 @@ local function build()
     r.SetMediaTrackInfo_Value(t,"D_PAN",cfg[name.."_pan"])
   end
   local eq=fx(tracks.keys,"ReaEQ")
-  assert(r.TrackFX_SetEQParam(tracks.keys,eq,2,0,0,360,false))
+  assert(r.TrackFX_SetEQParam(tracks.keys,eq,2,0,0,cfg.keys_bell_hz or 360,false))
   -- ReaEQ gain in linear amplitude
   assert(r.TrackFX_SetEQParam(tracks.keys,eq,2,0,1,10^(cfg.keys_bell_db/20),false))
   -- Write a short room-return fade at the end; preserve dry note attacks.
@@ -137,6 +138,35 @@ local function build()
     end
     r.Envelope_SortPoints(env)
   end
+  if cfg.master_trim_db then
+    local master=r.GetMasterTrack(proj)
+    local bell=fx(master,"ReaEQ")
+    assert(r.TrackFX_SetEQParam(master,bell,2,0,0,cfg.master_bell_hz,false))
+    assert(r.TrackFX_SetEQParam(master,bell,2,0,1,10^(cfg.master_bell_db/20),false))
+    local compressor=fx(master,"ReaComp")
+    for i,field in ipairs({"threshold_db","ratio","attack_ms","release_ms"}) do
+      displayparam(master,compressor,i-1,cfg["master_"..field])
+    end
+    r.SetMediaTrackInfo_Value(master,"D_VOL",10^(cfg.master_trim_db/20))
+  end
+  local audit=assert(io.open(dir.."fx-state.tsv","w"))
+  for i=-1,r.CountTracks(proj)-1 do
+    local track=i==-1 and r.GetMasterTrack(proj) or r.GetTrack(proj,i)
+    local _,name=r.GetTrackName(track)
+    audit:write(name,"\tpan\t",r.GetMediaTrackInfo_Value(track,"D_PAN"),"\n")
+    for j=0,r.TrackFX_GetCount(track)-1 do
+      local _,effect=r.TrackFX_GetFXName(track,j,"")
+      assert(r.TrackFX_GetEnabled(track,j) and not r.TrackFX_GetOffline(track,j),"Disabled FX: "..effect)
+      if not effect:find("RS5K",1,true) then
+        for k=0,r.TrackFX_GetNumParams(track,j)-1 do
+          local _,param=r.TrackFX_GetParamName(track,j,k,"")
+          local _,value=r.TrackFX_GetFormattedParamValue(track,j,k,"")
+          audit:write(name,"\t",effect,"\t",param,"\t",value,"\n")
+        end
+      end
+    end
+  end
+  audit:close()
   render_settings(proj,"reaper-mixed",0)
   r.Main_SaveProjectEx(proj,dir.."Studio.RPP",8)
   assert(exists(dir.."Studio.RPP"),"Save failed")

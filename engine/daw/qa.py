@@ -72,10 +72,14 @@ def sources(spec):
                 root, cents, _, path, digest = key_region(
                     pitch, e["velocity"], spec["keyboard_mapping"]
                 )
-                layer = next(
-                    s
-                    for s in ("ff", "pp", "mp", "f")
-                    if path.lower().endswith(s + ".flac")
+                layer = (
+                    path.rsplit("_", 1)[-1].split(".")[0]
+                    if spec["keyboard_mapping"] == "rhodes-sfz"
+                    else next(
+                        s
+                        for s in ("ff", "pp", "mp", "f")
+                        if path.lower().endswith(s + ".flac")
+                    )
                 )
             else:
                 _, root, layer, _, path, digest = select_sample(

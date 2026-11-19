@@ -2,15 +2,15 @@
 
 import hashlib
 import math
+import re
 from collections import defaultdict
 from pathlib import Path
 
 from engine.session.bank import CACHE, select_sample
-from engine.session.score import CHART, SECTIONS
+from engine.session.harmony import PPQ, chord, midi_ticks
 
 from .instruments import key_region
 
-PPQ = 960
 LANES = ("kick", "snare", "hat", "openhat", "bass", "guitar", "chuck", "keys")
 PERCUSSION = {"kick": 36, "snare": 38, "hat": 42, "openhat": 46, "chuck": 37}
 
@@ -44,9 +44,7 @@ def assignments(spec):
             channel = bucket.setdefault(zone, len(bucket))
             if channel >= 16:
                 raise ValueError("Too many sample zones for one MIDI note")
-            spread = {"guitar": 0.005, "keys": 0.002}.get(voice, 0)
-            start = round((e["step"] / 4 + j * spread * bpm / 60) * PPQ)
-            end = min(PPQ * 4, start + round(e["length"] * PPQ / 4))
+            start, end = midi_ticks(e, j, bpm)
             notes[voice, e["bar"]].append((start, end, channel, midi, e["velocity"]))
     return notes, zones
 
@@ -65,16 +63,27 @@ def midi_lines(notes):
 
 def export(spec, folder):
     bpm = spec["music_plan"]["rhythm"]["bpm"]
-    # Only the published 14-bar soul score has a verified export. Restrict all
-    # user-derived labels interpolated into a REAPER chunk to this chart.
+    bars = len(spec["chart"])
     if (
-        spec["chart"] != CHART
-        or not isinstance(bpm, (int, float))
+        not 1 <= bars <= 64
+        or not isinstance(bpm, (float, int))
         or not 45 <= bpm <= 240
+        or spec["music_plan"]["rhythm"]["meter"] != "4/4"
     ):
-        raise ValueError("Unsupported DAW chart or tempo")
-    if [(s["name"], s["first"], s["last"]) for s in spec["sections"]] != SECTIONS:
-        raise ValueError("Unsupported regions")
+        raise ValueError("Unsupported DAW chart, tempo or meter")
+    for symbol in spec["chart"]:
+        chord(symbol)
+    first = 1
+    for section in spec["sections"]:
+        if (
+            not re.fullmatch(r"[A-Za-z0-9 /-]{1,60}", section["name"])
+            or section["first"] != first
+            or not first <= section["last"] <= bars
+        ):
+            raise ValueError("Invalid DAW region")
+        first = section["last"] + 1
+    if first != bars + 1:
+        raise ValueError("Incomplete DAW regions")
     notes, zones = assignments(spec)
     bar_seconds = 240 / bpm
     lines = [
@@ -83,8 +92,8 @@ def export(spec, folder):
         "SAMPLERATE 48000 1 0",
         "RENDER_FMT 0 2 48000",
     ]
-    for bar, chord in enumerate(spec["chart"], 1):
-        lines.append(f'MARKER {bar} {(bar - 1) * bar_seconds} "{bar} {chord}" 0 0 1')
+    for bar, symbol in enumerate(spec["chart"], 1):
+        lines.append(f'MARKER {bar} {(bar - 1) * bar_seconds} "{bar} {symbol}" 0 0 1')
     for i, section in enumerate(spec["sections"], 100):
         lines.extend(
             [
@@ -132,6 +141,8 @@ def export(spec, folder):
     mix = spec["mixer"]
     settings = dict(
         mix["levels"],
+        bars=bars,
+        keys_bell_hz=mix["keys"]["chain"][0]["frequency"],
         duration=spec["frames"] / spec["sample_rate"],
         keys_bell_db=mix["keys"]["chain"][0]["gain_db"],
     )
@@ -142,6 +153,21 @@ def export(spec, folder):
         )
         for field in ("threshold_db", "ratio", "attack_ms", "release_ms"):
             settings[f"{group}_{field}"] = compressor[field]
+    if "host_master_gain_db" in mix:
+        equalizer, compressor = mix["master"]
+        if (
+            equalizer["type"] != "eq"
+            or equalizer["mode"] != "peaking"
+            or compressor["type"] != "compressor"
+        ):
+            raise ValueError("Unsupported REAPER master chain")
+        settings.update(
+            master_trim_db=mix["host_master_gain_db"],
+            master_bell_hz=equalizer["frequency"],
+            master_bell_db=equalizer["gain_db"],
+        )
+        for field in ("threshold_db", "ratio", "attack_ms", "release_ms"):
+            settings["master_" + field] = compressor[field]
     for voice in LANES:
         group = (
             "drums"
@@ -152,6 +178,9 @@ def export(spec, folder):
         )
         settings[voice + "_pan"] = mix[group]["pan"]
         settings[group + "_send"] = mix[group]["send"]
+    (folder / "project-notes.txt").write_text(
+        f"{spec['music_plan']['style']} | {spec['music_plan']['harmony']['key']} | 4/4"
+    )
     (folder / "mix.tsv").write_text("".join(f"{k}\t{v}\n" for k, v in settings.items()))
     (folder / "build.lua").write_bytes(
         Path(__file__).with_name("build.lua").read_bytes()

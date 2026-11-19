@@ -10,7 +10,7 @@
   },
   "harmony": {
     "key": "D minor",
-    "progression": "Dm9 G13 Cmaj9 A7",
+    "progression": "Dm9 A7 Dm9 G13 Cmaj9 A7 Dm9 G13 Cmaj9 A7 Dm9 A7 G13 Dm9",
     "voicing": "Airy upper voicings, tension resolves"
   },
   "sessions": [

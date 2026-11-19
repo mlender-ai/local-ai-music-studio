@@ -145,4 +145,9 @@ def mix(voices, sr, cfg):
         if p["send"]:
             y += p["send"] * process(y, sr, [cfg["room"]])
         wet[track] = y
-    return dry, wet, process(sum(wet.values()), sr, cfg["master"])
+    return (
+        dry,
+        wet,
+        process(sum(wet.values()), sr, cfg["master"])
+        * 10 ** (cfg.get("host_master_gain_db", 0) / 20),
+    )

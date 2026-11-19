@@ -19,7 +19,7 @@ include = ["engine*", "agent*", "app*"]
 [tool.setuptools.package-data]
 app = ["player/*.html"]
 "engine.session" = ["banks.json"]
-"engine.daw" = ["ep200.json", "cp80.json", "build.lua"]
+"engine.daw" = ["ep200.json", "cp80.json", "rhodes.json", "build.lua"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

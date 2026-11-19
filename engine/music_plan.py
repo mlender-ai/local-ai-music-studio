@@ -1,7 +1,7 @@
 """Director contract: musical intentions are soft conditioning, never stem controls."""
 
 from typing import Annotated, Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 Text = Annotated[str, Field(min_length=1, max_length=180)]
 
@@ -42,6 +42,7 @@ class Production(StrictPlan):
 class MusicPlan(StrictPlan):
     version: Literal["director-v1"] = "director-v1"
     source: Literal["codex", "user", "preset_fallback"] = "user"
+    session_arrangement: Literal["soul-disco", "jazz-hip-hop"] | None = None
     style: Text
     rhythm: Rhythm
     harmony: Harmony
@@ -50,6 +51,14 @@ class MusicPlan(StrictPlan):
     production: Production
     exclusions: list[Text] = Field(default_factory=list, max_length=8)
     vocal_mode: Literal["instrumental", "vocal", "unspecified"] = "unspecified"
+
+    @model_serializer(mode="wrap")
+    def serialize_plan(self, handler):
+        data = handler(self)
+        # Existing request keys include the serialized plan in their identity.
+        if self.session_arrangement is None:
+            data.pop("session_arrangement", None)
+        return data
 
     @model_validator(mode="after")
     def chronology(self):
