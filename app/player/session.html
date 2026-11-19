@@ -1,0 +1,43 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>소울 디스코 세션</title>
+<style>
+:root{font:16px system-ui;color:#21362e;background:#f6f7f2}body{margin:32px auto;max-width:860px;padding:0 20px}section{padding:20px;background:white;border:1px solid #cbd4cb;border-radius:10px;margin:18px 0}button,select,textarea,input{font:inherit}button,select{padding:8px;border-radius:6px;border:1px solid #acb7ad;background:white}button[aria-pressed=true]{background:#295640;color:white}label{display:inline-block;margin:6px}textarea{width:95%;height:60px}pre{white-space:pre-wrap;max-height:300px;overflow:auto}#seek{width:100%}#tracks div{margin:7px 0}#tracks b{display:inline-block;width:70px}h1,h2{margin:.2em 0 .5em}small{color:#485c51}
+</style><a href="/">스튜디오</a><h1>소울 디스코 세션</h1><p id="summary"></p>
+<section><h2>같은 위치에서 비교</h2><div id="choices"></div><p><button id="play" disabled>재생</button> <span id="status" role="status">준비 중</span></p><input id="seek" aria-label="재생 위치" type="range" min="0" max="30" step=".01" value="0"><small>비교곡은 전체 RMS 기준으로 음량을 맞춰 재생합니다.</small></section>
+<section><h2>개별 트랙</h2><div id="tracks"></div><p><label>트랙 믹스 <select id="mode"><option value="wet">Wet</option><option value="dry">Dry</option></select></label><button id="stems">트랙 믹스 듣기</button></p><small>Wet에는 악기별 공간계 리턴이 포함됩니다. 트랙 합산 재생은 마스터 처리 전 신호입니다.</small><details><summary>트랙별 DSP와 샘플 출처</summary><pre id="settings"></pre></details></section>
+<section><h2>청취 평가</h2><label>평가할 곡 <select id="rateMix"></select></label><div id="ratings"></div><label>메모<textarea id="memo"></textarea></label><small>이 브라우저에 저장됩니다. 1은 부족, 5는 매우 좋음입니다.</small></section>
+<script type="module">
+const el=id=>document.getElementById(id),names={A:'A · 기존 ACE-Step',B:'B · Dry',C:'C · Produced',D:'D · Variation'};
+const data=await fetch('/api/session-lab').then(r=>r.json());
+if(!data.audio){el('status').textContent=data.error;throw Error(data.error)}
+const ctx=new AudioContext(),cache=new Map(), controls={},scores=['드럼 타격감','베이스 연주감','기타·건반의 응답','인트로와 전개','구간별 변주','음색 자연스러움','저중역 명료도','고역 존재감','스테레오·깊이','전체 완성도'];
+let selected='C',playing=false,start=0,offset=0,revision=0,nodes=[];
+el('summary').textContent=data.bpm+' BPM · D minor · 14마디';
+function position(){return Math.max(0,Math.min(data.duration,playing?ctx.currentTime-start:offset))}
+function stop(){offset=position();revision++;playing=false;for(const n of nodes){n.stop();n.disconnect()}nodes=[];el('play').textContent='재생'}
+async function buffer(key){if(!cache.has(key)){cache.set(key,fetch(data.audio[key].url).then(r=>{if(!r.ok)throw Error('오디오 로드 실패');return r.arrayBuffer()}).then(x=>ctx.decodeAudioData(x)).catch(e=>{cache.delete(key);throw e}))}return cache.get(key)}
+function active(){const solo=data.tracks.some(t=>controls[t].solo.checked);return data.tracks.filter(t=>!controls[t].mute.checked&&(!solo||controls[t].solo.checked)).map(t=>el('mode').value+'-'+t)}
+async function launch(){
+ stop();const ticket=revision;await ctx.resume();const keys=selected==='stems'?active():[selected];
+ const bufs=await Promise.all(keys.map(buffer));if(ticket!==revision)return;
+ if(offset>=data.duration-.01)offset=0;
+ const when=ctx.currentTime+.015;start=when-offset;
+ for(const [i,buf] of bufs.entries()){const n=ctx.createBufferSource(),gain=ctx.createGain();n.buffer=buf;gain.gain.value=selected==='stems'?.85:Math.min(1,10**((target-data.audio[keys[i]].rms_dbfs)/20));n.connect(gain).connect(ctx.destination);n.start(when,Math.min(offset,buf.duration));nodes.push(n)}
+ playing=true;el('play').textContent='일시정지';
+}
+function listen(){launch().catch(e=>{stop();el('status').textContent=e.message})}
+function pick(k){stop();selected=k;for(const b of el('choices').children)b.setAttribute('aria-pressed',b.dataset.key===k);if(k!=='stems'){el('rateMix').value=k;loadScores()}listen()}
+const available=Object.keys(names).filter(k=>data.audio[k]),target=Math.min(...available.map(k=>data.audio[k].rms_dbfs));
+for(const k of available){const b=document.createElement('button');b.textContent=names[k];b.dataset.key=k;b.setAttribute('aria-pressed',k===selected);b.onclick=()=>pick(k);el('choices').append(b);el('rateMix').add(new Option(names[k],k))}
+el('play').disabled=false;el('play').onclick=()=>playing?stop():listen();el('seek').max=data.duration;
+el('seek').oninput=()=>{const resume=playing;stop();offset=+el('seek').value;if(resume)listen()};
+for(const t of data.tracks){const row=document.createElement('div');row.innerHTML='<b>'+t+'</b>';controls[t]={};for(const type of ['solo','mute']){const l=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.setAttribute('aria-label',t+' '+type);controls[t][type]=input;input.onchange=()=>pick('stems');l.append(input,type);row.append(l)}el('tracks').append(row)}
+el('mode').onchange=()=>pick('stems');el('stems').onclick=()=>pick('stems');
+el('settings').textContent=JSON.stringify({mixer:data.mixer,sources:data.sources},null,2);
+for(const s of scores){const l=document.createElement('label'),box=document.createElement('select');l.append(s,box);for(const v of ['','1','2','3','4','5'])box.add(new Option(v||'미검증',v));el('ratings').append(l);box.onchange=saveScores}
+function fields(){return [...el('ratings').querySelectorAll('select'),el('memo')]}
+function storageKey(){return 'session-lab:'+data.audio[el('rateMix').value].version_id}
+function saveScores(){localStorage.setItem(storageKey(),JSON.stringify(fields().map(f=>f.value)))}
+function loadScores(){const values=JSON.parse(localStorage.getItem(storageKey())||'[]');fields().forEach((f,i)=>f.value=values[i]||'')}
+el('rateMix').value='C';loadScores();el('rateMix').onchange=loadScores;el('memo').oninput=saveScores;
+function tick(){const p=position();el('seek').value=p;const section=data.sections.find(s=>s.start<=p&&p<s.end);el('status').textContent=p.toFixed(1)+'초 · '+(selected==='A'?'ACE-Step':section?.name||'잔향');if(playing&&p>=data.duration)stop();requestAnimationFrame(tick)}tick();
+</script></html>
