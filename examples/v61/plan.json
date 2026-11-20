@@ -1,0 +1,2260 @@
+{
+  "key": "D minor",
+  "scale": "D natural minor; C# on A7",
+  "bpm": 108,
+  "time_signature": "4/4",
+  "sections": [
+    "Opening",
+    "Groove A1",
+    "Groove A2",
+    "Development",
+    "Explosion A",
+    "Explosion B",
+    "Mechanical break",
+    "Guitar solo A",
+    "Guitar solo B",
+    "Bass and drum bridge",
+    "Final expansion A",
+    "Final expansion B",
+    "Resolution"
+  ],
+  "bars": [
+    {
+      "bar": 1,
+      "section": "Opening",
+      "native_section": "intro",
+      "chord_symbols": "D5(add9)",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          6
+        ],
+        [
+          8,
+          64,
+          2
+        ],
+        [
+          12,
+          57,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "bass",
+        "rhythm guitar",
+        "scratch",
+        "pipe"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "pickup"
+      },
+      "drum_pattern_type": "pickup",
+      "rhythmic_accents": [
+        0,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [
+        "scratch",
+        "pipe"
+      ],
+      "transitions": null
+    },
+    {
+      "bar": 2,
+      "section": "Opening",
+      "native_section": "intro",
+      "chord_symbols": "A7sus4>A7",
+      "harmonic_functions": "V7",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          74,
+          6
+        ],
+        [
+          8,
+          69,
+          2
+        ],
+        [
+          12,
+          73,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "pickup"
+      },
+      "drum_pattern_type": "pickup",
+      "rhythmic_accents": [
+        0,
+        8,
+        14
+      ],
+      "fills": "snare pickup",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 3,
+      "section": "Groove A1",
+      "native_section": "verse",
+      "chord_symbols": "Dm",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          53,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 4,
+      "section": "Groove A1",
+      "native_section": "verse",
+      "chord_symbols": "Bb",
+      "harmonic_functions": "bVI",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          46,
+          3
+        ],
+        [
+          6,
+          53,
+          2
+        ],
+        [
+          10,
+          50,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 5,
+      "section": "Groove A1",
+      "native_section": "verse",
+      "chord_symbols": "C",
+      "harmonic_functions": "bVII",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          48,
+          3
+        ],
+        [
+          6,
+          55,
+          2
+        ],
+        [
+          10,
+          52,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 6,
+      "section": "Groove A1",
+      "native_section": "verse",
+      "chord_symbols": "A7",
+      "harmonic_functions": "V7",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          69,
+          4
+        ],
+        [
+          5,
+          67,
+          2
+        ],
+        [
+          8,
+          76,
+          3
+        ],
+        [
+          12,
+          73,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 7,
+      "section": "Groove A2",
+      "native_section": "verse",
+      "chord_symbols": "Dm",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          53,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 8,
+      "section": "Groove A2",
+      "native_section": "verse",
+      "chord_symbols": "F",
+      "harmonic_functions": "bIII",
+      "bass_root": 41,
+      "lead_motif": [
+        [
+          0,
+          53,
+          3
+        ],
+        [
+          6,
+          60,
+          2
+        ],
+        [
+          10,
+          57,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 9,
+      "section": "Groove A2",
+      "native_section": "verse",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          55,
+          3
+        ],
+        [
+          6,
+          62,
+          2
+        ],
+        [
+          10,
+          58,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 10,
+      "section": "Groove A2",
+      "native_section": "verse",
+      "chord_symbols": "A7",
+      "harmonic_functions": "V7",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          69,
+          4
+        ],
+        [
+          5,
+          67,
+          2
+        ],
+        [
+          8,
+          76,
+          3
+        ],
+        [
+          12,
+          73,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": "snare drag",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 11,
+      "section": "Development",
+      "native_section": "pre-chorus",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          55,
+          3
+        ],
+        [
+          6,
+          62,
+          2
+        ],
+        [
+          10,
+          58,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 12,
+      "section": "Development",
+      "native_section": "pre-chorus",
+      "chord_symbols": "Bb",
+      "harmonic_functions": "bVI",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          46,
+          3
+        ],
+        [
+          6,
+          53,
+          2
+        ],
+        [
+          10,
+          50,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 13,
+      "section": "Development",
+      "native_section": "pre-chorus",
+      "chord_symbols": "C",
+      "harmonic_functions": "bVII",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          48,
+          3
+        ],
+        [
+          6,
+          55,
+          2
+        ],
+        [
+          10,
+          52,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 14,
+      "section": "Development",
+      "native_section": "pre-chorus",
+      "chord_symbols": "A7(b9)",
+      "harmonic_functions": "V7(b9)",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          69,
+          4
+        ],
+        [
+          5,
+          67,
+          2
+        ],
+        [
+          8,
+          70,
+          3
+        ],
+        [
+          12,
+          73,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "closed groove",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": "choked snare",
+      "fx_cues": [
+        "stutter"
+      ],
+      "transitions": "stop before explosion"
+    },
+    {
+      "bar": 15,
+      "section": "Explosion A",
+      "native_section": "chorus",
+      "chord_symbols": "D5",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 16,
+      "section": "Explosion A",
+      "native_section": "chorus",
+      "chord_symbols": "Bb5",
+      "harmonic_functions": "bVI",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          46,
+          3
+        ],
+        [
+          6,
+          53,
+          2
+        ],
+        [
+          10,
+          58,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 17,
+      "section": "Explosion A",
+      "native_section": "chorus",
+      "chord_symbols": "C5",
+      "harmonic_functions": "bVII",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          48,
+          3
+        ],
+        [
+          6,
+          55,
+          2
+        ],
+        [
+          10,
+          60,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 18,
+      "section": "Explosion A",
+      "native_section": "chorus",
+      "chord_symbols": "A5",
+      "harmonic_functions": "V",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          45,
+          3
+        ],
+        [
+          6,
+          52,
+          2
+        ],
+        [
+          10,
+          57,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": "rack tom answer",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 19,
+      "section": "Explosion B",
+      "native_section": "chorus",
+      "chord_symbols": "D5",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 20,
+      "section": "Explosion B",
+      "native_section": "chorus",
+      "chord_symbols": "F5",
+      "harmonic_functions": "bIII",
+      "bass_root": 41,
+      "lead_motif": [
+        [
+          0,
+          53,
+          3
+        ],
+        [
+          6,
+          60,
+          2
+        ],
+        [
+          10,
+          65,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 21,
+      "section": "Explosion B",
+      "native_section": "chorus",
+      "chord_symbols": "G5",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          55,
+          3
+        ],
+        [
+          6,
+          62,
+          2
+        ],
+        [
+          10,
+          67,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 22,
+      "section": "Explosion B",
+      "native_section": "chorus",
+      "chord_symbols": "A5",
+      "harmonic_functions": "V",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          45,
+          3
+        ],
+        [
+          6,
+          52,
+          2
+        ],
+        [
+          10,
+          57,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": "descending toms",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 23,
+      "section": "Mechanical break",
+      "native_section": "interlude",
+      "chord_symbols": "Dped",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "scratch"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [
+        0,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [
+        "scratch"
+      ],
+      "transitions": null
+    },
+    {
+      "bar": 24,
+      "section": "Mechanical break",
+      "native_section": "interlude",
+      "chord_symbols": "Eb5",
+      "harmonic_functions": "bII accent",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          12,
+          51,
+          2
+        ],
+        [
+          14,
+          58,
+          1
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "pipe"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [
+        12
+      ],
+      "fills": null,
+      "fx_cues": [
+        "pipe"
+      ],
+      "transitions": null
+    },
+    {
+      "bar": 25,
+      "section": "Mechanical break",
+      "native_section": "interlude",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          55,
+          3
+        ],
+        [
+          6,
+          62,
+          2
+        ],
+        [
+          10,
+          58,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [
+        2,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 26,
+      "section": "Mechanical break",
+      "native_section": "interlude",
+      "chord_symbols": "A7",
+      "harmonic_functions": "V7",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          69,
+          4
+        ],
+        [
+          5,
+          67,
+          2
+        ],
+        [
+          8,
+          76,
+          3
+        ],
+        [
+          12,
+          73,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar",
+        "scratch"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [
+        0,
+        8,
+        13
+      ],
+      "fills": "snare flam",
+      "fx_cues": [
+        "scratch"
+      ],
+      "transitions": null
+    },
+    {
+      "bar": 27,
+      "section": "Guitar solo A",
+      "native_section": "instrumental",
+      "chord_symbols": "Dm",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          74,
+          3
+        ],
+        [
+          3,
+          77,
+          1
+        ],
+        [
+          4,
+          81,
+          8
+        ],
+        [
+          13,
+          77,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 28,
+      "section": "Guitar solo A",
+      "native_section": "instrumental",
+      "chord_symbols": "Bb",
+      "harmonic_functions": "bVI",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          77,
+          4
+        ],
+        [
+          6,
+          74,
+          2
+        ],
+        [
+          8,
+          70,
+          6
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 29,
+      "section": "Guitar solo A",
+      "native_section": "instrumental",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          79,
+          6
+        ],
+        [
+          7,
+          77,
+          1
+        ],
+        [
+          8,
+          74,
+          4
+        ],
+        [
+          13,
+          70,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 30,
+      "section": "Guitar solo A",
+      "native_section": "instrumental",
+      "chord_symbols": "A7",
+      "harmonic_functions": "V7",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          76,
+          3
+        ],
+        [
+          4,
+          79,
+          2
+        ],
+        [
+          7,
+          82,
+          1
+        ],
+        [
+          8,
+          81,
+          4
+        ],
+        [
+          13,
+          73,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": "snare to tom",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 31,
+      "section": "Guitar solo B",
+      "native_section": "instrumental",
+      "chord_symbols": "F",
+      "harmonic_functions": "bIII",
+      "bass_root": 41,
+      "lead_motif": [
+        [
+          0,
+          77,
+          2
+        ],
+        [
+          2,
+          81,
+          2
+        ],
+        [
+          4,
+          84,
+          7
+        ],
+        [
+          13,
+          81,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 32,
+      "section": "Guitar solo B",
+      "native_section": "instrumental",
+      "chord_symbols": "C",
+      "harmonic_functions": "bVII",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          79,
+          2
+        ],
+        [
+          2,
+          84,
+          2
+        ],
+        [
+          4,
+          88,
+          4
+        ],
+        [
+          9,
+          86,
+          1
+        ],
+        [
+          10,
+          84,
+          1
+        ],
+        [
+          11,
+          83,
+          1
+        ],
+        [
+          12,
+          79,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 33,
+      "section": "Guitar solo B",
+      "native_section": "instrumental",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          86,
+          6
+        ],
+        [
+          7,
+          82,
+          1
+        ],
+        [
+          8,
+          79,
+          1
+        ],
+        [
+          9,
+          82,
+          1
+        ],
+        [
+          10,
+          86,
+          2
+        ],
+        [
+          12,
+          89,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10,
+        14
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 34,
+      "section": "Guitar solo B",
+      "native_section": "instrumental",
+      "chord_symbols": "A7(b9)",
+      "harmonic_functions": "V7(b9)",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          88,
+          3
+        ],
+        [
+          3,
+          86,
+          1
+        ],
+        [
+          4,
+          82,
+          3
+        ],
+        [
+          8,
+          81,
+          2
+        ],
+        [
+          10,
+          85,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "lead and supporting stabs",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        3,
+        8,
+        11
+      ],
+      "fills": "toms then choke",
+      "fx_cues": [],
+      "transitions": "full stop before duo"
+    },
+    {
+      "bar": 35,
+      "section": "Bass and drum bridge",
+      "native_section": "bridge",
+      "chord_symbols": "D",
+      "harmonic_functions": "bass descent",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          38,
+          4
+        ],
+        [
+          6,
+          50,
+          2
+        ],
+        [
+          9,
+          45,
+          2
+        ],
+        [
+          13,
+          38,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass"
+      ],
+      "instrument_roles": {
+        "guitar": "rest",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 36,
+      "section": "Bass and drum bridge",
+      "native_section": "bridge",
+      "chord_symbols": "C",
+      "harmonic_functions": "bass descent",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          36,
+          4
+        ],
+        [
+          6,
+          48,
+          2
+        ],
+        [
+          9,
+          43,
+          2
+        ],
+        [
+          13,
+          36,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass"
+      ],
+      "instrument_roles": {
+        "guitar": "rest",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 37,
+      "section": "Bass and drum bridge",
+      "native_section": "bridge",
+      "chord_symbols": "Bb",
+      "harmonic_functions": "bass descent",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          34,
+          4
+        ],
+        [
+          6,
+          46,
+          2
+        ],
+        [
+          9,
+          41,
+          2
+        ],
+        [
+          13,
+          34,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass"
+      ],
+      "instrument_roles": {
+        "guitar": "rest",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [],
+      "fills": "ghost and tom",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 38,
+      "section": "Bass and drum bridge",
+      "native_section": "bridge",
+      "chord_symbols": "A",
+      "harmonic_functions": "bass descent",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          33,
+          4
+        ],
+        [
+          6,
+          45,
+          2
+        ],
+        [
+          9,
+          40,
+          2
+        ],
+        [
+          13,
+          37,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass"
+      ],
+      "instrument_roles": {
+        "guitar": "rest",
+        "bass": "root, rests and connecting notes",
+        "drums": "half-time"
+      },
+      "drum_pattern_type": "half-time",
+      "rhythmic_accents": [],
+      "fills": "full tom run",
+      "fx_cues": [],
+      "transitions": "fill into re-entry"
+    },
+    {
+      "bar": 39,
+      "section": "Final expansion A",
+      "native_section": "chorus",
+      "chord_symbols": "D5",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 40,
+      "section": "Final expansion A",
+      "native_section": "chorus",
+      "chord_symbols": "Bb5",
+      "harmonic_functions": "bVI",
+      "bass_root": 34,
+      "lead_motif": [
+        [
+          0,
+          46,
+          3
+        ],
+        [
+          6,
+          53,
+          2
+        ],
+        [
+          10,
+          58,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 41,
+      "section": "Final expansion A",
+      "native_section": "chorus",
+      "chord_symbols": "C5",
+      "harmonic_functions": "bVII",
+      "bass_root": 36,
+      "lead_motif": [
+        [
+          0,
+          48,
+          3
+        ],
+        [
+          6,
+          55,
+          2
+        ],
+        [
+          10,
+          60,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 42,
+      "section": "Final expansion A",
+      "native_section": "chorus",
+      "chord_symbols": "A5",
+      "harmonic_functions": "V",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          45,
+          3
+        ],
+        [
+          6,
+          52,
+          2
+        ],
+        [
+          10,
+          57,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": "kick pickup",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 43,
+      "section": "Final expansion B",
+      "native_section": "chorus",
+      "chord_symbols": "Dm",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 44,
+      "section": "Final expansion B",
+      "native_section": "chorus",
+      "chord_symbols": "Gm",
+      "harmonic_functions": "iv",
+      "bass_root": 43,
+      "lead_motif": [
+        [
+          0,
+          55,
+          3
+        ],
+        [
+          6,
+          62,
+          2
+        ],
+        [
+          10,
+          67,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 45,
+      "section": "Final expansion B",
+      "native_section": "chorus",
+      "chord_symbols": "A7(b9)",
+      "harmonic_functions": "V7(b9)",
+      "bass_root": 33,
+      "lead_motif": [
+        [
+          0,
+          69,
+          4
+        ],
+        [
+          5,
+          67,
+          2
+        ],
+        [
+          8,
+          70,
+          3
+        ],
+        [
+          12,
+          73,
+          2
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        8,
+        11
+      ],
+      "fills": "dominant snare roll",
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 46,
+      "section": "Final expansion B",
+      "native_section": "chorus",
+      "chord_symbols": "Dm",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          50,
+          3
+        ],
+        [
+          6,
+          57,
+          2
+        ],
+        [
+          10,
+          62,
+          3
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "open fifths",
+        "bass": "root, rests and connecting notes",
+        "drums": "full-kit backbeat"
+      },
+      "drum_pattern_type": "open kit",
+      "rhythmic_accents": [
+        0,
+        6,
+        10
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 47,
+      "section": "Resolution",
+      "native_section": "outro",
+      "chord_symbols": "Dm(add9)",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          62,
+          6
+        ],
+        [
+          7,
+          65,
+          2
+        ],
+        [
+          10,
+          64,
+          4
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar",
+        "lead guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "ring out"
+      },
+      "drum_pattern_type": "ring out",
+      "rhythmic_accents": [
+        0,
+        8
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": null
+    },
+    {
+      "bar": 48,
+      "section": "Resolution",
+      "native_section": "outro",
+      "chord_symbols": "D5",
+      "harmonic_functions": "i",
+      "bass_root": 38,
+      "lead_motif": [
+        [
+          0,
+          62,
+          12
+        ]
+      ],
+      "active_instruments": [
+        "drums",
+        "bass",
+        "rhythm guitar"
+      ],
+      "instrument_roles": {
+        "guitar": "choked riff",
+        "bass": "root, rests and connecting notes",
+        "drums": "ring out"
+      },
+      "drum_pattern_type": "ring out",
+      "rhythmic_accents": [
+        0
+      ],
+      "fills": null,
+      "fx_cues": [],
+      "transitions": "D5 ring"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "sha256": {
+    "iron-return-master.mp3": "97b55ab5b99c4bd699bec2f5c32cd8000c459102c8abb3eebd763522ebba7319",
+    "iron-return-master.wav": "381beeeaf28b5b73270bbb1b79f3f3369164f0c0966dd5f8bac1340a126787bb",
+    "iron-return-original.wav": "8403b4f5de49b41e85974e7a538ca3dde6557ce2ad722ee7fbdd3532c9771aeb",
+    "iron-return-reaper.zip": "a436d2b76eb89ae921d9ba5f120934a9d01be667134251ed6257e2260e8b56ad"
+  },
+  "studio_rpp_reopen_pcm_identical": true,
+  "distribution_rpp_reopen_pcm_identical": true,
+  "reaper_version": "7.86/macOS-arm64",
+  "regression_tests_passed": 65
+}

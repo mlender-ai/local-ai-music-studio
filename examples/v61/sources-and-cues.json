@@ -1,0 +1,102 @@
+{
+  "sample_banks": {
+    "drums": {
+      "author": "Austin McMahon / Virtuosity Drums",
+      "license": "CC0-1.0",
+      "repo": "sfzinstruments/virtuosity_drums",
+      "revision": "9f04cf9a734527edfbb0a4eee1f674e45bbf71bc"
+    },
+    "bass": {
+      "author": "D. Smolken / Karoryfer",
+      "license": "CC0-1.0",
+      "repo": "sfzinstruments/karoryfer.fashionbass",
+      "revision": "0703973b300a6bacb837602be9b588ab64732a72"
+    },
+    "guitar": {
+      "author": "D. Smolken / Karoryfer",
+      "license": "CC0-1.0",
+      "repo": "sfzinstruments/karoryfer.emilyguitar",
+      "revision": "b4920dc662fd9cad6dcaccdeecffdd91c8725d8c"
+    }
+  },
+  "pipe": {
+    "file": "pipe.mp3",
+    "title": "Metal Pipe Hit 1_3",
+    "author": "Joao_Janz",
+    "source": "https://freesound.org/people/Joao_Janz/sounds/478675/",
+    "preview": "https://cdn.freesound.org/previews/478/478675_9961300-hq.mp3",
+    "license": "CC0-1.0",
+    "listed_original_rate": 96000,
+    "listed_original_seconds": 2.974,
+    "sha256": "c1d066da8f20acd9ab57a70951d1b00bf6b538741af701560caee98c26da3030"
+  },
+  "scratch": "Variable signed platter velocity and crossfader on a new performance of sample-library guitar pitch A3.",
+  "cues": [
+    {
+      "lane": "scratch",
+      "bar": 1,
+      "step": 5,
+      "seconds": 0.6944375,
+      "length": 0.6388958333333333,
+      "art": "platter + crossfader"
+    },
+    {
+      "lane": "scratch",
+      "bar": 23,
+      "step": 3,
+      "seconds": 49.3055625,
+      "length": 0.8333333333333334,
+      "art": "platter + crossfader"
+    },
+    {
+      "lane": "scratch",
+      "bar": 26,
+      "step": 6,
+      "seconds": 56.388895833333336,
+      "length": 0.5277708333333333,
+      "art": "platter + crossfader"
+    },
+    {
+      "lane": "metal",
+      "bar": 1,
+      "step": 12,
+      "seconds": 1.6666666666666667,
+      "length": 0.37,
+      "art": "CC0 pipe hit"
+    },
+    {
+      "lane": "metal",
+      "bar": 24,
+      "step": 12,
+      "seconds": 52.777770833333335,
+      "length": 0.37,
+      "art": "CC0 pipe hit"
+    }
+  ],
+  "impulses": {
+    "Marshall JCM800 - Marshall Stock 70": "48dcc27ee229502ec34ef863b8a867bb180156efccff2e2819260475a6f990c0",
+    "Marshall JCM800 - Matchless Chieftain": "273250faa8df43799e9ba549544b8c4005bea371e4d6df537f1f9d97076a8636",
+    "Marshall JTM45 - Matchless Chieftain": "f48c5bb9d4515a0de774181e043856e444d29adbb46ffb454480b2824e43bf42"
+  },
+  "event_counts": {
+    "left-di": 321,
+    "right-di": 319,
+    "bass": 199,
+    "kit": 611,
+    "lead-di": 56,
+    "scratch": 3,
+    "metal": 2
+  },
+  "v6_sample_muted_dbfs": {
+    "v6_lead": {
+      "guitar": -24.9497520808529,
+      "drums": -90.81206075976509,
+      "bass": -93.89314972074678
+    },
+    "v6_final": {
+      "guitar": -19.557192529462984,
+      "drums": -16.912825484059514,
+      "bass": -17.403628818350537
+    }
+  }
+}

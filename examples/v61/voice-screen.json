@@ -1,0 +1,105 @@
+{
+  "estimates": {
+    "htdemucs": {
+      "relative_rms_db": -43.40296446084814,
+      "max_2s_rms_dbfs": -43.607676987175665
+    },
+    "htdemucs_6s": {
+      "relative_rms_db": -33.252856672580236,
+      "max_2s_rms_dbfs": -33.4799364871311
+    }
+  },
+  "no_speech_per_6s": [
+    {
+      "seconds": 0.0,
+      "no_speech": 0.2932
+    },
+    {
+      "seconds": 6.0,
+      "no_speech": 0.8566
+    },
+    {
+      "seconds": 12.0,
+      "no_speech": 0.9003
+    },
+    {
+      "seconds": 18.0,
+      "no_speech": 0.8737
+    },
+    {
+      "seconds": 24.0,
+      "no_speech": 0.8847
+    },
+    {
+      "seconds": 30.0,
+      "no_speech": 0.8984
+    },
+    {
+      "seconds": 36.0,
+      "no_speech": 0.9006
+    },
+    {
+      "seconds": 42.0,
+      "no_speech": 0.9115
+    },
+    {
+      "seconds": 48.0,
+      "no_speech": 0.908
+    },
+    {
+      "seconds": 54.0,
+      "no_speech": 0.9041
+    },
+    {
+      "seconds": 60.0,
+      "no_speech": 0.9036
+    },
+    {
+      "seconds": 66.0,
+      "no_speech": 0.9007
+    },
+    {
+      "seconds": 72.0,
+      "no_speech": 0.9034
+    },
+    {
+      "seconds": 78.0,
+      "no_speech": 0.8283
+    },
+    {
+      "seconds": 84.0,
+      "no_speech": 0.9139
+    },
+    {
+      "seconds": 90.0,
+      "no_speech": 0.878
+    },
+    {
+      "seconds": 96.0,
+      "no_speech": 0.8507
+    },
+    {
+      "seconds": 102.0,
+      "no_speech": 0.8985
+    },
+    {
+      "seconds": 108.0,
+      "no_speech": 0.9427
+    }
+  ],
+  "first_six_seconds_transcriptions": {
+    "original": [
+      "이 영상은 제작되었습니다."
+    ],
+    "vocals": [
+      "시청해주셔서 감사합니다."
+    ]
+  },
+  "rejected_seed81": {
+    "reason": "Matching promise lyric fragments in stereo and estimated voice. Excluded from every deliverable.",
+    "relative_vocal_rms_db_four_six": [
+      -13.34,
+      -14.59
+    ]
+  }
+}
