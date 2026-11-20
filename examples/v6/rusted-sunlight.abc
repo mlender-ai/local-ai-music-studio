@@ -1,0 +1,68 @@
+X:1
+T:Rusted Sunlight
+M:4/4
+L:1/16
+Q:1/4=104
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:A
+% intro
+V: Vocal
+"Aadd9"z16|"Dmaj7"z16|"A/E"z16|"Fmaj7"z16|
+V: Ins
+z2 E3 B c4 B2 A4|F4 E2 z2 A6 z2|z2 E3 B c4 e2 B4|=F4 =c4 A6 z2|
+% verse
+V: Vocal
+"A"z16|"Bm7"z16|"Dmaj7"z16|"A/E"z16|
+V: Ins
+E3 z B2 c4 B2 A4|z4 F3 A B4 z4|F3 A d2 c4 A2 z4|E2 z2 B4 e4 z4|
+V: Vocal
+"A"z16|"Bm7"z16|"Fmaj7"z16|"Esus4"z16|
+V: Ins
+E3 z B2 c4 e2 A4|z4 B3 c d4 z4|=F3 A =c2 e4 =c2 z4|B6 A2 z4 E4|
+% pre-chorus
+V: Vocal
+"F#m"z16|"Dmaj7"z16|"A"z16|"E"z16|
+V: Ins
+c3 e f4 z4 c4|d4 z2 A2 F6 z2|e2 c2 z2 B2 A6 z2|B4 G4 z4 B4|
+V: Vocal
+"Fmaj7"z16|"Esus4"z16|
+V: Ins
+=c3 e2 a3 e4 =c4|B8 A4 B2 z2|
+% chorus
+V: Vocal
+"Aadd9"z16|"D"z16|"F#m"z16|"E"z16|
+V: Ins
+e3 b c'4 b4 a4|f4 e4 a6 z2|c'6 a2 f4 e4|b4 g2 e2 z8|
+V: Vocal
+"F"z16|"E"z16|
+V: Ins
+=c'4 a4 =f6 e2|b6 g2 e4 z4|
+% bridge
+V: Vocal
+"A5"z16|"A5"z16|"Fmaj7"z16|"Esus4"z16|
+V: Ins
+A,3 z13|z10 E2 A2 z2|=F3 z5 =c2 z6|B4 z8 B2 e2|
+% instrumental
+V: Vocal
+"A"z16|"Dmaj7"z16|"F#m"z16|"E"z16|
+V: Ins
+z2 e3 b c'4 b2 a4|f6 e2 z4 A4|c'8- c'4 a2 f2|g3 b e'6 z6|
+V: Vocal
+"D"z16|"A/C#"z16|"F"z16|"E"z16|
+V: Ins
+d'6 c'2 a4 z4|e2 a b c'2 e'2 c'2 b2 a4|=f'8 e'2 =c'4 z2|b6 g2 e4 z4|
+% chorus
+V: Vocal
+"A"z16|"D"z16|"F#m"z16|"E"z16|
+V: Ins
+e3 b c'4 e'2 b2 a4|f4 e4 a6 z2|c'6 a2 f2 a2 e4|b4 g2 e2 z6 B2|
+V: Vocal
+"Fmaj7"z16|"Esus4"z16|
+V: Ins
+=c'4 a4 e4 =c4|B8 A4 E2 z2|
+% outro
+V: Vocal
+"Dmaj7"z16|"Aadd9"z16|
+V: Ins
+F4 E2 B2 c4 B2 z2|A12 z4|

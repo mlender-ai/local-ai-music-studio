@@ -1,0 +1,31 @@
+{
+  "reaper": "7.86/macOS-arm64",
+  "installed_fx_count": 221,
+  "matches_in_host": {
+    "ValhallaSupermassive": [],
+    "Dragonfly": [],
+    "ValhallaFreqEcho": [],
+    "Kilohearts": [],
+    "Airwindows": [],
+    "Surge XT": [],
+    "ReaSynth": [
+      "VSTi: ReaSynth (Cockos)"
+    ],
+    "ReaVerbate": [
+      "VST: ReaVerbate (Cockos)"
+    ],
+    "ReaDelay": [
+      "VST: ReaDelay (Cockos)"
+    ],
+    "ReaEQ": [
+      "VST: ReaEQ (Cockos)"
+    ],
+    "chorus": [
+      "JS: Chorus (Stereo)",
+      "JS: Ozzifier Chorus",
+      "JS: Chorus (Improved Shaping)",
+      "JS: Chorus",
+      "JS: Delay w/Chorus"
+    ]
+  }
+}

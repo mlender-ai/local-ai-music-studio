@@ -1,0 +1,862 @@
+{
+  "sections": [
+    {
+      "name": "Opening",
+      "first_beat": 0,
+      "limit_beat": 16,
+      "start": 0,
+      "end": 9.790844512941714
+    },
+    {
+      "name": "Groove A",
+      "first_beat": 16,
+      "limit_beat": 32,
+      "start": 9.790844512941714,
+      "end": 19.419667014008905
+    },
+    {
+      "name": "Development",
+      "first_beat": 32,
+      "limit_beat": 48,
+      "start": 19.419667014008905,
+      "end": 29.06950443780994
+    },
+    {
+      "name": "First explosion",
+      "first_beat": 48,
+      "limit_beat": 92,
+      "start": 29.06950443780994,
+      "end": 55.486034760927616
+    },
+    {
+      "name": "Mechanical break",
+      "first_beat": 92,
+      "limit_beat": 104,
+      "start": 55.486034760927616,
+      "end": 62.687688306718655
+    },
+    {
+      "name": "Lead guitar",
+      "first_beat": 104,
+      "limit_beat": 128,
+      "start": 62.687688306718655,
+      "end": 77.07192649440013
+    },
+    {
+      "name": "Final expansion",
+      "first_beat": 128,
+      "limit_beat": 168,
+      "start": 77.07192649440013,
+      "end": 101.03428646999332
+    },
+    {
+      "name": "Resolution",
+      "first_beat": 168,
+      "limit_beat": 176,
+      "start": 101.03428646999332,
+      "end": 105.79866666666666
+    }
+  ],
+  "events": [
+    {
+      "source": "pipe",
+      "beat": 0.5,
+      "seconds": 0.5492015859337067,
+      "duration": 0.43,
+      "db": -13,
+      "pan": -0.42,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 8.5,
+      "seconds": 5.34968163393849,
+      "duration": 0.43,
+      "db": -13,
+      "pan": -0.42,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 16.75,
+      "seconds": 10.23721924564643,
+      "duration": 0.43,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 18.5,
+      "seconds": 11.280894701772414,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 21.5,
+      "seconds": 13.078828928683345,
+      "duration": 0.43,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 24.75,
+      "seconds": 15.038099574571856,
+      "duration": 0.43,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 27.25,
+      "seconds": 16.54891183417962,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 30.5,
+      "seconds": 18.513407150313526,
+      "duration": 0.43,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 31.5,
+      "seconds": 19.11761418399391,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": 0.3,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 32.75,
+      "seconds": 19.87256585459502,
+      "duration": 0.43,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 34.5,
+      "seconds": 20.92887811138818,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 37.5,
+      "seconds": 22.73901420024479,
+      "duration": 0.43,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 40.75,
+      "seconds": 24.701788730907083,
+      "duration": 0.43,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 43.25,
+      "seconds": 26.212111672331414,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 46.5,
+      "seconds": 28.168955780758925,
+      "duration": 0.43,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 47.5,
+      "seconds": 28.769415670021587,
+      "duration": 0.3839285714285714,
+      "db": -18,
+      "pan": 0.3,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 32.5,
+      "seconds": 19.721599574399647,
+      "duration": 0.14814814814814814,
+      "db": -18,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 34.0,
+      "seconds": 20.62715967368991,
+      "duration": 0.17391304347826086,
+      "db": -21,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 35.5,
+      "seconds": 21.532262804294056,
+      "duration": 0.17391304347826086,
+      "db": -18,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 37.0,
+      "seconds": 22.437272624677934,
+      "duration": 0.14814814814814814,
+      "db": -21,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 38.5,
+      "seconds": 23.342625203760775,
+      "duration": 0.17391304347826086,
+      "db": -18,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 40.0,
+      "seconds": 24.248550268734427,
+      "duration": 0.17391304347826086,
+      "db": -21,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 41.5,
+      "seconds": 25.155048710447595,
+      "duration": 0.14814814814814814,
+      "db": -18,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 43.0,
+      "seconds": 26.06127305034359,
+      "duration": 0.17391304347826086,
+      "db": -21,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 44.5,
+      "seconds": 26.96584780199975,
+      "duration": 0.17391304347826086,
+      "db": -18,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 46.0,
+      "seconds": 27.868584659284615,
+      "duration": 0.14814814814814814,
+      "db": -21,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 47.5,
+      "seconds": 28.769415670021587,
+      "duration": 0.17391304347826086,
+      "db": -18,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 62.75,
+      "seconds": 37.92941282932968,
+      "duration": 0.16,
+      "db": -15,
+      "pan": 0.36,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 63.5,
+      "seconds": 38.37961490242723,
+      "duration": 0.5119047619047619,
+      "db": -13,
+      "pan": -0.28,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 78.75,
+      "seconds": 47.526490088515516,
+      "duration": 0.16,
+      "db": -15,
+      "pan": 0.36,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 79.5,
+      "seconds": 47.978589666412894,
+      "duration": 0.5119047619047619,
+      "db": -13,
+      "pan": -0.28,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "motor",
+      "beat": 48,
+      "seconds": 27.26950443780994,
+      "duration": 1.8,
+      "db": -21,
+      "pan": 0.25,
+      "rate": 1.0,
+      "align": "end"
+    },
+    {
+      "source": "pipe",
+      "beat": 92,
+      "seconds": 55.486034760927616,
+      "duration": 0.43,
+      "db": -4.5,
+      "pan": -0.35,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 93.5,
+      "seconds": 56.385905255780315,
+      "duration": 0.5119047619047619,
+      "db": -6.5,
+      "pan": -0.12999999999999998,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 95.25,
+      "seconds": 57.43599026870388,
+      "duration": 0.3839285714285714,
+      "db": -8.5,
+      "pan": 0.09000000000000002,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 96.5,
+      "seconds": 58.186165087547295,
+      "duration": 0.43,
+      "db": -4.5,
+      "pan": -0.35,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 98.5,
+      "seconds": 59.38654162850116,
+      "duration": 0.5119047619047619,
+      "db": -6.5,
+      "pan": -0.12999999999999998,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 100,
+      "seconds": 60.28685779428067,
+      "duration": 0.43,
+      "db": -4.5,
+      "pan": -0.35,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 102.75,
+      "seconds": 61.93743770137574,
+      "duration": 0.5119047619047619,
+      "db": -6.5,
+      "pan": -0.12999999999999998,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 103.5,
+      "seconds": 62.3875887486737,
+      "duration": 0.3839285714285714,
+      "db": -8.5,
+      "pan": 0.09000000000000002,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 92.5,
+      "seconds": 55.78597454417681,
+      "duration": 0.14814814814814814,
+      "db": -7,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 94.0,
+      "seconds": 56.68589618413462,
+      "duration": 0.17391304347826086,
+      "db": -10,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 95.5,
+      "seconds": 57.586021095340755,
+      "duration": 0.17391304347826086,
+      "db": -7,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 97.0,
+      "seconds": 58.486247426480105,
+      "duration": 0.14814814814814814,
+      "db": -10,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 98.5,
+      "seconds": 59.38654162850116,
+      "duration": 0.17391304347826086,
+      "db": -7,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 100.0,
+      "seconds": 60.28685779428067,
+      "duration": 0.17391304347826086,
+      "db": -10,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 101.5,
+      "seconds": 61.18717758271679,
+      "duration": 0.14814814814814814,
+      "db": -7,
+      "pan": -0.18,
+      "rate": 1.08,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 103.0,
+      "seconds": 62.087489190628744,
+      "duration": 0.17391304347826086,
+      "db": -10,
+      "pan": 0.42,
+      "rate": 0.92,
+      "align": "attack"
+    },
+    {
+      "source": "motor",
+      "beat": 92,
+      "seconds": 53.68603476092762,
+      "duration": 1.8,
+      "db": -16,
+      "pan": 0.25,
+      "rate": 1.0,
+      "align": "end"
+    },
+    {
+      "source": "key",
+      "beat": 111.5,
+      "seconds": 67.15586225200008,
+      "duration": 0.16,
+      "db": -19,
+      "pan": 0.36,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 119.5,
+      "seconds": 71.96598000488888,
+      "duration": 0.16,
+      "db": -19,
+      "pan": 0.36,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "key",
+      "beat": 127.5,
+      "seconds": 76.77192879228673,
+      "duration": 0.16,
+      "db": -19,
+      "pan": 0.36,
+      "rate": 1.0,
+      "align": "attack"
+    },
+    {
+      "source": "motor",
+      "beat": 104,
+      "seconds": 60.88768830671866,
+      "duration": 1.8,
+      "db": -21,
+      "pan": 0.25,
+      "rate": 1.0,
+      "align": "end"
+    },
+    {
+      "source": "pipe",
+      "beat": 128.75,
+      "seconds": 77.52206646175217,
+      "duration": 0.43,
+      "db": -14,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 130.5,
+      "seconds": 78.57289378059667,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 133.5,
+      "seconds": 80.37669792116881,
+      "duration": 0.43,
+      "db": -14,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 136.75,
+      "seconds": 82.33297804867057,
+      "duration": 0.43,
+      "db": -14,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 139.25,
+      "seconds": 83.83524117454655,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 142.5,
+      "seconds": 85.78306692326859,
+      "duration": 0.43,
+      "db": -14,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 143.5,
+      "seconds": 86.38164981538745,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 144.75,
+      "seconds": 87.12957832926958,
+      "duration": 0.43,
+      "db": -14,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 146.5,
+      "seconds": 88.17634752900582,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 149.5,
+      "seconds": 89.97083314989722,
+      "duration": 0.43,
+      "db": -14,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 152.75,
+      "seconds": 91.91493001985243,
+      "duration": 0.43,
+      "db": -14,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 155.25,
+      "seconds": 93.40945980614256,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 158.5,
+      "seconds": 95.35109598462316,
+      "duration": 0.43,
+      "db": -14,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 159.5,
+      "seconds": 95.94848624186827,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": 0.3,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 160.75,
+      "seconds": 96.69537086681649,
+      "duration": 0.43,
+      "db": -14,
+      "pan": -0.38,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 162.5,
+      "seconds": 97.7415373966995,
+      "duration": 0.3839285714285714,
+      "db": -16,
+      "pan": -0.38,
+      "rate": 1.12,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 165.5,
+      "seconds": 99.53676905241255,
+      "duration": 0.43,
+      "db": -14,
+      "pan": 0.3,
+      "rate": 1,
+      "align": "attack"
+    },
+    {
+      "source": "pipe",
+      "beat": 170,
+      "seconds": 102.2329499372487,
+      "duration": 0.5119047619047619,
+      "db": -15,
+      "pan": -0.2,
+      "rate": 0.84,
+      "align": "attack"
+    },
+    {
+      "source": "motor",
+      "beat": 168,
+      "seconds": 99.23428646999332,
+      "duration": 1.8,
+      "db": -21,
+      "pan": 0.25,
+      "rate": 1.0,
+      "align": "end"
+    }
+  ],
+  "synth": [
+    {
+      "seconds": 20.92887811138818,
+      "end": 21.68309593189786,
+      "midi": 81,
+      "velocity": 71,
+      "pitch_class_relative_support": 1.0
+    },
+    {
+      "seconds": 25.759251126470406,
+      "end": 26.513788916307057,
+      "midi": 72,
+      "velocity": 57,
+      "pitch_class_relative_support": 1.0
+    },
+    {
+      "seconds": 78.57289378059667,
+      "end": 79.3240574044102,
+      "midi": 74,
+      "velocity": 71,
+      "pitch_class_relative_support": 1.0
+    },
+    {
+      "seconds": 83.38494525707277,
+      "end": 84.13523165575096,
+      "midi": 73,
+      "velocity": 57,
+      "pitch_class_relative_support": 0.936
+    },
+    {
+      "seconds": 88.17634752900582,
+      "end": 88.92399781701215,
+      "midi": 81,
+      "velocity": 71,
+      "pitch_class_relative_support": 1.0
+    },
+    {
+      "seconds": 92.96120996613695,
+      "end": 93.70823783026083,
+      "midi": 66,
+      "velocity": 57,
+      "pitch_class_relative_support": 1.0
+    },
+    {
+      "seconds": 97.7415373966995,
+      "end": 98.48925974042588,
+      "midi": 77,
+      "velocity": 71,
+      "pitch_class_relative_support": 1.0
+    }
+  ],
+  "guitar_answers": [
+    {
+      "seconds": 66.85583224899977,
+      "duration": 0.6000600060005978,
+      "offset": 5.649711636938789,
+      "rate": 2.0,
+      "db": -4,
+      "pan": 0.25,
+      "chroma_similarity": 0.734
+    },
+    {
+      "seconds": 71.05625229100396,
+      "duration": 0.9000900090008968,
+      "offset": 1.4492915949346035,
+      "rate": 2.0,
+      "db": -5,
+      "pan": -0.25,
+      "chroma_similarity": 0.863
+    },
+    {
+      "seconds": 74.67284937305098,
+      "duration": 1.2001200120011957,
+      "offset": 5.0496516309381905,
+      "rate": 1.0,
+      "db": -7,
+      "pan": 0.18,
+      "chroma_similarity": 0.956
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "without-additions": {
+    "changed_tracks": [
+      "Foley · pipe",
+      "Foley · key",
+      "Foley · motor",
+      "Guitar answers · resampled opening",
+      "Solar glass · editable synth answers"
+    ],
+    "section_delta_dbfs": {
+      "Opening": -54.25,
+      "Groove A": -52.45,
+      "Development": -41.31,
+      "First explosion": -46.11,
+      "Mechanical break": -37.46,
+      "Lead guitar": -44.53,
+      "Final expansion": -40.14,
+      "Resolution": -52.66
+    }
+  },
+  "fixed-returns": {
+    "changed_tracks": [
+      "Room · short reflections",
+      "Shoegaze · moving late field",
+      "Metallic space · pipe chamber",
+      "Delay · guitar answers",
+      "Transition · reverse motor bloom"
+    ],
+    "section_delta_dbfs": {
+      "Opening": -83.65,
+      "Groove A": -54.93,
+      "Development": -60.73,
+      "First explosion": -44.73,
+      "Mechanical break": -52.13,
+      "Lead guitar": -49.05,
+      "Final expansion": -44.76,
+      "Resolution": -53.58
+    }
+  },
+  "performance": {
+    "drums_mean_adjacent_bar_accent_difference_db": {
+      "Groove A": 12.0,
+      "Development": 13.37,
+      "First explosion": 2.09,
+      "Mechanical break": 11.27,
+      "Final expansion": 1.83
+    },
+    "bass_mean_adjacent_bar_accent_difference_db": {
+      "Groove A": 10.8,
+      "Development": 20.67,
+      "First explosion": 3.15,
+      "Mechanical break": 6.27,
+      "Final expansion": 2.32
+    },
+    "processed_samples": {
+      "pipe": {
+        "dominant_bin_hz": 4277.3,
+        "time_to_90_percent_energy_ms": 93.1
+      },
+      "key": {
+        "dominant_bin_hz": 1160.2,
+        "time_to_90_percent_energy_ms": 21.4
+      },
+      "motor": {
+        "dominant_bin_hz": 949.2,
+        "time_to_90_percent_energy_ms": 1693.1
+      }
+    }
+  }
+}
