@@ -1,6 +1,7 @@
 """Run the bundled ReaScript against a fresh copy of a validated score snapshot."""
 
 import argparse
+from contextlib import contextmanager
 import fcntl
 import json
 import os
@@ -34,7 +35,8 @@ def executable():
     return None
 
 
-def render(snapshot):
+@contextmanager
+def isolated_host():
     binary = executable()
     if not binary:
         raise RuntimeError(
@@ -53,36 +55,46 @@ def render(snapshot):
                 "coreaudiobs=512\ncoreaudiobsuse=0\ncoreaudiosrate=48000\n"
                 "coreaudiosrateuse=0\ncoreaudioignorereset=0\ncoreaudioignprojsr=0\n"
             )
-        return _render(snapshot, binary, config)
+        yield [str(binary), "-newinst", "-nosplash", "-cfgfile", str(config)]
 
 
-def _render(snapshot, binary, config):
+def build_in_host(args, script, log):
+    host = subprocess.Popen([*args, str(script)], stdout=log, stderr=log)
+    try:
+        deadline = time.monotonic() + 120
+        status = script.parent / "host-status.txt"
+        while not status.exists():
+            if host.poll() is not None or time.monotonic() > deadline:
+                raise RuntimeError(
+                    f"REAPER did not finish the build. See {script.parent}"
+                )
+            time.sleep(0.25)
+        message = status.read_text()
+        if not message.startswith("BUILT\n"):
+            raise RuntimeError(message)
+        return message
+    finally:
+        if host.poll() is None:
+            host.terminate()
+            try:
+                host.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                host.kill()
+                host.wait()
+
+
+def render(snapshot):
+    with isolated_host() as args:
+        return _render(snapshot, args)
+
+
+def _render(snapshot, args):
     spec = json.loads((snapshot / "session.json").read_text())
     job = snapshot / ("host-" + uuid4().hex)
     job.mkdir()
     layout = project.export(spec, job)
-    args = [str(binary), "-newinst", "-nosplash", "-cfgfile", str(config)]
     with (job / "host.log").open("w") as log:
-        host = subprocess.Popen([*args, str(job / "build.lua")], stdout=log, stderr=log)
-        try:
-            deadline = time.monotonic() + 120
-            status = job / "host-status.txt"
-            while not status.exists():
-                if host.poll() is not None or time.monotonic() > deadline:
-                    raise RuntimeError(f"REAPER did not finish the build. See {job}")
-                time.sleep(0.25)
-            message = status.read_text()
-            if not message.startswith("BUILT\n"):
-                raise RuntimeError(message)
-        finally:
-            # This instance is dedicated to the job. User-open instances are independent.
-            if host.poll() is None:
-                host.terminate()
-                try:
-                    host.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    host.kill()
-                    host.wait()
+        message = build_in_host(args, job / "build.lua", log)
         for name in ("Dry.RPP", "Studio.RPP"):
             make_portable(job / name, layout["sampler_zones"])
         replay = job / "replay"
