@@ -80,7 +80,7 @@ def waveform(path, brief):
         final_100ms_rms_dbfs=round(
             float(10 * np.log10(max(np.mean(x[-hop:] ** 2), 1e-14))), 2
         ),
-        rhythm=estimate_rhythm(path, brief["bpm"]),
+        rhythm=estimate_rhythm(path, brief.get("bpm")),
     )
 
 

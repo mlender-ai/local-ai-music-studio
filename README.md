@@ -2,6 +2,14 @@
 
 로컬 ACE-Step 음악 생성, 독립 DSP, 한국어 프로듀서 명령, STDIO MCP와 작은 A/B 플레이어입니다. 외부 음악 생성 API를 호출하지 않습니다. 실제 검증 결과는 [QA 보고서](docs/QA_REPORT.md)에 기록합니다.
 
+## V7 YuE2 록 연주곡
+
+V7 제작은 자연어 브리프에서 YuE2가 자체 악보와 스테레오 음악을 생성하는 경로로 시작합니다. PR #6의 원본과 95.96초 자연 종료 버전, 새 음원 및 재현 환경은 [V7 복구 보고서](docs/V7_NATIVE_RECOVERY.md)에 있습니다.
+
+```bash
+.venv/bin/python -m scripts.v7_native examples/v7/slate.txt --seed 41
+```
+
 ## 음악 품질 수정 — 2026-11-16
 
 사용자 청취에서 펑키 디스코 요청의 스타일·리듬 불일치가 보고됐습니다. 기존 기능 QA는 요청한 음악적 결과의 합격을 뜻하지 않습니다. 펑크/디스코의 영어 장르·기타·리듬 설명, 4/4 메타데이터, Turbo 권장 `shift=3.0`을 추가했습니다. [실제 재생성 비교](docs/QUALITY_FIX.md)를 참고하세요.

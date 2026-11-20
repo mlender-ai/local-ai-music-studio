@@ -1,0 +1,19 @@
+{
+  "engine": "yue2",
+  "genre": "rock",
+  "seed": 41,
+  "brief": {
+    "prompt": "기타 두 대가 주고받는 인트로 뒤 밴드가 들어오고 마지막 후렴을 함께 부르는 한국어 인디 록.",
+    "style": "Melodic indie rock, 116 BPM, live kit and electric bass, two answering electric guitars. A spare guitar intro opens into an intimate Korean sung verse, a rising chorus with backing harmonies, a brief instrumental turn and a final band cadence.",
+    "bpm": 116,
+    "duration": 60,
+    "lyrics": "[Intro]\n\n[Verse]\n빈 정류장에 남은 온기\n종이컵 속에 접힌 저녁\n낡은 운동화 끈을 묶고\n너의 보폭을 따라가\n\n[Chorus]\n한 칸 더 불을 켜 줘\n우리 그림자가 춤추게\n한 칸 더 길을 열어\n오늘은 걸어서 갈래\n\n[Outro]\n오늘은 걸어서 갈래"
+  },
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 3.206,
+    "peak_footprint_gib": 3.206,
+    "total_seconds": 326.907
+  }
+}
