@@ -10,6 +10,17 @@ from engine.daw.qa import levels
 from engine.rendering.audio import read_audio
 
 
+def matched_target(levels_by_track):
+    """Choose one loudness that needs no boost and leaves one dB of peak headroom."""
+    return min(
+        -18.0,
+        *(
+            s["integrated_lufs"] - max(0, s["true_peak_dbtp"] + 1)
+            for s in levels_by_track
+        ),
+    )
+
+
 def compare(folders, output):
     rows = []
     for folder in folders:
@@ -24,10 +35,7 @@ def compare(folders, output):
     ):
         raise ValueError("Use two takes of the same brief and seed")
     # Preserve headroom for intersample peaks. Never boost the quieter take.
-    target = min(
-        -18.0,
-        *(s["integrated_lufs"] - max(0, s["true_peak_dbtp"] + 1) for _, _, s in rows),
-    )
+    target = matched_target(stats for _, _, stats in rows)
     output.mkdir(parents=True, exist_ok=False)
     report = []
     for index, (folder, run, stats) in enumerate(rows, 1):
