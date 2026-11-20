@@ -1,0 +1,36 @@
+X:1
+T:Moon in a glass
+M:4/4
+L:1/16
+Q:1/4=72
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:D
+% intro
+V: Vocal
+"Dadd9"z16|
+V: Ins
+A,4 D2 E2 F4 E4|
+% verse
+V: Vocal
+"Dadd9"F2 F2 E2 D2 E2 F2 A4|"A/C#"E2 E2 D2 C2 D2 E2 E4|"Bm7"F2 A2 A2 B2 A2 F2 E4|"Gmaj7"D2 E2 F2 E2 D6 z2|
+V: Ins
+Z4|
+V: Vocal
+"Em7"z8 "Asus4"z8|
+V: Ins
+E4 G2 F2 E4 z4|
+% chorus
+V: Vocal
+"Gmaj9"B2 B2 A2 G2 A2 B2 d2 d2-|"D/F#"d8 z8|"Em7"G2 A2 B2 d2 B2 A2 G4|"Asus4"E2 F2 G2 A2 "A"B2 A2 E2 E2|
+V: Ins
+Z4|
+V: Vocal
+"Gmaj7"B2 A2 F2 E2 "A7"G2 E2 D4-|"Dadd9"D10 z6|
+V: Ins
+Z|z12 A,4|
+% outro
+V: Vocal
+"Dadd9"z16|
+V: Ins
+D2 E2 F4 D8|]

@@ -9,7 +9,9 @@ from engine.generation.supervisor import run_guarded, run_worker
 from engine.paths import DATA, ROOT, RUNTIME
 
 
-def run(engine, genre, seed, brief):
+def run(engine, genre, seed, brief, *, score=None):
+    if score is not None and (engine != "yue2" or not score.strip()):
+        raise ValueError("Provide a nonempty ABC score for YuE2")
     folder = DATA / "v4" / f"{engine}-{genre}-{uuid4().hex[:10]}"
     folder.mkdir(parents=True)
     result = dict(engine=engine, genre=genre, seed=seed, brief=brief)
@@ -44,6 +46,9 @@ def run(engine, genre, seed, brief):
                 steps=32,
                 output_format="wav32",
             )
+            if score is not None:
+                req["abc"] = score
+                result["input_score"] = score
             request = folder / "request.json"
             request.write_text(json.dumps(req, ensure_ascii=False, indent=2))
             path = folder / "original.wav"
@@ -90,7 +95,19 @@ if __name__ == "__main__":
         "--instrumental", action="store_true", help="Use an instrumental custom brief."
     )
     ap.add_argument("--seed", type=int, default=41)
+    ap.add_argument(
+        "--score", type=Path, help="Realize this original ABC chart with YuE2."
+    )
+    ap.add_argument(
+        "--duration-cap", type=int, help="Override the YuE2 end-of-song cap (1–120 s)."
+    )
     args = ap.parse_args()
+    if (args.score or args.duration_cap is not None) and (
+        args.engine != "yue2" or len(args.genres) != 1
+    ):
+        ap.error("--score and --duration-cap require a single YuE2 brief")
+    if args.duration_cap is not None and not 1 <= args.duration_cap <= 120:
+        ap.error("--duration-cap must be 1–120 seconds")
     briefs = json.loads((ROOT / "examples/v4/briefs.json").read_text())
     if args.prompt:
         if len(args.genres) != 1 or (bool(args.lyrics_file) == args.instrumental):
@@ -110,4 +127,12 @@ if __name__ == "__main__":
     elif args.lyrics_file or args.instrumental:
         ap.error("Use --prompt for a custom brief")
     for genre in args.genres:
-        run(args.engine, genre, args.seed, briefs[genre])
+        if args.duration_cap is not None:
+            briefs[genre]["duration"] = args.duration_cap
+        run(
+            args.engine,
+            genre,
+            args.seed,
+            briefs[genre],
+            score=args.score.read_text() if args.score else None,
+        )
