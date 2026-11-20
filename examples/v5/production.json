@@ -1,0 +1,289 @@
+{
+  "host": [
+    "BUILT",
+    "7.86/macOS-arm64"
+  ],
+  "settings": {
+    "bpm": 112,
+    "source_seconds": 107.83866666666667,
+    "tail": 2.0,
+    "master_db": -1.1,
+    "vocal_db": 0.45,
+    "plate_db": -26,
+    "haze_db": -18,
+    "chorus_wet_db": 1.5,
+    "chorus_width": 155,
+    "lead_start": 60.15,
+    "lead_end": 75.75,
+    "lead_presence": 2.1,
+    "lead_db": -16
+  },
+  "direction": "후렴이 시작되면 기타 공간이 갑자기 넓어지게 해줘",
+  "sample_rate": 48000,
+  "score_regions": [
+    {
+      "name": "Intro",
+      "start": 0.0,
+      "end": 8.571428571428571
+    },
+    {
+      "name": "Verse",
+      "start": 8.571428571428571,
+      "end": 25.714285714285715
+    },
+    {
+      "name": "Pre-chorus",
+      "start": 25.714285714285715,
+      "end": 34.285714285714285
+    },
+    {
+      "name": "Chorus",
+      "start": 34.285714285714285,
+      "end": 51.42857142857143
+    },
+    {
+      "name": "Break",
+      "start": 51.42857142857143,
+      "end": 60.0
+    },
+    {
+      "name": "Solo cue",
+      "start": 60.0,
+      "end": 77.14285714285714
+    },
+    {
+      "name": "Final chorus",
+      "start": 77.14285714285714,
+      "end": 94.28571428571429
+    },
+    {
+      "name": "Outro",
+      "start": 94.28571428571429,
+      "end": 107.83866666666667
+    }
+  ],
+  "dry_error_vs_original_db": -131.94073401697872,
+  "reopen_pcm_identical": true,
+  "original": {
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames": 5176256,
+    "duration_seconds": 107.83866666666667,
+    "peak": 0.8929173946380615,
+    "peak_dbfs": -0.9837743320218266,
+    "rms": 0.13822972328168015,
+    "rms_dbfs": -17.187971227621947,
+    "clipped_samples": 0,
+    "finite": true,
+    "low_band_power": 0.0015357333285662645,
+    "high_band_power": 5.6881458251409224e-05,
+    "low_mid_fraction": 0.23301776654343992,
+    "presence_fraction": 0.08481131013819862,
+    "air_fraction": 0.01393600117120807,
+    "lr_correlation": 0.8495391857665789,
+    "crest_db": 16.20419689560012,
+    "mono_fold_db": -0.33987478396713366,
+    "integrated_lufs": -14.47,
+    "true_peak_dbtp": -0.96,
+    "pcm_sha256": "bbe77de12ab0a0617e3920a07a029cddaa58f51a6189506d183df1b03f8d4707",
+    "section_rms_dbfs": {
+      "Intro": -23.591870548684884,
+      "Verse": -18.3012181980741,
+      "Pre-chorus": -17.87776750204225,
+      "Chorus": -15.719471282592618,
+      "Break": -25.238550990788955,
+      "Solo cue": -14.413101283545409,
+      "Final chorus": -15.440256006617808,
+      "Outro": -25.950430075897444
+    }
+  },
+  "master": {
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames": 5272256,
+    "duration_seconds": 109.83866666666667,
+    "peak": 0.7791168689727783,
+    "peak_dbfs": -2.1679478492937756,
+    "rms": 0.11184883644761821,
+    "rms_dbfs": -19.02737058932776,
+    "clipped_samples": 0,
+    "finite": true,
+    "low_band_power": 0.0009448309719501839,
+    "high_band_power": 4.040549953782055e-05,
+    "low_mid_fraction": 0.19814280506873902,
+    "presence_fraction": 0.12134301158850672,
+    "air_fraction": 0.01436462926784251,
+    "lr_correlation": 0.8259799676977992,
+    "crest_db": 16.859422740033985,
+    "mono_fold_db": -0.39548282374884347,
+    "integrated_lufs": -15.63,
+    "true_peak_dbtp": -2.15,
+    "pcm_sha256": "2d50048a3f0da54a44e7e9e82b66516f032e43140a14459adf0d52dd5618e6ad",
+    "section_rms_dbfs": {
+      "Intro": -26.77859269665074,
+      "Verse": -20.37959550418991,
+      "Pre-chorus": -19.823948548767806,
+      "Chorus": -17.398146293798135,
+      "Break": -28.306705099139627,
+      "Solo cue": -16.00812490941346,
+      "Final chorus": -17.05723830001816,
+      "Outro": -28.852746002535362
+    }
+  },
+  "stem_diagnostics": {
+    "htdemucs_6s": {
+      "sum_error_vs_mix_db": -24.109476282814548,
+      "stems": {
+        "bass": {
+          "rms_dbfs": -23.293838958400357,
+          "section_dbfs": {
+            "Intro": -87.28367949220227,
+            "Verse": -22.389402092796736,
+            "Pre-chorus": -23.424657140155265,
+            "Chorus": -23.655550888265502,
+            "Break": -39.67399635305344,
+            "Solo cue": -19.18018034787793,
+            "Final chorus": -23.144166521950797,
+            "Outro": -37.686915400343736
+          }
+        },
+        "drums": {
+          "rms_dbfs": -23.919077922261565,
+          "section_dbfs": {
+            "Intro": -88.69570713193582,
+            "Verse": -24.61272825464121,
+            "Pre-chorus": -34.01088695765749,
+            "Chorus": -21.501464455093465,
+            "Break": -52.17170299653044,
+            "Solo cue": -20.94479667672022,
+            "Final chorus": -21.7210819056969,
+            "Outro": -51.630702076517224
+          }
+        },
+        "guitar": {
+          "rms_dbfs": -25.59025468162887,
+          "section_dbfs": {
+            "Intro": -23.9876624840938,
+            "Verse": -33.4437943579841,
+            "Pre-chorus": -33.116276127620175,
+            "Chorus": -30.964156384270204,
+            "Break": -25.89678232072828,
+            "Solo cue": -20.0452090291354,
+            "Final chorus": -30.28039998810868,
+            "Outro": -26.54667873125817
+          }
+        },
+        "other": {
+          "rms_dbfs": -34.91894686067884,
+          "section_dbfs": {
+            "Intro": -72.72775399408923,
+            "Verse": -41.12109161515164,
+            "Pre-chorus": -29.93209324475473,
+            "Chorus": -38.028443757130496,
+            "Break": -86.49786652104525,
+            "Solo cue": -29.41066383871195,
+            "Final chorus": -38.85755074604229,
+            "Outro": -49.58654390790336
+          }
+        },
+        "piano": {
+          "rms_dbfs": -69.00572779343447,
+          "section_dbfs": {
+            "Intro": -61.616060598896794,
+            "Verse": -63.82445260997062,
+            "Pre-chorus": -81.63930727915903,
+            "Chorus": -79.99799287362721,
+            "Break": -92.34407441351054,
+            "Solo cue": -80.61417331068148,
+            "Final chorus": -80.41727289742673,
+            "Outro": -95.22305238215642
+          }
+        },
+        "vocals": {
+          "rms_dbfs": -22.9332824409262,
+          "section_dbfs": {
+            "Intro": -57.448612301717425,
+            "Verse": -23.80026838479052,
+            "Pre-chorus": -21.19239845957843,
+            "Chorus": -19.55875518066052,
+            "Break": -42.19458073184302,
+            "Solo cue": -52.487329522934985,
+            "Final chorus": -18.880122777985715,
+            "Outro": -73.20603460108549
+          }
+        }
+      },
+      "resources": {
+        "peak_rss_gib": 0.377,
+        "peak_footprint_gib": 1.917,
+        "total_seconds": 20.012
+      }
+    },
+    "htdemucs": {
+      "sum_error_vs_mix_db": -33.272369129609544,
+      "stems": {
+        "bass": {
+          "rms_dbfs": -23.327229000490483,
+          "section_dbfs": {
+            "Intro": -82.70327721829187,
+            "Verse": -22.43030068934226,
+            "Pre-chorus": -23.223479287382172,
+            "Chorus": -23.749725543029967,
+            "Break": -39.28184492485402,
+            "Solo cue": -19.093710093451495,
+            "Final chorus": -23.52710515258153,
+            "Outro": -38.60611566500038
+          }
+        },
+        "drums": {
+          "rms_dbfs": -23.84311467308379,
+          "section_dbfs": {
+            "Intro": -78.95686984363184,
+            "Verse": -24.5416115350104,
+            "Pre-chorus": -34.38584309630848,
+            "Chorus": -21.38662731101515,
+            "Break": -51.76884974036619,
+            "Solo cue": -20.91454696537067,
+            "Final chorus": -21.615902419811764,
+            "Outro": -53.087770907902694
+          }
+        },
+        "other": {
+          "rms_dbfs": -24.243596603046008,
+          "section_dbfs": {
+            "Intro": -23.63810454271395,
+            "Verse": -31.131971464926718,
+            "Pre-chorus": -26.38780613225712,
+            "Chorus": -28.10101773100822,
+            "Break": -25.932080166852614,
+            "Solo cue": -18.844608005229475,
+            "Final chorus": -27.263535382372915,
+            "Outro": -26.320221823708483
+          }
+        },
+        "vocals": {
+          "rms_dbfs": -22.96931161445649,
+          "section_dbfs": {
+            "Intro": -57.171654923587944,
+            "Verse": -23.82057299398401,
+            "Pre-chorus": -21.178487181471134,
+            "Chorus": -19.610923708850514,
+            "Break": -41.87424902980625,
+            "Solo cue": -49.35713256755345,
+            "Final chorus": -18.92546980009818,
+            "Outro": -58.71532753408615
+          }
+        }
+      },
+      "resources": {
+        "peak_rss_gib": 0.412,
+        "peak_footprint_gib": 2.481,
+        "total_seconds": 7.2
+      }
+    }
+  },
+  "end_rms_dbfs": {
+    "original": -67.69922819290659,
+    "master": -163.98287269423716
+  }
+}

@@ -1,0 +1,417 @@
+REAPER	7.86/macOS-arm64
+installed	Video processor	Video processor
+installed	Container	Container
+installed	AU: AUAudioFilePlayer (Apple)	Apple: AUAudioFilePlayer
+installed	AU: AUBandpass (Apple)	Apple: AUBandpass
+installed	AU: AUDelay (Apple)	Apple: AUDelay
+installed	AU: AUDistortion (Apple)	Apple: AUDistortion
+installed	AU: AUDynamicsProcessor (Apple)	Apple: AUDynamicsProcessor
+installed	AU: AUFilter (Apple)	Apple: AUFilter
+installed	AU: AUGraphicEQ (Apple)	Apple: AUGraphicEQ
+installed	AU: AUHighShelfFilter (Apple)	Apple: AUHighShelfFilter
+installed	AU: AUHipass (Apple)	Apple: AUHipass
+installed	AU: AULowpass (Apple)	Apple: AULowpass
+installed	AU: AULowShelfFilter (Apple)	Apple: AULowShelfFilter
+installed	AU: AUMatrixReverb (Apple)	Apple: AUMatrixReverb
+installed	AU: AUMultibandCompressor (Apple)	Apple: AUMultibandCompressor
+installed	AU: AUNBandEQ (Apple)	Apple: AUNBandEQ
+installed	AU: AUNetReceive (Apple)	Apple: AUNetReceive
+installed	AU: AUNetSend (Apple)	Apple: AUNetSend
+installed	AU: AUNewPitch (Apple)	Apple: AUNewPitch
+installed	AU: AUParametricEQ (Apple)	Apple: AUParametricEQ
+installed	AU: AUPeakLimiter (Apple)	Apple: AUPeakLimiter
+installed	AU: AUPitch (Apple)	Apple: AUPitch
+installed	AU: AUReverb2 (Apple)	Apple: AUReverb2
+installed	AU: AURogerBeep (Apple)	Apple: AURogerBeep
+installed	AU: AURoundTripAAC (Apple)	Apple: AURoundTripAAC
+installed	AU: AUSampleDelay (Apple)	Apple: AUSampleDelay
+installed	AU: AUScheduledSoundPlayer (Apple)	Apple: AUScheduledSoundPlayer
+installed	AU: AUSoundIsolation (Apple)	Apple: AUSoundIsolation
+installed	AU: AUSpeechSynthesis (Apple)	Apple: AUSpeechSynthesis
+installed	AUi: AUMIDISynth (Apple)	Apple: AUMIDISynth
+installed	AUi: AUSampler (Apple)	Apple: AUSampler
+installed	AUi: DLSMusicDevice (Apple)	Apple: DLSMusicDevice
+installed	VST: ReaCast (Cockos)	reacast.vst.dylib
+installed	VST: ReaComp (Cockos)	reacomp.vst.dylib
+installed	VST: ReaControlMIDI (Cockos)	reacontrolMIDI.vst.dylib
+installed	VST: ReaDelay (Cockos)	readelay.vst.dylib
+installed	VST: ReaEQ (Cockos)	reaeq.vst.dylib
+installed	VST: ReaFir (FFT EQ+Dynamics Processor) (Cockos)	reafir.vst.dylib
+installed	VST: ReaGate (Cockos)	reagate.vst.dylib
+installed	VST: ReaInsert (Cockos)	reainsert.vst.dylib
+installed	VST: ReaLimit (Cockos)	realimit.vst.dylib
+installed	VST: ReaNINJAM (Cockos)	reaninjam.vst.dylib
+installed	VST: ReaPitch (Cockos)	reapitch.vst.dylib
+installed	VSTi: ReaSamplOmatic5000 (Cockos)	reasamplomatic.vst.dylib
+installed	VST: ReaStream (Cockos) (8ch)	reastream.vst.dylib
+installed	VST: ReaSurround (Cockos)	reasurround.vst.dylib
+installed	VST: ReaSurroundPan (Cockos)	reasurround2.vst.dylib
+installed	VSTi: ReaSynth (Cockos)	reasynth.vst.dylib
+installed	VST: ReaTune (Cockos)	reatune.vst.dylib
+installed	VST: ReaVerb (Cockos)	reaverb.vst.dylib
+installed	VST: ReaVerbate (Cockos)	reaverbate.vst.dylib
+installed	VST: ReaVocode (Cockos)	reavocode.vst.dylib
+installed	VST: ReaVoice (Cockos)	reavoice.vst.dylib
+installed	VST: ReaXcomp (Cockos)	reaxcomp.vst.dylib
+installed	JS: Delay w/Reverseness	misc/reverseness
+installed	JS: ADPCM Simulator	misc/adpcm_simulator
+installed	JS: video sample peeker	misc/video_sample_peeker
+installed	JS: DC Filter	filters/dc_remove
+installed	JS: Spectropaint Filter	filters/spectro_filter_paint
+installed	JS: General Dynamics (Cockos)	dynamics/general_dynamics
+installed	JS: WigWare Multi-channel Peak VU Meter	analysis/WigMCVUMeter
+installed	JS: Gain Reduction Scope (Cockos)	analysis/gain_reduction_scope
+installed	JS: Spectrograph Spectrogram Meter (Cockos)	analysis/gfxspectrograph
+installed	JS: Spectropaint Synthesis	analysis/spectropaint
+installed	JS: Loudness Meter Peak/RMS/LUFS (Cockos)	analysis/loudness_meter
+installed	JS: Oscilloscope Meter (Cockos)	analysis/gfxscope
+installed	JS: Frequency Spectrum Analyzer Meter (Cockos)	analysis/gfxanalyzer
+installed	JS: MIDI Choke	midi/midi_choke
+installed	JS: MIDI Chorderizer	midi/midi_chorderizer
+installed	JS: MIDI Choke Group	midi/midi_choke_group
+installed	JS: MIDI Route Note To Channel	midi/midi_note2channel
+installed	JS: MIDI CC Mapper	midi/midi_CC_mapper
+installed	JS: MIDI Chord In Key	midi/midi_chordkey
+installed	JS: MIDI note sanitizer	midi/midi_note_sanitizer
+installed	JS: MIDI Note Filter	midi/midi_note_filter
+installed	JS: MIDI Note-On Delay	midi/midinoteondelay
+installed	JS: MIDI Program/Bank Switch on Load	midi/program_bank_onload
+installed	JS: MIDI Note Repeater	midi/midi_note_repeater
+installed	JS: MIDI Sequencer Megababy	midi/sequencer_megababy
+installed	JS: MIDI Note Hold	midi/midi_note_hold
+installed	JS: MIDI Sequencer Baby v2	midi/sequencer_baby_v2
+installed	JS: MIDI Velocity Control	midi/midi_velocitycontrol
+installed	JS: MIDI Transpose Notes	midi/midi_transpose
+installed	JS: MIDI Arpeggiator	midi/midi_arp
+installed	JS: MIDI Delay	midi/midi_delay
+installed	JS: MIDI Logger	midi/midi_logger
+installed	JS: Audio To MIDI Drum Trigger	midi/drumtrigger
+installed	JS: MIDI Map To Key	midi/midi_maptokey
+installed	JS: Event Horizon Limiter/Clipper	sstillwell/eventhorizon2
+installed	JS: Fairly Childish Compressor/Limiter	sstillwell/fairlychildish
+installed	JS: 3x3 EQ (1-Pole Crossover)	sstillwell/3x3_6dbSlope
+installed	JS: Fairly Childish Stereo Compressor/Limiter	sstillwell/fairlychildish2
+installed	JS: Chorus (Stereo)	sstillwell/chorus_stereo
+installed	JS: Bad Buss Mojo Waveshaper	sstillwell/badbussmojo
+installed	JS: 4x4 EQ	sstillwell/4x4
+installed	JS: Subtractive Stereo Enhancer	sstillwell/width
+installed	JS: ReaLoud LP	sstillwell/realoud_lpf
+installed	JS: Auto Expander	sstillwell/autoexpand
+installed	JS: Event Horizon Clipper	sstillwell/eventhorizon
+installed	JS: Huge Booty Bass Enhancer	sstillwell/hugebooty
+installed	JS: 3x3 EQ	sstillwell/3x3
+installed	JS: Thunderkick	sstillwell/thunderkick
+installed	JS: Louderizer	sstillwell/louderizer
+installed	JS: Stereo Width	sstillwell/stereowidth
+installed	JS: Downward Expander	sstillwell/expander
+installed	JS: Ozzifier Chorus	sstillwell/ozzifier
+installed	JS: ReaLoud	sstillwell/realoud
+installed	JS: 1175 Compressor	sstillwell/1175
+installed	JS: Delay w/Tempo Length	sstillwell/delay_tempo
+installed	JS: Chorus (Improved Shaping)	sstillwell/chorus
+installed	JS: Dirt Squeeze Compressor	sstillwell/dirtsqueeze
+installed	JS: Express Bus Compressor	sstillwell/expressbus
+installed	JS: Louderizer LP	sstillwell/louderizer_lpf
+installed	JS: MIDI Velocity Scaler/Compressor	sstillwell/volscale
+installed	JS: Exciter (Treble Enhancer)	sstillwell/exciter
+installed	JS: Major Tom Compressor	sstillwell/majortom
+installed	JS: Delay w/Tempo Ping-Pong	sstillwell/delay_pong
+installed	JS: Flange Baby	sstillwell/flangebaby
+installed	JS: Master Tom Compressor	sstillwell/mastertom
+installed	JS: MIDI Note Randomize	sstillwell/randomizer
+installed	JS: Tone Gate	remaincalm_org/tonegate
+installed	JS: Avocado Ducking Glitch Generator	remaincalm_org/avocado_glitch
+installed	JS: Delay (Floaty)	remaincalm_org/floaty_delay
+installed	JS: Paranoia Mangler	remaincalm_org/paranoia_mangler
+installed	JS: Tremolo	guitar/tremolo
+installed	JS: Flanger	guitar/flanger
+installed	JS: Wah-Wah	guitar/wah
+installed	JS: 4-Tap Phaser	guitar/phaser
+installed	JS: Chorus	guitar/chorus
+installed	JS: Tone Generator	synthesis/tonegenerator
+installed	JS: Spectral Hold (Cockos)	synthesis/spectral_hold
+installed	JS: Transient-Driven Auto-Pan v1.1 (Transmitter)	Till/Transient-driven Auto-Pan v1.1 (Transmitter)
+installed	JS: Transient-Driven Auto-Pan v1.1 (Receiver)	Till/Transient-driven Auto-Pan v1.1 (Receiver)
+installed	JS: Auto-Wideness	Till/Auto-Wideness v1.0
+installed	JS: Super8 MIDI-controlled synchronized looper (Cockos)	loopsamplers/super8
+installed	JS: Dynamic Range Meter	meters/dynamics_meter
+installed	JS: Bit Meter (Cockos)	meters/bit_meter
+installed	JS: Graphical Waveshaper	waveshapers/graphdist
+installed	JS: 5-Band Joiner	loser/5BandJoiner
+installed	JS: Digital Versatile Compressor	loser/DVCJS
+installed	JS: Zero Crossing Maximizer	loser/ZeroCrossingMaximizer
+installed	JS: 4-Band EQ	loser/4BandEQ
+installed	JS: 3-Band Joiner	loser/3BandJoiner
+installed	JS: Master Limiter	loser/masterLimiter
+installed	JS: 5-Band Splitter	loser/5BandSplitter
+installed	JS: Stereo Upmix	loser/stereo
+installed	JS: Digital Versatile Compressor v2	loser/DVC2JS
+installed	JS: MGA JS Limiter (Unlinked Stereo)	loser/MGA_JSLimiterST
+installed	JS: 50 Hz Kicker	loser/50HzKicker
+installed	JS: Time Difference Pan	loser/timeDifferencePan
+installed	JS: Digital Drum Compressor	loser/DDC
+installed	JS: Center Canceler	loser/CenterCanceler
+installed	JS: Ping Pong Pan	loser/ppp
+installed	JS: 4-Band Joiner	loser/4BandJoiner
+installed	JS: Channel Time Delayer	loser/TimeDelayer
+installed	JS: 3-Band Splitter	loser/3BandSplitter
+installed	JS: 3-Band EQ	loser/3BandEQ
+installed	JS: MIDI EQ Ducker	loser/MIDI_EQ_Ducker
+installed	JS: 4-Band Splitter	loser/4BandSplitter
+installed	JS: Saturation	loser/Saturation
+installed	JS: Stereo Field Manipulator	loser/StereoField
+installed	JS: Exciter	loser/Exciter
+installed	JS: White Noise Generator	loser/WhiteNoise
+installed	JS: Goniometer	loser/gfxGoniometer
+installed	JS: Channel Phase Meter	loser/phaseMeter
+installed	JS: MGA JS Limiter	loser/MGA_JSLimiter
+installed	JS: Compciter	loser/Compciter
+installed	JS: Upward Expander	loser/UpwardExpander
+installed	JS: Waveshaping Distortion	loser/waveShapingDstr
+installed	JS: Amplitude Modulator	loser/amplitudeModulator
+installed	JS: Stereo Enhancer	loser/stereoEnhancer
+installed	JS: MIDI Tool v2	IX/MIDI_Tool II
+installed	JS: MIDI Router/Transpose	IX/MIDI_Router
+installed	JS: MIDI CC LFO Generator	IX/MIDI_CCRider
+installed	JS: 8x Stereo to 1x Stereo Mixer	IX/Mixer_8xS-1xS
+installed	JS: MIDI Pattern/Scale Variation Generator	IX/MIDI_Variant
+installed	JS: MIDI Velocity Variation Generator	IX/MIDI_Velocifier II
+installed	JS: MIDI Map To Key v2	IX/MIDI_KeyMap
+installed	JS: MIDI Pitch Wheel LFO	IX/MIDI_Wobulator
+installed	JS: MIDI Snap To Key	IX/MIDI_KeySnap
+installed	JS: Channel Polarity Control	IX/StereoPhaseInvert
+installed	JS: Channel Router w/Polarity	IX/PhaseAdjustingRouter
+installed	JS: SwixMitch (4x Stereo In, 2 Bus X-Fader)	IX/SwixMitch
+installed	JS: 8-Channel Input Switcher	IX/Switcher2
+installed	JS: 8x Mono to 1x Stereo Mixer	IX/Mixer_8xM-1xS
+installed	JS: MIDI Tool	IX/MIDI_Tool
+installed	JS: Delay w/LFO-Modulated Length	delay/delay_varlen
+installed	JS: Delay w/Tone Control	delay/delay_tone
+installed	JS: Delay w/Stereo Bounce	delay/delay_chfun
+installed	JS: Delay w/Sustain	delay/delay_sustain
+installed	JS: Time Adjustment Delay	delay/time_adjustment
+installed	JS: Delay (Lo-Fi)	delay/delay_lowres
+installed	JS: Delay w/Chorus	delay/delay_chorus
+installed	JS: Delay	delay/delay
+installed	JS: Chebyshev 4-Pole Filter	Liteon/cheby24db
+installed	JS: Butterworth 4-Pole Filter	Liteon/butterworth24db
+installed	JS: Presence EQ	Liteon/presenceeq
+installed	JS: Tilt Equalizer	Liteon/tilteq
+installed	JS: NP1136 Peak Limiter	Liteon/np1136peaklimiter
+installed	JS: Moog 4-Pole Filter	Liteon/moog24db
+installed	JS: Apple 2-Pole Lowpass Filter	Liteon/applefilter12db
+installed	JS: MDA Pseudo-Stereo	Liteon/pseudostereo
+installed	JS: Pink Noise Generator	Liteon/pinknoisegen
+installed	JS: VU Meter	Liteon/vumetergfx
+installed	JS: 3-Band Peak Filter	Liteon/3bandpeakfilter
+installed	JS: Ring Modulator	Liteon/ringmodulator
+installed	JS: Multi Waveshaper	Liteon/waveshapermulti
+installed	JS: Apple 12-Pole Filter	Liteon/applefilter72db
+installed	JS: De-esser	Liteon/deesser
+installed	JS: VU Meter (Summed)	Liteon/vumetergfxsum
+installed	JS: Bass Manager/Booster	Liteon/bassmanager
+installed	JS: Non-Linear Processor	Liteon/nonlinear
+installed	JS: Channel Mixer	utility/channelmixer
+installed	JS: Mid/Side Decoder	utility/KanakaMS5
+installed	JS: Mid/Side Encoder	utility/KanakaMSEncoder1
+installed	JS: Stereo Channel Volume/Pan/Polarity Control	utility/chanmix2
+installed	JS: Volume/Pan Adjustment (Cockos)	utility/volume_pan_sample_accurate_auto
+installed	JS: SMPTE LTC Reader/Meter	utility/smpte_ltc_reader
+installed	JS: Channel Mapper-Downmixer (Cockos)	utility/channel_mapper
+installed	JS: Bit Reduction/Dither w/Noise Shaping	utility/dither_psycho
+installed	JS: Phase Rotator	utility/phase_adjust
+load	ReaEQ	0
+meta	ReaEQ	fx_name	VST: ReaEQ (Cockos)
+meta	ReaEQ	fx_type	VST
+meta	ReaEQ	fx_ident	reaeq.vst.dylib<1919247729
+presets	ReaEQ	-1	24
+param	ReaEQ	0	Freq-Low Shelf	100.0	0.14143806695938	true
+param	ReaEQ	1	Gain-Low Shelf	0.0	0.5	true
+param	ReaEQ	2	BW-Low Shelf	0.80	0.20000000298023	true
+param	ReaEQ	3	Freq-Band 2	300.0	0.28950598835945	true
+param	ReaEQ	4	Gain-Band 2	0.0	0.5	true
+param	ReaEQ	5	BW-Band 2	2.00	0.5	true
+param	ReaEQ	6	Freq-Band 3	1000.0	0.47604861855507	true
+param	ReaEQ	7	Gain-Band 3	0.0	0.5	true
+param	ReaEQ	8	BW-Band 3	2.00	0.5	true
+param	ReaEQ	9	Freq-High Shelf 4	5000.0	0.73935085535049	true
+param	ReaEQ	10	Gain-High Shelf 4	0.0	0.5	true
+param	ReaEQ	11	BW-High Shelf 4	0.80	0.20000000298023	true
+param	ReaEQ	12	Freq-High Pass 5	100.0	0.14143806695938	true
+param	ReaEQ	13	Gain-High Pass 5	0.0	0.5	true
+param	ReaEQ	14	BW-High Pass 5	2.00	0.5	true
+param	ReaEQ	15	Global Gain	0.0	0.5	true
+param	ReaEQ	16	Bypass	normal	0	true
+param	ReaEQ	17	Wet	100	1	true
+param	ReaEQ	18	Delta	normal	0	true
+load	ReaComp	1
+meta	ReaComp	fx_name	VST: ReaComp (Cockos)
+meta	ReaComp	fx_type	VST
+meta	ReaComp	fx_ident	reacomp.vst.dylib<1919247213
+presets	ReaComp	-1	19
+param	ReaComp	0	Threshold	+0.0	0.5	true
+param	ReaComp	1	Ratio	4.00	0.030303031206131	true
+param	ReaComp	2	Attack	3.0	0.0060000000521541	true
+param	ReaComp	3	Release	100	0.019999999552965	true
+param	ReaComp	4	Pre-comp	0.00	0	true
+param	ReaComp	5	resvd	0	0	true
+param	ReaComp	6	Lowpass	20000	1	true
+param	ReaComp	7	Hipass	0	0	true
+param	ReaComp	8	SignIn	0	0	true
+param	ReaComp	9	AudIn	0	0	false
+param	ReaComp	10	Dry	-inf	1.5811387754638e-08	true
+param	ReaComp	11	Wet	+0.0	0.5	true
+param	ReaComp	12	Filter Preview	0	0	true
+param	ReaComp	13	RMS size	5.0	0.0050000000745058	true
+param	ReaComp	14	Knee	0.0	0	true
+param	ReaComp	15	Auto Make Up Gain	0	0	true
+param	ReaComp	16	Auto Release	0	0	true
+param	ReaComp	17	Legacy Attack/Knee Options	0.25	0.25	true
+param	ReaComp	18	Deprecated Broken Anti-Alias	0	0	true
+param	ReaComp	19	Multichannel Mode	0	0	false
+param	ReaComp	20	Metering Index	0	0	false
+param	ReaComp	21	Bypass	normal	0	true
+param	ReaComp	22	Wet	100	1	true
+param	ReaComp	23	Delta	normal	0	true
+load	ReaVerbate	2
+meta	ReaVerbate	fx_name	VST: ReaVerbate (Cockos)
+meta	ReaVerbate	fx_type	VST
+meta	ReaVerbate	fx_ident	reaverbate.vst.dylib<1920361016
+presets	ReaVerbate	-1	20
+param	ReaVerbate	0	Wet	-6.0	0.25001725554466	true
+param	ReaVerbate	1	Dry	+0.0	0.5	true
+param	ReaVerbate	2	Room size	50	0.29411765933037	true
+param	ReaVerbate	3	Dampening	50	0.5	true
+param	ReaVerbate	4	Width	1.00	1	true
+param	ReaVerbate	5	Delay	0	0	true
+param	ReaVerbate	6	Lowpass	20000	1	true
+param	ReaVerbate	7	Hipass	0	0	true
+param	ReaVerbate	8	Bypass	normal	0	true
+param	ReaVerbate	9	Wet	100	1	true
+param	ReaVerbate	10	Delta	normal	0	true
+load	ReaDelay	3
+meta	ReaDelay	fx_name	VST: ReaDelay (Cockos)
+meta	ReaDelay	fx_type	VST
+meta	ReaDelay	fx_ident	readelay.vst.dylib<1919247468
+presets	ReaDelay	-1	9
+param	ReaDelay	0	Wet	-6.0	0.25001725554466	true
+param	ReaDelay	1	Dry	+0.0	0.5	true
+param	ReaDelay	2	1: Enabled	ON	1	true
+param	ReaDelay	3	1: Length (time)	0.0	0	true
+param	ReaDelay	4	1: Length (musical)	2.00	0.0078125	true
+param	ReaDelay	5	1: Feedback	-inf	1.5811387754638e-08	true
+param	ReaDelay	6	1: Lowpass	20000	1	true
+param	ReaDelay	7	1: Hipass	0	0	true
+param	ReaDelay	8	1: Resolution	24	1	true
+param	ReaDelay	9	1: Stereo width	1.00	1	true
+param	ReaDelay	10	1: Volume	+0.0	0.5	true
+param	ReaDelay	11	1: Pan	0.000	0.5	true
+param	ReaDelay	12	Bypass	normal	0	true
+param	ReaDelay	13	Wet	100	1	true
+param	ReaDelay	14	Delta	normal	0	true
+load	ReaVerb	4
+meta	ReaVerb	fx_name	VST: ReaVerb (Cockos)
+meta	ReaVerb	fx_type	VST
+meta	ReaVerb	fx_ident	reaverb.vst.dylib<1919252066
+presets	ReaVerb	-1	2
+param	ReaVerb	0	Wet	-12.0	0.12559431791306	true
+param	ReaVerb	1	Dry	+0.0	0.5	true
+param	ReaVerb	2	Pre-verb	0	0	true
+param	ReaVerb	3	Max FFT size	16384	1	true
+param	ReaVerb	4	Width	1.00	1	true
+param	ReaVerb	5	Pan	0.00	0.5	true
+param	ReaVerb	6	ZL mode	1	1	true
+param	ReaVerb	7	LL mode	1	1	true
+param	ReaVerb	8	Bypass	normal	0	true
+param	ReaVerb	9	Wet	100	1	true
+param	ReaVerb	10	Delta	normal	0	true
+load	ReaLimit	5
+meta	ReaLimit	fx_name	VST: ReaLimit (Cockos)
+meta	ReaLimit	fx_type	VST
+meta	ReaLimit	fx_ident	realimit.vst.dylib<1919708532
+presets	ReaLimit	-1	0
+param	ReaLimit	0	Threshold	+0.00	0.83333331346512	true
+param	ReaLimit	1	Ceiling	+0.00	1	true
+param	ReaLimit	2	Release	15.0	0.35481339693069	true
+param	ReaLimit	3	Bypass	normal	0	true
+param	ReaLimit	4	Wet	100	1	true
+param	ReaLimit	5	Delta	normal	0	true
+load	JS: LOSER/Saturation	6
+meta	JS: LOSER/Saturation	fx_name	JS: Saturation
+meta	JS: LOSER/Saturation	fx_type	JS
+meta	JS: LOSER/Saturation	fx_ident	loser/Saturation
+presets	JS: LOSER/Saturation	-1	0
+param	JS: LOSER/Saturation	0	Amount (%)	0.0	0	true
+param	JS: LOSER/Saturation	1	Bypass	normal	0	true
+param	JS: LOSER/Saturation	2	Wet	100	1	true
+param	JS: LOSER/Saturation	3	Delta	normal	0	true
+load	JS: guitar/distortion	7
+meta	JS: guitar/distortion	fx_name	JS: Distortion
+meta	JS: guitar/distortion	fx_type	JS
+meta	JS: guitar/distortion	fx_ident	guitar/distortion
+presets	JS: guitar/distortion	-1	0
+param	JS: guitar/distortion	0	Gain (dB)	20.0	0.4	true
+param	JS: guitar/distortion	1	Hardness	6.0	0.55555555555556	true
+param	JS: guitar/distortion	2	Max Volume (dB)	-12.0	0.7	true
+param	JS: guitar/distortion	3	Channel Mode	Left	0	true
+param	JS: guitar/distortion	4	Bypass	normal	0	true
+param	JS: guitar/distortion	5	Wet	100	1	true
+param	JS: guitar/distortion	6	Delta	normal	0	true
+load	JS: guitar/amp-model	8
+meta	JS: guitar/amp-model	fx_name	JS: Convolution Amp/Cab Modeler
+meta	JS: guitar/amp-model	fx_type	JS
+meta	JS: guitar/amp-model	fx_ident	guitar/amp-model
+presets	JS: guitar/amp-model	-1	0
+param	JS: guitar/amp-model	0	Model	none	0	true
+param	JS: guitar/amp-model	1	Preamp (dB)	0.0	0.5	true
+param	JS: guitar/amp-model	2	Upsample Impulse If Required	Yes (correct gain)	1	true
+param	JS: guitar/amp-model	3	Channel Mode	L-Stereo	0	true
+param	JS: guitar/amp-model	4	Filter Size	0.0	0	true
+param	JS: guitar/amp-model	5	FFT Size	0.0	0	true
+param	JS: guitar/amp-model	6	Bypass	normal	0	true
+param	JS: guitar/amp-model	7	Wet	100	1	true
+param	JS: guitar/amp-model	8	Delta	normal	0	true
+load	JS: Liteon/deesser	9
+meta	JS: Liteon/deesser	fx_name	JS: De-esser
+meta	JS: Liteon/deesser	fx_type	JS
+meta	JS: Liteon/deesser	fx_ident	Liteon/deesser
+presets	JS: Liteon/deesser	-1	0
+param	JS: Liteon/deesser	0	Processing	Mono	1	true
+param	JS: Liteon/deesser	1	Target Type	Hipass	1	true
+param	JS: Liteon/deesser	2	Monitor	Off	0	true
+param	JS: Liteon/deesser	3	Frequency (Hz)	4000.0	0.23809523809524	true
+param	JS: Liteon/deesser	4	Bandwidth (Oct)	1.5	0.46666666666667	true
+param	JS: Liteon/deesser	5	Threshold (dB)	-25.0	0.6875	true
+param	JS: Liteon/deesser	6	Ratio	4.0	0.15789473684211	true
+param	JS: Liteon/deesser	7	Time Constants	A: 3 és - R: 50 ms	0	true
+param	JS: Liteon/deesser	8	Gain (-inf/+24dB)	0.0	0.5	true
+param	JS: Liteon/deesser	9	Bypass	normal	0	true
+param	JS: Liteon/deesser	10	Wet	100	1	true
+param	JS: Liteon/deesser	11	Delta	normal	0	true
+load	JS: sstillwell/chorus_stereo	10
+meta	JS: sstillwell/chorus_stereo	fx_name	JS: Chorus (Stereo)
+meta	JS: sstillwell/chorus_stereo	fx_type	JS
+meta	JS: sstillwell/chorus_stereo	fx_ident	sstillwell/chorus_stereo
+presets	JS: sstillwell/chorus_stereo	-1	0
+param	JS: sstillwell/chorus_stereo	0	Chorus Length (ms)	15.0	0.028056112224449	true
+param	JS: sstillwell/chorus_stereo	1	Number Of Voices	1.0	0	true
+param	JS: sstillwell/chorus_stereo	2	Rate (Hz) (0=tempo sync)	0.5	0.03125	true
+param	JS: sstillwell/chorus_stereo	3	Pitch Fudge Factor	0.7	0.7	true
+param	JS: sstillwell/chorus_stereo	4	Wet Mix (dB)	-6.0	0.47	true
+param	JS: sstillwell/chorus_stereo	5	Dry Mix (dB)	-6.0	0.47	true
+param	JS: sstillwell/chorus_stereo	6	Channel Rate Offset (Hz)	0.0	0.5	true
+param	JS: sstillwell/chorus_stereo	7	Tempo Sync (fraction of whole note)	0.25	0.047619047619048	true
+param	JS: sstillwell/chorus_stereo	8	Bypass	normal	0	true
+param	JS: sstillwell/chorus_stereo	9	Wet	100	1	true
+param	JS: sstillwell/chorus_stereo	10	Delta	normal	0	true
+load	JS: loser/stereoEnhancer	11
+meta	JS: loser/stereoEnhancer	fx_name	JS: Stereo Enhancer
+meta	JS: loser/stereoEnhancer	fx_type	JS
+meta	JS: loser/stereoEnhancer	fx_ident	loser/stereoEnhancer
+presets	JS: loser/stereoEnhancer	-1	0
+param	JS: loser/stereoEnhancer	0	Width Low (%)	100.0	0.5	true
+param	JS: loser/stereoEnhancer	1	Crossover (Hz)	500.0	0.025	true
+param	JS: loser/stereoEnhancer	2	Width High (%)	100.0	0.5	true
+param	JS: loser/stereoEnhancer	3	Bypass	normal	0	true
+param	JS: loser/stereoEnhancer	4	Wet	100	1	true
+param	JS: loser/stereoEnhancer	5	Delta	normal	0	true

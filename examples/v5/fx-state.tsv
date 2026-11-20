@@ -1,0 +1,227 @@
+MASTER	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+MASTER	VST: ReaEQ (Cockos)	Freq-Band 2	315.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Band 2	-0.7
+MASTER	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+MASTER	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+MASTER	VST: ReaEQ (Cockos)	Freq-High Shelf 4	6800.0
+MASTER	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.4
+MASTER	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+MASTER	VST: ReaEQ (Cockos)	Freq-High Pass 5	26.0
+MASTER	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+MASTER	VST: ReaEQ (Cockos)	Global Gain	0.0
+MASTER	VST: ReaEQ (Cockos)	Bypass	normal
+MASTER	VST: ReaEQ (Cockos)	Wet	100
+MASTER	VST: ReaEQ (Cockos)	Delta	normal
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 2	285.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 2	-1.4
+Vocals · separated estimate	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Freq-High Shelf 4	3950.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Gain-High Shelf 4	1.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Freq-High Pass 5	78.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Global Gain	0.0
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Bypass	normal
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Wet	100
+Vocals · separated estimate	VST: ReaEQ (Cockos)	Delta	normal
+Vocals · separated estimate	JS: De-esser	Processing	Stereo
+Vocals · separated estimate	JS: De-esser	Target Type	Hipass
+Vocals · separated estimate	JS: De-esser	Monitor	Off
+Vocals · separated estimate	JS: De-esser	Frequency (Hz)	6600.0
+Vocals · separated estimate	JS: De-esser	Bandwidth (Oct)	1.5
+Vocals · separated estimate	JS: De-esser	Threshold (dB)	-25.0
+Vocals · separated estimate	JS: De-esser	Ratio	2.0
+Vocals · separated estimate	JS: De-esser	Time Constants	A: 3 �s - R: 50 ms
+Vocals · separated estimate	JS: De-esser	Gain (-inf/+24dB)	0.0
+Vocals · separated estimate	JS: De-esser	Bypass	normal
+Vocals · separated estimate	JS: De-esser	Wet	32
+Vocals · separated estimate	JS: De-esser	Delta	normal
+Vocals · separated estimate	VST: ReaComp (Cockos)	Threshold	-15.0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Ratio	1.349
+Vocals · separated estimate	VST: ReaComp (Cockos)	Attack	19.0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Release	110
+Vocals · separated estimate	VST: ReaComp (Cockos)	Pre-comp	0.00
+Vocals · separated estimate	VST: ReaComp (Cockos)	resvd	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Lowpass	20000
+Vocals · separated estimate	VST: ReaComp (Cockos)	Hipass	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	SignIn	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	AudIn	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Dry	-inf
+Vocals · separated estimate	VST: ReaComp (Cockos)	Wet	+0.0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Filter Preview	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	RMS size	5.0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Knee	0.0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Auto Make Up Gain	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Auto Release	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Legacy Attack/Knee Options	0.25
+Vocals · separated estimate	VST: ReaComp (Cockos)	Deprecated Broken Anti-Alias	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Multichannel Mode	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Metering Index	0
+Vocals · separated estimate	VST: ReaComp (Cockos)	Bypass	normal
+Vocals · separated estimate	VST: ReaComp (Cockos)	Wet	100
+Vocals · separated estimate	VST: ReaComp (Cockos)	Delta	normal
+Vocals · separated estimate	Send	Plate-style · vocal reflections	0.050118723362727
+Drums · separated estimate	VST: ReaComp (Cockos)	Threshold	-12.0
+Drums · separated estimate	VST: ReaComp (Cockos)	Ratio	1.399
+Drums · separated estimate	VST: ReaComp (Cockos)	Attack	25.0
+Drums · separated estimate	VST: ReaComp (Cockos)	Release	95
+Drums · separated estimate	VST: ReaComp (Cockos)	Pre-comp	0.00
+Drums · separated estimate	VST: ReaComp (Cockos)	resvd	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Lowpass	20000
+Drums · separated estimate	VST: ReaComp (Cockos)	Hipass	0
+Drums · separated estimate	VST: ReaComp (Cockos)	SignIn	0
+Drums · separated estimate	VST: ReaComp (Cockos)	AudIn	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Dry	-inf
+Drums · separated estimate	VST: ReaComp (Cockos)	Wet	+0.0
+Drums · separated estimate	VST: ReaComp (Cockos)	Filter Preview	0
+Drums · separated estimate	VST: ReaComp (Cockos)	RMS size	5.0
+Drums · separated estimate	VST: ReaComp (Cockos)	Knee	0.0
+Drums · separated estimate	VST: ReaComp (Cockos)	Auto Make Up Gain	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Auto Release	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Legacy Attack/Knee Options	0.25
+Drums · separated estimate	VST: ReaComp (Cockos)	Deprecated Broken Anti-Alias	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Multichannel Mode	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Metering Index	0
+Drums · separated estimate	VST: ReaComp (Cockos)	Bypass	normal
+Drums · separated estimate	VST: ReaComp (Cockos)	Wet	100
+Drums · separated estimate	VST: ReaComp (Cockos)	Delta	normal
+Drums · separated estimate	Send	Room · drums and clean guitar	0.056234132519035
+Bass · separated estimate	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Bass · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 2	215.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 2	-0.7
+Bass · separated estimate	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Bass · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Bass · separated estimate	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Bass · separated estimate	VST: ReaEQ (Cockos)	Freq-High Pass 5	30.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Bass · separated estimate	VST: ReaEQ (Cockos)	Global Gain	0.0
+Bass · separated estimate	VST: ReaEQ (Cockos)	Bypass	normal
+Bass · separated estimate	VST: ReaEQ (Cockos)	Wet	100
+Bass · separated estimate	VST: ReaEQ (Cockos)	Delta	normal
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 2	335.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 2	-1.6
+Guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-High Shelf 4	4900.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.7
+Guitar · separated estimate	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-High Pass 5	96.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Global Gain	0.0
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Bypass	normal
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Wet	100
+Guitar · separated estimate	VST: ReaEQ (Cockos)	Delta	normal
+Guitar · separated estimate	JS: Stereo Enhancer	Width Low (%)	100.0
+Guitar · separated estimate	JS: Stereo Enhancer	Crossover (Hz)	550.0
+Guitar · separated estimate	JS: Stereo Enhancer	Width High (%)	100.0
+Guitar · separated estimate	JS: Stereo Enhancer	Bypass	normal
+Guitar · separated estimate	JS: Stereo Enhancer	Wet	100
+Guitar · separated estimate	JS: Stereo Enhancer	Delta	normal
+Guitar · separated estimate	Send	Room · drums and clean guitar	0.070794578438414
+Guitar · separated estimate	Send	Shoegaze · diffuse guitar return	0.12589254117942
+Guitar · separated estimate	Send	Delay · dotted eighth	0.056234132519035
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Wet	-0.0
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Dry	-inf
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Room size	30
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Dampening	62
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Width	1.00
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Delay	8
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Lowpass	6900
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Hipass	210
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Bypass	normal
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Wet	100
+Room · drums and clean guitar	VST: ReaVerbate (Cockos)	Delta	normal
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Wet	-0.0
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Dry	-inf
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Room size	51
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Dampening	57
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Width	1.00
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Delay	31
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Lowpass	7400
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Hipass	269
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Bypass	normal
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Wet	100
+Plate-style · vocal reflections	VST: ReaVerbate (Cockos)	Delta	normal
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Wet	-9.0
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Dry	-inf
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Room size	85
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Dampening	67
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Width	1.00
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Delay	41
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Lowpass	6499
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Hipass	299
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Bypass	normal
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Wet	100
+Shoegaze · diffuse guitar return	VST: ReaVerbate (Cockos)	Delta	normal
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Chorus Length (ms)	14.0
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Number Of Voices	2.0
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Rate (Hz) (0=tempo sync)	0.32
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Pitch Fudge Factor	0.42
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Wet Mix (dB)	-17.0
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Dry Mix (dB)	0.0
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Channel Rate Offset (Hz)	0.09
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Tempo Sync (fraction of whole note)	0.25
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Bypass	normal
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Wet	100
+Shoegaze · diffuse guitar return	JS: Chorus (Stereo)	Delta	normal
+Delay · dotted eighth	VST: ReaDelay (Cockos)	Wet	-0.0
+Delay · dotted eighth	VST: ReaDelay (Cockos)	Dry	-inf
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Enabled	ON
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Length (time)	401.7
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Length (musical)	0.00
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Feedback	-12.0
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Lowpass	4300
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Hipass	299
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Resolution	24
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Stereo width	1.00
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Volume	+0.0
+Delay · dotted eighth	VST: ReaDelay (Cockos)	1: Pan	0.000
+Delay · dotted eighth	VST: ReaDelay (Cockos)	Bypass	normal
+Delay · dotted eighth	VST: ReaDelay (Cockos)	Wet	100
+Delay · dotted eighth	VST: ReaDelay (Cockos)	Delta	normal
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Freq-Band 2	2450.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Gain-Band 2	2.1
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5100.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.6
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Freq-High Pass 5	400.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Global Gain	0.0
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Bypass	normal
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Wet	100
+Lead focus · excerpt of guitar estimate	VST: ReaEQ (Cockos)	Delta	normal
+Lead focus · excerpt of guitar estimate	Send	Shoegaze · diffuse guitar return	0.1122018454302
+Lead focus · excerpt of guitar estimate	Send	Delay · dotted eighth	0.25118864315096

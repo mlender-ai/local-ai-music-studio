@@ -1,0 +1,113 @@
+{
+  "sha256": {
+    "original.wav": "252477c558829f365369d15fb66fbb151f2a86780f0ddac7f2e616c469345414",
+    "YuE2 Original.wav": "457a5fc3472008fccb9354dc1407bbd097d339858c1c1591f2c7cbe57946ae1d",
+    "METALLIC DREAM - Final Master.wav": "c461a4829ba2adc9ef510c2ef26f5b3f24a7e1a7206edaf2a25952c23b93343d"
+  },
+  "approved_rock_reference": {
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames": 2879936,
+    "duration_seconds": 59.998666666666665,
+    "peak": 1.027491807937622,
+    "peak_dbfs": 0.23556735973743714,
+    "rms": 0.15226254281501478,
+    "rms_dbfs": -16.348138433543216,
+    "clipped_samples": 1,
+    "finite": true,
+    "low_band_power": 0.0018688068613462322,
+    "high_band_power": 5.0248328704818075e-05,
+    "low_mid_fraction": 0.26313015981252175,
+    "presence_fraction": 0.06622267488039262,
+    "air_fraction": 0.011206892999689726,
+    "lr_correlation": 0.805550918727682,
+    "crest_db": 16.583705793280654,
+    "mono_fold_db": -0.44462189977843547,
+    "integrated_lufs": -13.85,
+    "true_peak_dbtp": 0.26,
+    "pcm_sha256": "eb6730aaff256d22299244269686edd3ccf910c755feab73c84cb788d05e9c7a",
+    "section_rms_dbfs": {}
+  },
+  "solo_audio_evidence": {
+    "excerpt_seconds": [
+      60.15,
+      75.75
+    ],
+    "six_source_guitar_dbfs": -19.991945439589447,
+    "six_source_vocal_dbfs": -52.152494522533495,
+    "four_source_vocal_dbfs": -75.08360210712682,
+    "estimate_pitch": {
+      "strong_periodicity_windows": 137,
+      "analysis_hop_seconds": 0.1,
+      "fundamental_hz_percentiles": [
+        235.3,
+        347.8,
+        533.3
+      ]
+    }
+  },
+  "command_delta": [
+    {
+      "section": "Intro",
+      "direction_delta_db_relative_to_control": -173.2214073040409,
+      "side_to_mid_change_db": 0.0
+    },
+    {
+      "section": "Verse",
+      "direction_delta_db_relative_to_control": -179.6204044962256,
+      "side_to_mid_change_db": 0.0
+    },
+    {
+      "section": "Pre-chorus",
+      "direction_delta_db_relative_to_control": -50.625952742374615,
+      "side_to_mid_change_db": 0.0044169528480768605
+    },
+    {
+      "section": "Chorus",
+      "direction_delta_db_relative_to_control": -25.38401464083796,
+      "side_to_mid_change_db": 0.9840728696559946
+    },
+    {
+      "section": "Break",
+      "direction_delta_db_relative_to_control": -50.90983218243505,
+      "side_to_mid_change_db": 0.0011288858872653407
+    },
+    {
+      "section": "Solo cue",
+      "direction_delta_db_relative_to_control": -50.40686662598025,
+      "side_to_mid_change_db": 0.005293025313664046
+    },
+    {
+      "section": "Final chorus",
+      "direction_delta_db_relative_to_control": -25.584949404681957,
+      "side_to_mid_change_db": 0.990498636562025
+    },
+    {
+      "section": "Outro",
+      "direction_delta_db_relative_to_control": -51.50066818286898,
+      "side_to_mid_change_db": 0.003904640363302292
+    }
+  ],
+  "original_asr": {
+    "model": "openai/whisper-small@973afd24965f72e36ca33b3055d56a652f456b4d",
+    "language": "ko",
+    "chunks": [
+      "샴 빛의 벽을 타고 긴방에 내려 앉아 목 끝에 다음 밤은 가만히 삼켜본다 밝힌 숨을 따라",
+      "눈이 조금 열린다 깨진 빛을 안 곧 뛰어 나를 놓치지 마 녹슨 밤을 찍고 뛰어 내가 여기 있다",
+      "이 곡은 이 곡의 곡이 가장 좋은 곡입니다.",
+      "내가 여기 있다"
+    ],
+    "character_error_rate": 0.33
+  },
+  "master_asr": {
+    "model": "openai/whisper-small@973afd24965f72e36ca33b3055d56a652f456b4d",
+    "language": "ko",
+    "chunks": [
+      "샴 빛의 벽을 타고 긴방에 내려 앉아 목 끝에 다음 밤은 가만히 삼켜본다 밝힌 숨을 따라",
+      "면이 조금 열린다 깨진 빛을 안 곧 뛰어 나를 놓치지 마 목숨 밤을 짓고 뛰어 내가 여기 있다",
+      "이 곡은 이 곡의 곡이 가장 좋은 곡입니다.",
+      "내가 여기 있다"
+    ],
+    "character_error_rate": 0.351
+  }
+}
