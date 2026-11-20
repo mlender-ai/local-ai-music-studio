@@ -1,0 +1,16 @@
+{
+  "source_sha256": "c15e845df994b68fe0482e7c2997ebc227368f23b6c1bdc9ef299dd7b07b3b38",
+  "pulse_hint_bpm": 104,
+  "section_first_beats": [
+    0,
+    16,
+    32,
+    48,
+    92,
+    104,
+    128,
+    168
+  ],
+  "master_trim_db": -4.2,
+  "tail": 1.7
+}

@@ -1,0 +1,29 @@
+{
+  "engine": "yue2",
+  "genre": "rusted-sunlight",
+  "seed": 73,
+  "brief": {
+    "style": "Instrumental, warm melodic neo-psychedelic alternative rock quartet, instrumental guitar theme, 104 bpm, A major with borrowed F major, clear close-picked electric guitar climbs E B C-sharp then falls to A, answering bass slides, live acoustic kit, rim and open hats, crooked metallic backbeat, tactile vintage amps, pockets of silence. The fuzz wall blossoms then collapses into isolated bass and rim clicks. Exposed singing electric guitar solo with bent strings, a fast turn, space between phrases and harmonic feedback. Full band octave reprise then a ringing A add9 chord. All instruments, no vocals, no singing, no choir, no spoken words.",
+    "lyrics": "",
+    "bpm": 104,
+    "duration": 110
+  },
+  "input_score": "X:1\nT:Rusted Sunlight\nM:4/4\nL:1/16\nQ:1/4=104\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:A\n% intro\nV: Vocal\n\"Aadd9\"z16|\"Dmaj7\"z16|\"A/E\"z16|\"Fmaj7\"z16|\nV: Ins\nz2 E3 B c4 B2 A4|F4 E2 z2 A6 z2|z2 E3 B c4 e2 B4|=F4 =c4 A6 z2|\n% verse\nV: Vocal\n\"A\"z16|\"Bm7\"z16|\"Dmaj7\"z16|\"A/E\"z16|\nV: Ins\nE3 z B2 c4 B2 A4|z4 F3 A B4 z4|F3 A d2 c4 A2 z4|E2 z2 B4 e4 z4|\nV: Vocal\n\"A\"z16|\"Bm7\"z16|\"Fmaj7\"z16|\"Esus4\"z16|\nV: Ins\nE3 z B2 c4 e2 A4|z4 B3 c d4 z4|=F3 A =c2 e4 =c2 z4|B6 A2 z4 E4|\n% pre-chorus\nV: Vocal\n\"F#m\"z16|\"Dmaj7\"z16|\"A\"z16|\"E\"z16|\nV: Ins\nc3 e f4 z4 c4|d4 z2 A2 F6 z2|e2 c2 z2 B2 A6 z2|B4 G4 z4 B4|\nV: Vocal\n\"Fmaj7\"z16|\"Esus4\"z16|\nV: Ins\n=c3 e2 a3 e4 =c4|B8 A4 B2 z2|\n% chorus\nV: Vocal\n\"Aadd9\"z16|\"D\"z16|\"F#m\"z16|\"E\"z16|\nV: Ins\ne3 b c'4 b4 a4|f4 e4 a6 z2|c'6 a2 f4 e4|b4 g2 e2 z8|\nV: Vocal\n\"F\"z16|\"E\"z16|\nV: Ins\n=c'4 a4 =f6 e2|b6 g2 e4 z4|\n% bridge\nV: Vocal\n\"A5\"z16|\"A5\"z16|\"Fmaj7\"z16|\"Esus4\"z16|\nV: Ins\nA,3 z13|z10 E2 A2 z2|=F3 z5 =c2 z6|B4 z8 B2 e2|\n% instrumental\nV: Vocal\n\"A\"z16|\"Dmaj7\"z16|\"F#m\"z16|\"E\"z16|\nV: Ins\nz2 e3 b c'4 b2 a4|f6 e2 z4 A4|c'8- c'4 a2 f2|g3 b e'6 z6|\nV: Vocal\n\"D\"z16|\"A/C#\"z16|\"F\"z16|\"E\"z16|\nV: Ins\nd'6 c'2 a4 z4|e2 a b c'2 e'2 c'2 b2 a4|=f'8 e'2 =c'4 z2|b6 g2 e4 z4|\n% chorus\nV: Vocal\n\"A\"z16|\"D\"z16|\"F#m\"z16|\"E\"z16|\nV: Ins\ne3 b c'4 e'2 b2 a4|f4 e4 a6 z2|c'6 a2 f2 a2 e4|b4 g2 e2 z6 B2|\nV: Vocal\n\"Fmaj7\"z16|\"Esus4\"z16|\nV: Ins\n=c'4 a4 e4 =c4|B8 A4 E2 z2|\n% outro\nV: Vocal\n\"Dmaj7\"z16|\"Aadd9\"z16|\nV: Ins\nF4 E2 B2 c4 B2 z2|A12 z4|\n",
+  "status": "rendered",
+  "original": "rusted-sunlight-original.wav",
+  "run": {
+    "peak_rss_gib": 3.98,
+    "peak_footprint_gib": 3.98,
+    "total_seconds": 386.421
+  },
+  "score_echo_identical": true,
+  "semantic_end_step": 2645,
+  "sample_rate": 48000,
+  "frames": 5078336,
+  "cpp_commit": "e646d5228911ae1b81ac2a261115a255848ce85f",
+  "backbone": "YuE2-3B-Q8_0",
+  "vae": "F32",
+  "cot": "full",
+  "steps": 32,
+  "output_sha256": "c15e845df994b68fe0482e7c2997ebc227368f23b6c1bdc9ef299dd7b07b3b38"
+}

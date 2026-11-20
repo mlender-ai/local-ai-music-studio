@@ -1,0 +1,522 @@
+{
+  "duration": 105.79866666666666,
+  "bpm": 99.99000000000036,
+  "bars": [
+    {
+      "beat": 0,
+      "start": 0.249,
+      "mix": -24.15,
+      "vocals": -82.77,
+      "drums": -92.3,
+      "bass": -92.18,
+      "guitar": -24.14,
+      "vocals_four": -87.55
+    },
+    {
+      "beat": 4,
+      "start": 2.649,
+      "mix": -26.24,
+      "vocals": -86.54,
+      "drums": -94.62,
+      "bass": -95.97,
+      "guitar": -26.28,
+      "vocals_four": -85.71
+    },
+    {
+      "beat": 8,
+      "start": 5.05,
+      "mix": -26.32,
+      "vocals": -85.82,
+      "drums": -86.9,
+      "bass": -69.93,
+      "guitar": -26.4,
+      "vocals_four": -88.74
+    },
+    {
+      "beat": 12,
+      "start": 7.418,
+      "mix": -23.05,
+      "vocals": -90.66,
+      "drums": -30.75,
+      "bass": -31.94,
+      "guitar": -26.22,
+      "vocals_four": -84.16
+    },
+    {
+      "beat": 16,
+      "start": 9.791,
+      "mix": -16.81,
+      "vocals": -87.01,
+      "drums": -24.47,
+      "bass": -19.94,
+      "guitar": -23.42,
+      "vocals_four": -78.91
+    },
+    {
+      "beat": 20,
+      "start": 12.178,
+      "mix": -17.33,
+      "vocals": -87.03,
+      "drums": -26.13,
+      "bass": -19.36,
+      "guitar": -25.11,
+      "vocals_four": -77.41
+    },
+    {
+      "beat": 24,
+      "start": 14.585,
+      "mix": -17.45,
+      "vocals": -86.96,
+      "drums": -24.71,
+      "bass": -23.21,
+      "guitar": -22.47,
+      "vocals_four": -75.95
+    },
+    {
+      "beat": 28,
+      "start": 17.002,
+      "mix": -18.92,
+      "vocals": -89.56,
+      "drums": -26.34,
+      "bass": -23.21,
+      "guitar": -25.32,
+      "vocals_four": -79.31
+    },
+    {
+      "beat": 32,
+      "start": 19.42,
+      "mix": -16.41,
+      "vocals": -87.78,
+      "drums": -22.53,
+      "bass": -19.27,
+      "guitar": -23.71,
+      "vocals_four": -81.38
+    },
+    {
+      "beat": 36,
+      "start": 21.834,
+      "mix": -16.4,
+      "vocals": -89.42,
+      "drums": -22.58,
+      "bass": -18.51,
+      "guitar": -26.53,
+      "vocals_four": -82.19
+    },
+    {
+      "beat": 40,
+      "start": 24.249,
+      "mix": -18.41,
+      "vocals": -82.61,
+      "drums": -23.46,
+      "bass": -44.34,
+      "guitar": -20.22,
+      "vocals_four": -81.94
+    },
+    {
+      "beat": 44,
+      "start": 26.665,
+      "mix": -17.91,
+      "vocals": -83.55,
+      "drums": -21.32,
+      "bass": -28.67,
+      "guitar": -22.04,
+      "vocals_four": -79.57
+    },
+    {
+      "beat": 48,
+      "start": 29.07,
+      "mix": -12.28,
+      "vocals": -79.71,
+      "drums": -19.23,
+      "bass": -17.53,
+      "guitar": -15.86,
+      "vocals_four": -74.12
+    },
+    {
+      "beat": 52,
+      "start": 31.468,
+      "mix": -11.78,
+      "vocals": -81.34,
+      "drums": -18.01,
+      "bass": -17.02,
+      "guitar": -15.56,
+      "vocals_four": -76.65
+    },
+    {
+      "beat": 56,
+      "start": 33.87,
+      "mix": -12.2,
+      "vocals": -81.43,
+      "drums": -18.01,
+      "bass": -16.88,
+      "guitar": -16.84,
+      "vocals_four": -76.55
+    },
+    {
+      "beat": 60,
+      "start": 36.277,
+      "mix": -12.78,
+      "vocals": -82.41,
+      "drums": -18.08,
+      "bass": -19.32,
+      "guitar": -16.53,
+      "vocals_four": -75.41
+    },
+    {
+      "beat": 64,
+      "start": 38.68,
+      "mix": -12.95,
+      "vocals": -80.35,
+      "drums": -18.0,
+      "bass": -20.75,
+      "guitar": -16.47,
+      "vocals_four": -75.58
+    },
+    {
+      "beat": 68,
+      "start": 41.081,
+      "mix": -12.9,
+      "vocals": -81.57,
+      "drums": -17.45,
+      "bass": -18.34,
+      "guitar": -17.98,
+      "vocals_four": -76.59
+    },
+    {
+      "beat": 72,
+      "start": 43.476,
+      "mix": -12.03,
+      "vocals": -59.85,
+      "drums": -17.99,
+      "bass": -16.42,
+      "guitar": -16.98,
+      "vocals_four": -77.06
+    },
+    {
+      "beat": 76,
+      "start": 45.872,
+      "mix": -12.35,
+      "vocals": -82.67,
+      "drums": -17.78,
+      "bass": -16.92,
+      "guitar": -17.52,
+      "vocals_four": -76.89
+    },
+    {
+      "beat": 80,
+      "start": 48.28,
+      "mix": -12.8,
+      "vocals": -79.48,
+      "drums": -18.25,
+      "bass": -19.76,
+      "guitar": -16.66,
+      "vocals_four": -69.22
+    },
+    {
+      "beat": 84,
+      "start": 50.688,
+      "mix": -13.38,
+      "vocals": -81.29,
+      "drums": -17.96,
+      "bass": -18.97,
+      "guitar": -19.54,
+      "vocals_four": -73.05
+    },
+    {
+      "beat": 88,
+      "start": 53.088,
+      "mix": -13.34,
+      "vocals": -80.25,
+      "drums": -18.1,
+      "bass": -19.32,
+      "guitar": -19.94,
+      "vocals_four": -76.34
+    },
+    {
+      "beat": 92,
+      "start": 55.486,
+      "mix": -13.42,
+      "vocals": -79.71,
+      "drums": -18.15,
+      "bass": -17.54,
+      "guitar": -21.15,
+      "vocals_four": -77.26
+    },
+    {
+      "beat": 96,
+      "start": 57.886,
+      "mix": -18.06,
+      "vocals": -91.02,
+      "drums": -24.64,
+      "bass": -21.25,
+      "guitar": -25.68,
+      "vocals_four": -83.7
+    },
+    {
+      "beat": 100,
+      "start": 60.287,
+      "mix": -25.7,
+      "vocals": -83.1,
+      "drums": -65.55,
+      "bass": -36.28,
+      "guitar": -26.57,
+      "vocals_four": -90.43
+    },
+    {
+      "beat": 104,
+      "start": 62.688,
+      "mix": -25.87,
+      "vocals": -91.42,
+      "drums": -88.45,
+      "bass": -94.78,
+      "guitar": -25.89,
+      "vocals_four": -90.81
+    },
+    {
+      "beat": 108,
+      "start": 65.056,
+      "mix": -25.63,
+      "vocals": -89.18,
+      "drums": -94.15,
+      "bass": -95.46,
+      "guitar": -25.63,
+      "vocals_four": -86.11
+    },
+    {
+      "beat": 112,
+      "start": 67.456,
+      "mix": -25.17,
+      "vocals": -91.39,
+      "drums": -94.29,
+      "bass": -94.14,
+      "guitar": -25.14,
+      "vocals_four": -88.53
+    },
+    {
+      "beat": 116,
+      "start": 69.856,
+      "mix": -22.13,
+      "vocals": -88.14,
+      "drums": -89.82,
+      "bass": -90.75,
+      "guitar": -22.22,
+      "vocals_four": -82.15
+    },
+    {
+      "beat": 120,
+      "start": 72.276,
+      "mix": -28.13,
+      "vocals": -92.2,
+      "drums": -93.59,
+      "bass": -96.88,
+      "guitar": -28.18,
+      "vocals_four": -88.41
+    },
+    {
+      "beat": 124,
+      "start": 74.673,
+      "mix": -24.77,
+      "vocals": -89.51,
+      "drums": -88.44,
+      "bass": -93.6,
+      "guitar": -24.85,
+      "vocals_four": -87.77
+    },
+    {
+      "beat": 128,
+      "start": 77.072,
+      "mix": -11.44,
+      "vocals": -47.3,
+      "drums": -17.07,
+      "bass": -16.98,
+      "guitar": -27.42,
+      "vocals_four": -76.37
+    },
+    {
+      "beat": 132,
+      "start": 79.474,
+      "mix": -12.17,
+      "vocals": -80.94,
+      "drums": -17.48,
+      "bass": -17.0,
+      "guitar": -32.34,
+      "vocals_four": -76.39
+    },
+    {
+      "beat": 136,
+      "start": 81.882,
+      "mix": -12.63,
+      "vocals": -82.97,
+      "drums": -17.13,
+      "bass": -17.52,
+      "guitar": -21.92,
+      "vocals_four": -75.7
+    },
+    {
+      "beat": 140,
+      "start": 84.285,
+      "mix": -12.47,
+      "vocals": -82.41,
+      "drums": -17.46,
+      "bass": -17.39,
+      "guitar": -17.62,
+      "vocals_four": -75.09
+    },
+    {
+      "beat": 144,
+      "start": 86.681,
+      "mix": -11.86,
+      "vocals": -58.67,
+      "drums": -17.07,
+      "bass": -16.54,
+      "guitar": -17.05,
+      "vocals_four": -75.6
+    },
+    {
+      "beat": 148,
+      "start": 89.074,
+      "mix": -12.09,
+      "vocals": -80.63,
+      "drums": -16.74,
+      "bass": -16.65,
+      "guitar": -18.02,
+      "vocals_four": -76.66
+    },
+    {
+      "beat": 152,
+      "start": 91.466,
+      "mix": -12.71,
+      "vocals": -82.46,
+      "drums": -16.61,
+      "bass": -19.52,
+      "guitar": -17.94,
+      "vocals_four": -71.97
+    },
+    {
+      "beat": 156,
+      "start": 93.858,
+      "mix": -12.29,
+      "vocals": -83.88,
+      "drums": -16.75,
+      "bass": -17.77,
+      "guitar": -18.57,
+      "vocals_four": -71.74
+    },
+    {
+      "beat": 160,
+      "start": 96.247,
+      "mix": -12.74,
+      "vocals": -81.15,
+      "drums": -16.09,
+      "bass": -17.92,
+      "guitar": -20.97,
+      "vocals_four": -72.11
+    },
+    {
+      "beat": 164,
+      "start": 98.639,
+      "mix": -12.76,
+      "vocals": -82.12,
+      "drums": -16.9,
+      "bass": -17.45,
+      "guitar": -19.48,
+      "vocals_four": -72.38
+    },
+    {
+      "beat": 168,
+      "start": 101.034,
+      "mix": -21.46,
+      "vocals": -90.49,
+      "drums": -77.47,
+      "bass": -69.22,
+      "guitar": -21.48,
+      "vocals_four": -83.29
+    },
+    {
+      "beat": 172,
+      "start": 103.432,
+      "mix": -28.01,
+      "vocals": -91.88,
+      "drums": -90.36,
+      "bass": -95.36,
+      "guitar": -28.0,
+      "vocals_four": -91.18
+    }
+  ],
+  "six_source_voice_vs_mix_db": -48.337452089239676,
+  "four_source_voice_vs_mix_db": -61.83784995851157,
+  "original_no_speech": [
+    {
+      "seconds": 0.0,
+      "no_speech": 0.5275
+    },
+    {
+      "seconds": 6.0,
+      "no_speech": 0.7854
+    },
+    {
+      "seconds": 12.0,
+      "no_speech": 0.6694
+    },
+    {
+      "seconds": 18.0,
+      "no_speech": 0.6433
+    },
+    {
+      "seconds": 24.0,
+      "no_speech": 0.7603
+    },
+    {
+      "seconds": 30.0,
+      "no_speech": 0.6408
+    },
+    {
+      "seconds": 36.0,
+      "no_speech": 0.8073
+    },
+    {
+      "seconds": 42.0,
+      "no_speech": 0.766
+    },
+    {
+      "seconds": 48.0,
+      "no_speech": 0.5967
+    },
+    {
+      "seconds": 54.0,
+      "no_speech": 0.7838
+    },
+    {
+      "seconds": 60.0,
+      "no_speech": 0.776
+    },
+    {
+      "seconds": 66.0,
+      "no_speech": 0.8532
+    },
+    {
+      "seconds": 72.0,
+      "no_speech": 0.8804
+    },
+    {
+      "seconds": 78.0,
+      "no_speech": 0.7083
+    },
+    {
+      "seconds": 84.0,
+      "no_speech": 0.7539
+    },
+    {
+      "seconds": 90.0,
+      "no_speech": 0.6307
+    },
+    {
+      "seconds": 96.0,
+      "no_speech": 0.8303
+    },
+    {
+      "seconds": 102.0,
+      "no_speech": 0.9488
+    }
+  ]
+}

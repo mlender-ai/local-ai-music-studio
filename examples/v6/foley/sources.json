@@ -1,0 +1,35 @@
+[
+  {
+    "file": "pipe.mp3",
+    "title": "Metal Pipe Hit 1_3",
+    "author": "Joao_Janz",
+    "source": "https://freesound.org/people/Joao_Janz/sounds/478675/",
+    "preview": "https://cdn.freesound.org/previews/478/478675_9961300-hq.mp3",
+    "license": "CC0-1.0",
+    "listed_original_rate": 96000,
+    "listed_original_seconds": 2.974,
+    "sha256": "c1d066da8f20acd9ab57a70951d1b00bf6b538741af701560caee98c26da3030"
+  },
+  {
+    "file": "key.mp3",
+    "title": "Typewriter snippet 02",
+    "author": "cabled_mess",
+    "source": "https://freesound.org/people/cabled_mess/sounds/360602/",
+    "preview": "https://cdn.freesound.org/previews/360/360602_5450487-hq.mp3",
+    "license": "CC0-1.0",
+    "listed_original_rate": 96000,
+    "listed_original_seconds": 0.223,
+    "sha256": "63e3853f2dfb4f595c665de245357e5279402851d002126c07e40e825ae22261"
+  },
+  {
+    "file": "motor.mp3",
+    "title": "Small electronic motor",
+    "author": "derjuli",
+    "source": "https://freesound.org/people/derjuli/sounds/418013/",
+    "preview": "https://cdn.freesound.org/previews/418/418013_2573247-hq.mp3",
+    "license": "CC0-1.0",
+    "listed_original_rate": 44100,
+    "listed_original_seconds": 15.276,
+    "sha256": "35bf12f5ec30a82eabfd7b4fd2a900284828bcc592ac9114fa483e02e2f60c89"
+  }
+]

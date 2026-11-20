@@ -9,10 +9,10 @@ from engine.generation.supervisor import run_guarded, run_worker
 from engine.paths import DATA, ROOT, RUNTIME
 
 
-def run(engine, genre, seed, brief, *, score=None):
+def run(engine, genre, seed, brief, *, score=None, output_root=None):
     if score is not None and (engine != "yue2" or not score.strip()):
         raise ValueError("Provide a nonempty ABC score for YuE2")
-    folder = DATA / "v4" / f"{engine}-{genre}-{uuid4().hex[:10]}"
+    folder = (output_root or DATA / "v4") / f"{engine}-{genre}-{uuid4().hex[:10]}"
     folder.mkdir(parents=True)
     result = dict(engine=engine, genre=genre, seed=seed, brief=brief)
     log = folder / "worker.log"

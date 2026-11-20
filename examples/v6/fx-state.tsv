@@ -1,0 +1,237 @@
+MASTER	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+MASTER	VST: ReaEQ (Cockos)	Freq-Band 2	310.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Band 2	-0.5
+MASTER	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+MASTER	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+MASTER	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+MASTER	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+MASTER	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+MASTER	VST: ReaEQ (Cockos)	Freq-High Pass 5	24.0
+MASTER	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+MASTER	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+MASTER	VST: ReaEQ (Cockos)	Global Gain	0.0
+MASTER	VST: ReaEQ (Cockos)	Bypass	normal
+MASTER	VST: ReaEQ (Cockos)	Wet	100
+MASTER	VST: ReaEQ (Cockos)	Delta	normal
+MASTER	items	0	envelopes	1
+YuE2 original · reference (muted)	items	1	envelopes	0
+drums · separated estimate	items	1	envelopes	1
+bass · separated estimate	items	1	envelopes	0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 2	310.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 2	-0.6
+guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-High Shelf 4	4200.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.6
+guitar · separated estimate	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+guitar · separated estimate	VST: ReaEQ (Cockos)	Freq-High Pass 5	55.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+guitar · separated estimate	VST: ReaEQ (Cockos)	Global Gain	0.0
+guitar · separated estimate	VST: ReaEQ (Cockos)	Bypass	normal
+guitar · separated estimate	VST: ReaEQ (Cockos)	Wet	100
+guitar · separated estimate	VST: ReaEQ (Cockos)	Delta	normal
+guitar · separated estimate	items	1	envelopes	1
+remainder · original minus three estimates	items	1	envelopes	0
+Foley · pipe	items	44	envelopes	0
+Foley · key	items	24	envelopes	0
+Foley · motor	items	4	envelopes	0
+Guitar answers · resampled opening	items	3	envelopes	0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Attack	20.0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Release	309
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Square mix	0.00
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Saw mix	0.07
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Triangle mix	0.35
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Volume	-15.00
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Decay	329
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Extra sine mix	0.13
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Extra sine tuning	1199
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Sustain	-8.00
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Pulse Width	0.50
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Global detune	0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Legacy oscillator mode	0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Portamento	0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Broken portamento extra sine oscillator	0
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Bypass	normal
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Wet	100
+Solar glass · editable synth answers	VSTi: ReaSynth (Cockos)	Delta	normal
+Solar glass · editable synth answers	items	7	envelopes	0
+Room · short reflections	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Room · short reflections	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Room · short reflections	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Room · short reflections	VST: ReaEQ (Cockos)	Freq-Band 2	380.0
+Room · short reflections	VST: ReaEQ (Cockos)	Gain-Band 2	-1.0
+Room · short reflections	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Room · short reflections	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Room · short reflections	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Room · short reflections	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Room · short reflections	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Room · short reflections	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Room · short reflections	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Room · short reflections	VST: ReaEQ (Cockos)	Freq-High Pass 5	180.0
+Room · short reflections	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Room · short reflections	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Room · short reflections	VST: ReaEQ (Cockos)	Global Gain	0.0
+Room · short reflections	VST: ReaEQ (Cockos)	Bypass	normal
+Room · short reflections	VST: ReaEQ (Cockos)	Wet	100
+Room · short reflections	VST: ReaEQ (Cockos)	Delta	normal
+Room · short reflections	VST: ReaVerbate (Cockos)	Wet	-0.0
+Room · short reflections	VST: ReaVerbate (Cockos)	Dry	-inf
+Room · short reflections	VST: ReaVerbate (Cockos)	Room size	30
+Room · short reflections	VST: ReaVerbate (Cockos)	Dampening	51
+Room · short reflections	VST: ReaVerbate (Cockos)	Width	1.00
+Room · short reflections	VST: ReaVerbate (Cockos)	Delay	6
+Room · short reflections	VST: ReaVerbate (Cockos)	Lowpass	7400
+Room · short reflections	VST: ReaVerbate (Cockos)	Hipass	190
+Room · short reflections	VST: ReaVerbate (Cockos)	Bypass	normal
+Room · short reflections	VST: ReaVerbate (Cockos)	Wet	100
+Room · short reflections	VST: ReaVerbate (Cockos)	Delta	normal
+Room · short reflections	items	0	envelopes	1
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Freq-Band 2	620.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Gain-Band 2	-1.8
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Freq-High Pass 5	280.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Global Gain	0.0
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Bypass	normal
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Wet	100
+Shoegaze · moving late field	VST: ReaEQ (Cockos)	Delta	normal
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Wet	-0.0
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Dry	-inf
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Room size	90
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Dampening	61
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Width	1.00
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Delay	41
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Lowpass	5800
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Hipass	320
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Bypass	normal
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Wet	100
+Shoegaze · moving late field	VST: ReaVerbate (Cockos)	Delta	normal
+Shoegaze · moving late field	JS: Chorus (Stereo)	Chorus Length (ms)	15.0
+Shoegaze · moving late field	JS: Chorus (Stereo)	Number Of Voices	1.0
+Shoegaze · moving late field	JS: Chorus (Stereo)	Rate (Hz) (0=tempo sync)	0.21
+Shoegaze · moving late field	JS: Chorus (Stereo)	Pitch Fudge Factor	0.7
+Shoegaze · moving late field	JS: Chorus (Stereo)	Wet Mix (dB)	-6.0
+Shoegaze · moving late field	JS: Chorus (Stereo)	Dry Mix (dB)	-6.0
+Shoegaze · moving late field	JS: Chorus (Stereo)	Channel Rate Offset (Hz)	0.0
+Shoegaze · moving late field	JS: Chorus (Stereo)	Tempo Sync (fraction of whole note)	0.25
+Shoegaze · moving late field	JS: Chorus (Stereo)	Bypass	normal
+Shoegaze · moving late field	JS: Chorus (Stereo)	Wet	100
+Shoegaze · moving late field	JS: Chorus (Stereo)	Delta	normal
+Shoegaze · moving late field	items	0	envelopes	1
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Freq-Band 2	1250.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Gain-Band 2	-1.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Freq-High Pass 5	470.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Global Gain	0.0
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Bypass	normal
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Wet	100
+Metallic space · pipe chamber	VST: ReaEQ (Cockos)	Delta	normal
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Wet	-0.0
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Dry	-inf
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Room size	60
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Dampening	39
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Width	1.00
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Delay	17
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Lowpass	6900
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Hipass	509
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Bypass	normal
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Wet	100
+Metallic space · pipe chamber	VST: ReaVerbate (Cockos)	Delta	normal
+Metallic space · pipe chamber	items	0	envelopes	1
+Delay · guitar answers	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Delay · guitar answers	VST: ReaEQ (Cockos)	Freq-Band 2	750.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Gain-Band 2	-1.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Delay · guitar answers	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Delay · guitar answers	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Delay · guitar answers	VST: ReaEQ (Cockos)	Freq-High Pass 5	320.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Delay · guitar answers	VST: ReaEQ (Cockos)	Global Gain	0.0
+Delay · guitar answers	VST: ReaEQ (Cockos)	Bypass	normal
+Delay · guitar answers	VST: ReaEQ (Cockos)	Wet	100
+Delay · guitar answers	VST: ReaEQ (Cockos)	Delta	normal
+Delay · guitar answers	VST: ReaDelay (Cockos)	Wet	-0.0
+Delay · guitar answers	VST: ReaDelay (Cockos)	Dry	-inf
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Enabled	ON
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Length (time)	450.0
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Length (musical)	0.00
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Feedback	-12.0
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Lowpass	4300
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Hipass	360
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Resolution	24
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Stereo width	1.00
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Volume	+0.0
+Delay · guitar answers	VST: ReaDelay (Cockos)	1: Pan	0.000
+Delay · guitar answers	VST: ReaDelay (Cockos)	Bypass	normal
+Delay · guitar answers	VST: ReaDelay (Cockos)	Wet	100
+Delay · guitar answers	VST: ReaDelay (Cockos)	Delta	normal
+Delay · guitar answers	items	0	envelopes	1
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Freq-Band 2	1700.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Gain-Band 2	-1.5
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Freq-High Pass 5	550.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Global Gain	0.0
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Bypass	normal
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Wet	100
+Transition · reverse motor bloom	VST: ReaEQ (Cockos)	Delta	normal
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Wet	-0.0
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Dry	-inf
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Room size	74
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Dampening	73
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Width	1.00
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Delay	22
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Lowpass	3899
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Hipass	600
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Bypass	normal
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Wet	100
+Transition · reverse motor bloom	VST: ReaVerbate (Cockos)	Delta	normal
+Transition · reverse motor bloom	items	0	envelopes	1

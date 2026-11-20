@@ -195,6 +195,7 @@ def produce(source, stems, output, bpm, master_db, direction="", lead=None):
     (output / "mix.tsv").write_text("\n".join(rows) + "\n")
     script = output / "build.lua"
     shutil.copyfile(Path(__file__).with_suffix(".lua"), script)
+    shutil.copyfile(Path(__file__).with_name("rock_fx.lua"), output / "rock_fx.lua")
     project = output / "METALLIC DREAM.RPP"
     final = output / "METALLIC DREAM - Final Master.wav"
     replay = output / "reopen"
