@@ -1,0 +1,17 @@
+{
+  "rock": {
+    "prompt": "기타 두 대가 주고받는 인트로 뒤 밴드가 들어오고 마지막 후렴을 함께 부르는 한국어 인디 록.",
+    "style": "Melodic indie rock, 116 BPM, live kit and electric bass, two answering electric guitars. A spare guitar intro opens into an intimate Korean sung verse, a rising chorus with backing harmonies, a brief instrumental turn and a final band cadence.",
+    "bpm": 116, "duration": 60, "lyrics": "[Intro]\n\n[Verse]\n빈 정류장에 남은 온기\n종이컵 속에 접힌 저녁\n낡은 운동화 끈을 묶고\n너의 보폭을 따라가\n\n[Chorus]\n한 칸 더 불을 켜 줘\n우리 그림자가 춤추게\n한 칸 더 길을 열어\n오늘은 걸어서 갈래\n\n[Outro]\n오늘은 걸어서 갈래"
+  },
+  "ballad": {
+    "prompt": "피아노와 조용한 한국어 보컬로 시작해 후렴에서 감정이 커지는 팝 발라드.",
+    "style": "Emotional Korean pop ballad, 72 BPM. Intimate Korean lead vocal and felt piano intro, breathing room between phrases, bass and brushed drums enter softly. A widening chorus answers the verse with a new melody; a gentle resolved ending.",
+    "bpm": 72, "duration": 45, "lyrics": "[Verse]\n유리잔에 달이 뜨면\n식은 차를 다시 데워\n네가 앉던 의자 곁에\n작은 노래 놓아 둬\n\n[Chorus]\n천천히 내게 와도 돼\n새벽은 아직 멀었어\n불 꺼진 창문 사이로\n우리 노래 번져 가"
+  },
+  "jazz": {
+    "prompt": "90년대 감성의 멜로디컬한 재즈 힙합. 사람처럼 맞물리는 드럼과 베이스, 변주가 있는 연주곡.",
+    "style": "1990s melodic jazz hip-hop and soul instrumental, 90 BPM, laid-back swung backbeat, live electric bass answering the kick, warm electric piano motif moving through rich jazz harmony, short clean guitar replies. A sparse opening, a settled groove, a contrasting break and a return.",
+    "bpm": 90, "duration": 40, "lyrics": "[Instrumental]"
+  }
+}

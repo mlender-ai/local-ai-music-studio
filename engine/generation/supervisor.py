@@ -1,5 +1,6 @@
 """Bounded subprocess execution; only children created here are ever stopped."""
 
+from contextlib import contextmanager
 import fcntl
 import json
 import subprocess
@@ -16,6 +17,22 @@ GiB = 1024**3
 def run_worker(
     request: dict, log_path: Path, timeout: float = 900, max_memory_gb: float = 10
 ):
+    with generation_lock() as fd:
+        request_path = log_path.with_suffix(".request.json")
+        request_path.write_text(json.dumps(request, ensure_ascii=False, indent=2))
+        command = [sys.executable, "-m", "engine.generation.worker", str(request_path)]
+        usage = _run_locked(command, log_path, timeout, max_memory_gb, fd)
+        return {**json.loads(Path(request["result_path"]).read_text()), **usage}
+
+
+def run_guarded(command, log_path, timeout=900, max_memory_gb=10):
+    """Run one direct inference process with the studio's shared resource limits."""
+    with generation_lock() as fd:
+        return _run_locked(command, log_path, timeout, max_memory_gb, fd)
+
+
+@contextmanager
+def generation_lock():
     DATA.mkdir(parents=True, exist_ok=True)
     with (DATA / "generation.lock").open("a+") as lock:
         try:
@@ -24,13 +41,11 @@ def run_worker(
             raise RuntimeError(
                 "Another local model worker is already running."
             ) from exc
-        return _run_locked(request, log_path, timeout, max_memory_gb, lock.fileno())
+        yield lock.fileno()
 
 
-def _run_locked(request, log_path, timeout, max_memory_gb, lock_fd):
+def _run_locked(command, log_path, timeout, max_memory_gb, lock_fd):
     root = Path(__file__).resolve().parents[2]
-    request_path = log_path.with_suffix(".request.json")
-    request_path.write_text(json.dumps(request, ensure_ascii=False, indent=2))
     if psutil.virtual_memory().available < 1.5 * GiB:
         raise RuntimeError(
             "Insufficient available RAM (requires at least 1.5 GiB before launch)."
@@ -41,7 +56,7 @@ def _run_locked(request, log_path, timeout, max_memory_gb, lock_fd):
     started = time.monotonic()
     with log_path.open("w") as log:
         process = subprocess.Popen(
-            [sys.executable, "-m", "engine.generation.worker", str(request_path)],
+            command,
             cwd=root,
             stdout=log,
             stderr=subprocess.STDOUT,
@@ -88,7 +103,7 @@ def _run_locked(request, log_path, timeout, max_memory_gb, lock_fd):
                 time.sleep(0.5)
             if process.wait() != 0:
                 tail = log_path.read_text(errors="replace")[-4000:]
-                raise RuntimeError(f"ACE-Step worker failed; see {log_path}\n{tail}")
+                raise RuntimeError(f"Generation worker failed; see {log_path}\n{tail}")
         finally:
             if process.poll() is None:
                 process.terminate()
@@ -97,8 +112,8 @@ def _run_locked(request, log_path, timeout, max_memory_gb, lock_fd):
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    result = json.loads(Path(request["result_path"]).read_text())
-    result["peak_rss_gib"] = round(peak / GiB, 3)
-    result["peak_footprint_gib"] = round(footprint_peak / GiB, 3)
-    result["total_seconds"] = round(time.monotonic() - started, 3)
-    return result
+    return dict(
+        peak_rss_gib=round(peak / GiB, 3),
+        peak_footprint_gib=round(footprint_peak / GiB, 3),
+        total_seconds=round(time.monotonic() - started, 3),
+    )
