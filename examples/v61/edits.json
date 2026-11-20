@@ -1,0 +1,768 @@
+{
+  "grid": {
+    "pulse_bpm": 107.68500000000054,
+    "initial_grid_candidate_bpm": 107.5,
+    "downbeat_phase": 0,
+    "complete_bars": 49,
+    "unconstrained_pulse": [
+      {
+        "bpm": 71.6,
+        "strength": 0.414
+      },
+      {
+        "bpm": 143.3,
+        "strength": 0.413
+      },
+      {
+        "bpm": 86.1,
+        "strength": 0.342
+      },
+      {
+        "bpm": 107.5,
+        "strength": 0.122
+      }
+    ]
+  },
+  "edits": [
+    {
+      "lane": "generated-guitar",
+      "bar": 1,
+      "source_bar": 2,
+      "offset": 2.2912520490720536,
+      "rate": 1.002925198495607,
+      "pitch": 0,
+      "chord_energy_share": 0.6789754575164829,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 3,
+      "source_bar": 7,
+      "offset": 13.467427086190197,
+      "rate": 1.003309683376298,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 3,
+      "source_bar": 3,
+      "offset": 4.519974712395625,
+      "rate": 1.0029251984956071,
+      "pitch": 0,
+      "chord_energy_share": 0.6505764080284832,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 4,
+      "source_bar": 8,
+      "offset": 15.697004160359748,
+      "rate": 1.0043941326717627,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 4,
+      "source_bar": 4,
+      "offset": 6.748697375719196,
+      "rate": 1.0191519535734754,
+      "pitch": 0,
+      "chord_energy_share": 0.8177637352802191,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 5,
+      "source_bar": 9,
+      "offset": 17.928991121852555,
+      "rate": 1.0053119257781769,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 5,
+      "source_bar": 5,
+      "offset": 9.013479494771364,
+      "rate": 1.0017544278449473,
+      "pitch": 0,
+      "chord_energy_share": 0.8885163319055875,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 6,
+      "source_bar": 7,
+      "offset": 13.467427086190197,
+      "rate": 1.003309683376298,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 6,
+      "source_bar": 6,
+      "offset": 11.239600445537913,
+      "rate": 1.0025219882935275,
+      "pitch": 0,
+      "chord_energy_share": 0.8652963171609747,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 7,
+      "source_bar": 8,
+      "offset": 15.697004160359748,
+      "rate": 1.0043941326717627,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 7,
+      "source_bar": 7,
+      "offset": 13.467427086190197,
+      "rate": 1.003309683376298,
+      "pitch": 0,
+      "chord_energy_share": 0.6597572303419336,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 8,
+      "source_bar": 9,
+      "offset": 17.928991121852555,
+      "rate": 1.0053119257781769,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 8,
+      "source_bar": 8,
+      "offset": 15.697004160359748,
+      "rate": 1.0043941326717627,
+      "pitch": 0,
+      "chord_energy_share": 0.7811932741864861,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 9,
+      "source_bar": 10,
+      "offset": 20.163017623581837,
+      "rate": 1.0044570475342323,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 9,
+      "source_bar": 9,
+      "offset": 17.928991121852555,
+      "rate": 1.0053119257781769,
+      "pitch": 0,
+      "chord_energy_share": 0.7589279056748638,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 10,
+      "source_bar": 11,
+      "offset": 22.39514439588013,
+      "rate": 1.0015662463840118,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 10,
+      "source_bar": 10,
+      "offset": 20.163017623581837,
+      "rate": 1.0044570475342323,
+      "pitch": 0,
+      "chord_energy_share": 0.8543509633155523,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 11,
+      "source_bar": 12,
+      "offset": 24.62084716562238,
+      "rate": 0.9982228233752432,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 11,
+      "source_bar": 13,
+      "offset": 26.839120106456253,
+      "rate": 0.9975340399889436,
+      "pitch": 0,
+      "chord_energy_share": 0.7774046907738907,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 12,
+      "source_bar": 13,
+      "offset": 26.839120106456253,
+      "rate": 0.9975340399889436,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 12,
+      "source_bar": 14,
+      "offset": 29.055862417542794,
+      "rate": 1.0035027806449448,
+      "pitch": 1,
+      "chord_energy_share": 0.6818494583032914,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 13,
+      "source_bar": 14,
+      "offset": 29.055862417542794,
+      "rate": 1.0035027806449448,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 13,
+      "source_bar": 5,
+      "offset": 9.013479494771364,
+      "rate": 1.0017544278449473,
+      "pitch": 0,
+      "chord_energy_share": 0.8885163319055875,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 14,
+      "source_bar": 15,
+      "offset": 31.285868596753783,
+      "rate": 1.0077987459864906,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 15,
+      "source_bar": 16,
+      "offset": 33.52542136561265,
+      "rate": 1.007117432131191,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 15,
+      "source_bar": 27,
+      "offset": 57.97283179736431,
+      "rate": 1.0030570204067515,
+      "pitch": 0,
+      "chord_energy_share": 0.6910858845701522,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 16,
+      "source_bar": 17,
+      "offset": 35.763460103681965,
+      "rate": 1.0056835044863413,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 16,
+      "source_bar": 28,
+      "offset": 60.2018473982682,
+      "rate": 1.0033562057730154,
+      "pitch": 0,
+      "chord_energy_share": 0.7083674418716954,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 17,
+      "source_bar": 18,
+      "offset": 37.998312335873834,
+      "rate": 1.0040423567050012,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 17,
+      "source_bar": 17,
+      "offset": 35.763460103681965,
+      "rate": 1.0056835044863413,
+      "pitch": 0,
+      "chord_energy_share": 0.6869075453622075,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 18,
+      "source_bar": 19,
+      "offset": 40.22951757299606,
+      "rate": 1.0022212643517143,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 18,
+      "source_bar": 18,
+      "offset": 37.998312335873834,
+      "rate": 1.0040423567050012,
+      "pitch": 0,
+      "chord_energy_share": 0.7437690031098533,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 19,
+      "source_bar": 20,
+      "offset": 42.45667593822209,
+      "rate": 1.0025980457625376,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 19,
+      "source_bar": 19,
+      "offset": 40.22951757299606,
+      "rate": 1.0022212643517143,
+      "pitch": 0,
+      "chord_energy_share": 0.598935829284458,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 20,
+      "source_bar": 21,
+      "offset": 44.684671595472174,
+      "rate": 1.0040288499554777,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 20,
+      "source_bar": 20,
+      "offset": 42.45667593822209,
+      "rate": 1.0025980457625376,
+      "pitch": 0,
+      "chord_energy_share": 0.5609742787689914,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 21,
+      "source_bar": 22,
+      "offset": 46.91584681759546,
+      "rate": 1.0000030609178323,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 21,
+      "source_bar": 18,
+      "offset": 37.998312335873834,
+      "rate": 1.0040423567050012,
+      "pitch": -2,
+      "chord_energy_share": 0.7437690031098533,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 22,
+      "source_bar": 23,
+      "offset": 49.13807584185731,
+      "rate": 0.9875484235052816,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 22,
+      "source_bar": 18,
+      "offset": 37.998312335873834,
+      "rate": 1.0040423567050012,
+      "pitch": 0,
+      "chord_energy_share": 0.7437690031098533,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 23,
+      "source_bar": 24,
+      "offset": 51.33262789409127,
+      "rate": 0.9841154313074344,
+      "pitch": 0,
+      "db": -5
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 23,
+      "source_bar": 19,
+      "offset": 40.22951757299606,
+      "rate": 1.0022212643517143,
+      "pitch": 0,
+      "chord_energy_share": 0.598935829284458,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 25,
+      "source_bar": 25,
+      "offset": 53.519551074774455,
+      "rate": 1.0006328565722538,
+      "pitch": 0,
+      "db": -5
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 25,
+      "source_bar": 13,
+      "offset": 26.839120106456253,
+      "rate": 0.9975340399889436,
+      "pitch": 0,
+      "chord_energy_share": 0.7774046907738907,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 26,
+      "source_bar": 26,
+      "offset": 55.74317964493502,
+      "rate": 1.0033434685931797,
+      "pitch": 0,
+      "db": -5
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 27,
+      "source_bar": 27,
+      "offset": 57.97283179736431,
+      "rate": 1.0030570204067515,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 27,
+      "source_bar": 27,
+      "offset": 57.97283179736431,
+      "rate": 1.0030570204067515,
+      "pitch": 0,
+      "chord_energy_share": 0.7894943665709846,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 28,
+      "source_bar": 28,
+      "offset": 60.2018473982682,
+      "rate": 1.0033562057730154,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 28,
+      "source_bar": 28,
+      "offset": 60.2018473982682,
+      "rate": 1.0033562057730154,
+      "pitch": 0,
+      "chord_energy_share": 0.8026503654870962,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 29,
+      "source_bar": 29,
+      "offset": 62.43152785554157,
+      "rate": 1.0040472183885019,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 29,
+      "source_bar": 29,
+      "offset": 62.43152785554157,
+      "rate": 1.0040472183885019,
+      "pitch": 0,
+      "chord_energy_share": 0.7218004312689539,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 30,
+      "source_bar": 30,
+      "offset": 64.6627438964049,
+      "rate": 1.0033974841457194,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 30,
+      "source_bar": 30,
+      "offset": 64.6627438964049,
+      "rate": 1.0033974841457194,
+      "pitch": 0,
+      "chord_energy_share": 0.7007435756312929,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 31,
+      "source_bar": 31,
+      "offset": 66.89251608339539,
+      "rate": 1.0035424772642998,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 31,
+      "source_bar": 31,
+      "offset": 66.89251608339539,
+      "rate": 1.0035424772642998,
+      "pitch": 0,
+      "chord_energy_share": 0.6138028458114794,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 32,
+      "source_bar": 32,
+      "offset": 69.12261047731606,
+      "rate": 1.004518636716041,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 32,
+      "source_bar": 41,
+      "offset": 89.1991065984906,
+      "rate": 1.0034759502818489,
+      "pitch": 0,
+      "chord_energy_share": 0.8401175821111313,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 33,
+      "source_bar": 33,
+      "offset": 71.35487411446282,
+      "rate": 1.0043589469167564,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 33,
+      "source_bar": 42,
+      "offset": 91.42905315467249,
+      "rate": 1.003189987501731,
+      "pitch": -2,
+      "chord_energy_share": 0.7024610567514524,
+      "db": -8
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 34,
+      "source_bar": 34,
+      "offset": 73.58678288538894,
+      "rate": 1.0036873719686177,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 39,
+      "source_bar": 40,
+      "offset": 86.9670664501321,
+      "rate": 1.0044180667613283,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 39,
+      "source_bar": 43,
+      "offset": 93.65836423800967,
+      "rate": 1.0031820322614629,
+      "pitch": 0,
+      "chord_energy_share": 0.609265183331653,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 40,
+      "source_bar": 41,
+      "offset": 89.1991065984906,
+      "rate": 1.0034759502818489,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 40,
+      "source_bar": 44,
+      "offset": 95.88765764303514,
+      "rate": 1.003533877515975,
+      "pitch": 0,
+      "chord_energy_share": 0.5746637279141614,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 41,
+      "source_bar": 42,
+      "offset": 91.42905315467249,
+      "rate": 1.003189987501731,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 41,
+      "source_bar": 45,
+      "offset": 98.11773292640397,
+      "rate": 1.004350773993081,
+      "pitch": 0,
+      "chord_energy_share": 0.7155120055296011,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 42,
+      "source_bar": 43,
+      "offset": 93.65836423800967,
+      "rate": 1.0031820322614629,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 42,
+      "source_bar": 46,
+      "offset": 100.34962353527749,
+      "rate": 1.0039882780005236,
+      "pitch": 0,
+      "chord_energy_share": 0.6746729944484359,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 43,
+      "source_bar": 44,
+      "offset": 95.88765764303514,
+      "rate": 1.003533877515975,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 43,
+      "source_bar": 47,
+      "offset": 102.58070859750087,
+      "rate": 1.0036326180334207,
+      "pitch": 0,
+      "chord_energy_share": 0.6996372051671207,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 44,
+      "source_bar": 45,
+      "offset": 98.11773292640397,
+      "rate": 1.004350773993081,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 44,
+      "source_bar": 37,
+      "offset": 80.27707607855722,
+      "rate": 1.003709323528912,
+      "pitch": 0,
+      "chord_energy_share": 0.7130679807366114,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 45,
+      "source_bar": 46,
+      "offset": 100.34962353527749,
+      "rate": 1.0039882780005236,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 46,
+      "source_bar": 47,
+      "offset": 102.58070859750087,
+      "rate": 1.0036326180334207,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 46,
+      "source_bar": 47,
+      "offset": 102.58070859750087,
+      "rate": 1.0036326180334207,
+      "pitch": 0,
+      "chord_energy_share": 0.6996372051671207,
+      "db": -2
+    },
+    {
+      "lane": "generated-drums",
+      "bar": 47,
+      "source_bar": 48,
+      "offset": 104.81100330424181,
+      "rate": 1.003289896121163,
+      "pitch": 0,
+      "db": -1
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 47,
+      "source_bar": 47,
+      "offset": 102.58070859750087,
+      "rate": 1.0036326180334207,
+      "pitch": 0,
+      "chord_energy_share": 0.6996372051671207,
+      "db": -5
+    },
+    {
+      "lane": "generated-guitar",
+      "bar": 48,
+      "source_bar": 49,
+      "offset": 107.04053640673328,
+      "rate": 1.003015175520469,
+      "pitch": 2,
+      "chord_energy_share": 0.7139070091237241,
+      "db": -5
+    }
+  ]
+}

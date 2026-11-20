@@ -1,0 +1,277 @@
+generated-guitar	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+generated-guitar	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+generated-guitar	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+generated-guitar	VST: ReaEQ (Cockos)	Freq-Band 2	450.0
+generated-guitar	VST: ReaEQ (Cockos)	Gain-Band 2	-1.0
+generated-guitar	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+generated-guitar	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+generated-guitar	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+generated-guitar	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+generated-guitar	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+generated-guitar	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+generated-guitar	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+generated-guitar	VST: ReaEQ (Cockos)	Freq-High Pass 5	90.0
+generated-guitar	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+generated-guitar	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+generated-guitar	VST: ReaEQ (Cockos)	Global Gain	0.0
+generated-guitar	VST: ReaEQ (Cockos)	Bypass	normal
+generated-guitar	VST: ReaEQ (Cockos)	Wet	100
+generated-guitar	VST: ReaEQ (Cockos)	Delta	normal
+left-di	JS: Distortion	Gain (dB)	28.0
+left-di	JS: Distortion	Hardness	6.0
+left-di	JS: Distortion	Max Volume (dB)	-10.0
+left-di	JS: Distortion	Channel Mode	Left
+left-di	JS: Distortion	Bypass	normal
+left-di	JS: Distortion	Wet	100
+left-di	JS: Distortion	Delta	normal
+left-di	JS: Convolution Amp/Cab Modeler	Model	Marshall JCM800 - Marshall Stock 70
+left-di	JS: Convolution Amp/Cab Modeler	Preamp (dB)	-2.0
+left-di	JS: Convolution Amp/Cab Modeler	Upsample Impulse If Required	Yes (correct gain)
+left-di	JS: Convolution Amp/Cab Modeler	Channel Mode	L-Stereo
+left-di	JS: Convolution Amp/Cab Modeler	Filter Size	204.0
+left-di	JS: Convolution Amp/Cab Modeler	FFT Size	512.0
+left-di	JS: Convolution Amp/Cab Modeler	Bypass	normal
+left-di	JS: Convolution Amp/Cab Modeler	Wet	100
+left-di	JS: Convolution Amp/Cab Modeler	Delta	normal
+left-di	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+left-di	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+left-di	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+left-di	VST: ReaEQ (Cockos)	Freq-Band 2	290.0
+left-di	VST: ReaEQ (Cockos)	Gain-Band 2	-1.3
+left-di	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+left-di	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+left-di	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+left-di	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+left-di	VST: ReaEQ (Cockos)	Freq-High Shelf 4	3600.0
+left-di	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.6
+left-di	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+left-di	VST: ReaEQ (Cockos)	Freq-High Pass 5	66.0
+left-di	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+left-di	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+left-di	VST: ReaEQ (Cockos)	Global Gain	0.0
+left-di	VST: ReaEQ (Cockos)	Bypass	normal
+left-di	VST: ReaEQ (Cockos)	Wet	100
+left-di	VST: ReaEQ (Cockos)	Delta	normal
+right-di	JS: Distortion	Gain (dB)	25.0
+right-di	JS: Distortion	Hardness	5.0
+right-di	JS: Distortion	Max Volume (dB)	-10.0
+right-di	JS: Distortion	Channel Mode	Left
+right-di	JS: Distortion	Bypass	normal
+right-di	JS: Distortion	Wet	100
+right-di	JS: Distortion	Delta	normal
+right-di	JS: Convolution Amp/Cab Modeler	Model	Marshall JCM800 - Matchless Chieftain
+right-di	JS: Convolution Amp/Cab Modeler	Preamp (dB)	-2.0
+right-di	JS: Convolution Amp/Cab Modeler	Upsample Impulse If Required	Yes (correct gain)
+right-di	JS: Convolution Amp/Cab Modeler	Channel Mode	L-Stereo
+right-di	JS: Convolution Amp/Cab Modeler	Filter Size	180.0
+right-di	JS: Convolution Amp/Cab Modeler	FFT Size	512.0
+right-di	JS: Convolution Amp/Cab Modeler	Bypass	normal
+right-di	JS: Convolution Amp/Cab Modeler	Wet	100
+right-di	JS: Convolution Amp/Cab Modeler	Delta	normal
+right-di	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+right-di	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+right-di	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+right-di	VST: ReaEQ (Cockos)	Freq-Band 2	290.0
+right-di	VST: ReaEQ (Cockos)	Gain-Band 2	-1.3
+right-di	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+right-di	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+right-di	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+right-di	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+right-di	VST: ReaEQ (Cockos)	Freq-High Shelf 4	3600.0
+right-di	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.6
+right-di	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+right-di	VST: ReaEQ (Cockos)	Freq-High Pass 5	66.0
+right-di	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+right-di	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+right-di	VST: ReaEQ (Cockos)	Global Gain	0.0
+right-di	VST: ReaEQ (Cockos)	Bypass	normal
+right-di	VST: ReaEQ (Cockos)	Wet	100
+right-di	VST: ReaEQ (Cockos)	Delta	normal
+lead-di	JS: Distortion	Gain (dB)	31.0
+lead-di	JS: Distortion	Hardness	5.0
+lead-di	JS: Distortion	Max Volume (dB)	-9.0
+lead-di	JS: Distortion	Channel Mode	Left
+lead-di	JS: Distortion	Bypass	normal
+lead-di	JS: Distortion	Wet	100
+lead-di	JS: Distortion	Delta	normal
+lead-di	JS: Convolution Amp/Cab Modeler	Model	Marshall JTM45 - Matchless Chieftain
+lead-di	JS: Convolution Amp/Cab Modeler	Preamp (dB)	-2.0
+lead-di	JS: Convolution Amp/Cab Modeler	Upsample Impulse If Required	Yes (correct gain)
+lead-di	JS: Convolution Amp/Cab Modeler	Channel Mode	L-Stereo
+lead-di	JS: Convolution Amp/Cab Modeler	Filter Size	226.0
+lead-di	JS: Convolution Amp/Cab Modeler	FFT Size	512.0
+lead-di	JS: Convolution Amp/Cab Modeler	Bypass	normal
+lead-di	JS: Convolution Amp/Cab Modeler	Wet	100
+lead-di	JS: Convolution Amp/Cab Modeler	Delta	normal
+lead-di	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+lead-di	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+lead-di	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+lead-di	VST: ReaEQ (Cockos)	Freq-Band 2	290.0
+lead-di	VST: ReaEQ (Cockos)	Gain-Band 2	-1.3
+lead-di	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+lead-di	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+lead-di	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+lead-di	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+lead-di	VST: ReaEQ (Cockos)	Freq-High Shelf 4	3600.0
+lead-di	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.6
+lead-di	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+lead-di	VST: ReaEQ (Cockos)	Freq-High Pass 5	105.0
+lead-di	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+lead-di	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+lead-di	VST: ReaEQ (Cockos)	Global Gain	0.0
+lead-di	VST: ReaEQ (Cockos)	Bypass	normal
+lead-di	VST: ReaEQ (Cockos)	Wet	100
+lead-di	VST: ReaEQ (Cockos)	Delta	normal
+kit	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+kit	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+kit	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+kit	VST: ReaEQ (Cockos)	Freq-Band 2	380.0
+kit	VST: ReaEQ (Cockos)	Gain-Band 2	-1.0
+kit	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+kit	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+kit	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+kit	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+kit	VST: ReaEQ (Cockos)	Freq-High Shelf 4	3900.0
+kit	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.8
+kit	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+kit	VST: ReaEQ (Cockos)	Freq-High Pass 5	27.0
+kit	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+kit	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+kit	VST: ReaEQ (Cockos)	Global Gain	0.0
+kit	VST: ReaEQ (Cockos)	Bypass	normal
+kit	VST: ReaEQ (Cockos)	Wet	100
+kit	VST: ReaEQ (Cockos)	Delta	normal
+kit	VST: ReaComp (Cockos)	Threshold	-10.0
+kit	VST: ReaComp (Cockos)	Ratio	1.600
+kit	VST: ReaComp (Cockos)	Attack	23.0
+kit	VST: ReaComp (Cockos)	Release	90
+kit	VST: ReaComp (Cockos)	Pre-comp	0.00
+kit	VST: ReaComp (Cockos)	resvd	0
+kit	VST: ReaComp (Cockos)	Lowpass	20000
+kit	VST: ReaComp (Cockos)	Hipass	0
+kit	VST: ReaComp (Cockos)	SignIn	0
+kit	VST: ReaComp (Cockos)	AudIn	0
+kit	VST: ReaComp (Cockos)	Dry	-inf
+kit	VST: ReaComp (Cockos)	Wet	+0.0
+kit	VST: ReaComp (Cockos)	Filter Preview	0
+kit	VST: ReaComp (Cockos)	RMS size	5.0
+kit	VST: ReaComp (Cockos)	Knee	0.0
+kit	VST: ReaComp (Cockos)	Auto Make Up Gain	0
+kit	VST: ReaComp (Cockos)	Auto Release	0
+kit	VST: ReaComp (Cockos)	Legacy Attack/Knee Options	0.25
+kit	VST: ReaComp (Cockos)	Deprecated Broken Anti-Alias	0
+kit	VST: ReaComp (Cockos)	Multichannel Mode	0
+kit	VST: ReaComp (Cockos)	Metering Index	0
+kit	VST: ReaComp (Cockos)	Bypass	normal
+kit	VST: ReaComp (Cockos)	Wet	100
+kit	VST: ReaComp (Cockos)	Delta	normal
+bass	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+bass	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+bass	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+bass	VST: ReaEQ (Cockos)	Freq-Band 2	215.0
+bass	VST: ReaEQ (Cockos)	Gain-Band 2	-1.1
+bass	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+bass	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+bass	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+bass	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+bass	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+bass	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+bass	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+bass	VST: ReaEQ (Cockos)	Freq-High Pass 5	30.0
+bass	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+bass	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+bass	VST: ReaEQ (Cockos)	Global Gain	0.0
+bass	VST: ReaEQ (Cockos)	Bypass	normal
+bass	VST: ReaEQ (Cockos)	Wet	100
+bass	VST: ReaEQ (Cockos)	Delta	normal
+bass	VST: ReaComp (Cockos)	Threshold	-15.0
+bass	VST: ReaComp (Cockos)	Ratio	2.19
+bass	VST: ReaComp (Cockos)	Attack	23.9
+bass	VST: ReaComp (Cockos)	Release	104
+bass	VST: ReaComp (Cockos)	Pre-comp	0.00
+bass	VST: ReaComp (Cockos)	resvd	0
+bass	VST: ReaComp (Cockos)	Lowpass	20000
+bass	VST: ReaComp (Cockos)	Hipass	0
+bass	VST: ReaComp (Cockos)	SignIn	0
+bass	VST: ReaComp (Cockos)	AudIn	0
+bass	VST: ReaComp (Cockos)	Dry	-inf
+bass	VST: ReaComp (Cockos)	Wet	+0.0
+bass	VST: ReaComp (Cockos)	Filter Preview	0
+bass	VST: ReaComp (Cockos)	RMS size	5.0
+bass	VST: ReaComp (Cockos)	Knee	0.0
+bass	VST: ReaComp (Cockos)	Auto Make Up Gain	0
+bass	VST: ReaComp (Cockos)	Auto Release	0
+bass	VST: ReaComp (Cockos)	Legacy Attack/Knee Options	0.25
+bass	VST: ReaComp (Cockos)	Deprecated Broken Anti-Alias	0
+bass	VST: ReaComp (Cockos)	Multichannel Mode	0
+bass	VST: ReaComp (Cockos)	Metering Index	0
+bass	VST: ReaComp (Cockos)	Bypass	normal
+bass	VST: ReaComp (Cockos)	Wet	100
+bass	VST: ReaComp (Cockos)	Delta	normal
+room	VST: ReaVerbate (Cockos)	Wet	-0.0
+room	VST: ReaVerbate (Cockos)	Dry	-inf
+room	VST: ReaVerbate (Cockos)	Room size	30
+room	VST: ReaVerbate (Cockos)	Dampening	53
+room	VST: ReaVerbate (Cockos)	Width	1.00
+room	VST: ReaVerbate (Cockos)	Delay	8
+room	VST: ReaVerbate (Cockos)	Lowpass	6199
+room	VST: ReaVerbate (Cockos)	Hipass	219
+room	VST: ReaVerbate (Cockos)	Bypass	normal
+room	VST: ReaVerbate (Cockos)	Wet	100
+room	VST: ReaVerbate (Cockos)	Delta	normal
+hall	VST: ReaEQ (Cockos)	Freq-Low Shelf	100.0
+hall	VST: ReaEQ (Cockos)	Gain-Low Shelf	0.0
+hall	VST: ReaEQ (Cockos)	BW-Low Shelf	0.80
+hall	VST: ReaEQ (Cockos)	Freq-Band 2	500.0
+hall	VST: ReaEQ (Cockos)	Gain-Band 2	-1.6
+hall	VST: ReaEQ (Cockos)	BW-Band 2	2.00
+hall	VST: ReaEQ (Cockos)	Freq-Band 3	1000.0
+hall	VST: ReaEQ (Cockos)	Gain-Band 3	0.0
+hall	VST: ReaEQ (Cockos)	BW-Band 3	2.00
+hall	VST: ReaEQ (Cockos)	Freq-High Shelf 4	5000.0
+hall	VST: ReaEQ (Cockos)	Gain-High Shelf 4	0.0
+hall	VST: ReaEQ (Cockos)	BW-High Shelf 4	0.80
+hall	VST: ReaEQ (Cockos)	Freq-High Pass 5	260.0
+hall	VST: ReaEQ (Cockos)	Gain-High Pass 5	0.0
+hall	VST: ReaEQ (Cockos)	BW-High Pass 5	2.00
+hall	VST: ReaEQ (Cockos)	Global Gain	0.0
+hall	VST: ReaEQ (Cockos)	Bypass	normal
+hall	VST: ReaEQ (Cockos)	Wet	100
+hall	VST: ReaEQ (Cockos)	Delta	normal
+hall	VST: ReaVerbate (Cockos)	Wet	-0.0
+hall	VST: ReaVerbate (Cockos)	Dry	-inf
+hall	VST: ReaVerbate (Cockos)	Room size	87
+hall	VST: ReaVerbate (Cockos)	Dampening	63
+hall	VST: ReaVerbate (Cockos)	Width	1.00
+hall	VST: ReaVerbate (Cockos)	Delay	43
+hall	VST: ReaVerbate (Cockos)	Lowpass	5800
+hall	VST: ReaVerbate (Cockos)	Hipass	299
+hall	VST: ReaVerbate (Cockos)	Bypass	normal
+hall	VST: ReaVerbate (Cockos)	Wet	100
+hall	VST: ReaVerbate (Cockos)	Delta	normal
+hall	JS: Chorus (Stereo)	Chorus Length (ms)	15.0
+hall	JS: Chorus (Stereo)	Number Of Voices	1.0
+hall	JS: Chorus (Stereo)	Rate (Hz) (0=tempo sync)	0.5
+hall	JS: Chorus (Stereo)	Pitch Fudge Factor	0.7
+hall	JS: Chorus (Stereo)	Wet Mix (dB)	-6.0
+hall	JS: Chorus (Stereo)	Dry Mix (dB)	-6.0
+hall	JS: Chorus (Stereo)	Channel Rate Offset (Hz)	0.0
+hall	JS: Chorus (Stereo)	Tempo Sync (fraction of whole note)	0.25
+hall	JS: Chorus (Stereo)	Bypass	normal
+hall	JS: Chorus (Stereo)	Wet	100
+hall	JS: Chorus (Stereo)	Delta	normal
+echo	VST: ReaDelay (Cockos)	Wet	-0.0
+echo	VST: ReaDelay (Cockos)	Dry	-inf
+echo	VST: ReaDelay (Cockos)	1: Enabled	ON
+echo	VST: ReaDelay (Cockos)	1: Length (time)	416.6
+echo	VST: ReaDelay (Cockos)	1: Length (musical)	0.00
+echo	VST: ReaDelay (Cockos)	1: Feedback	-8.5
+echo	VST: ReaDelay (Cockos)	1: Lowpass	4500
+echo	VST: ReaDelay (Cockos)	1: Hipass	310
+echo	VST: ReaDelay (Cockos)	1: Resolution	24
+echo	VST: ReaDelay (Cockos)	1: Stereo width	1.00
+echo	VST: ReaDelay (Cockos)	1: Volume	+0.0
+echo	VST: ReaDelay (Cockos)	1: Pan	0.000
+echo	VST: ReaDelay (Cockos)	Bypass	normal
+echo	VST: ReaDelay (Cockos)	Wet	100
+echo	VST: ReaDelay (Cockos)	Delta	normal

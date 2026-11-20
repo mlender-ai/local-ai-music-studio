@@ -1,0 +1,338 @@
+[
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 45,
+    "take": 1,
+    "path": "notes/a2_f_rr1.wav",
+    "blob": "6dfe9dd9bcdb9156b29a7597c0b0993ebf32876b"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 45,
+    "take": 2,
+    "path": "notes/a2_f_rr2.wav",
+    "blob": "0614e07628a947418edd1830665a68700b564093"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 57,
+    "take": 1,
+    "path": "notes/a3_f_rr1.wav",
+    "blob": "4c1bc14099ba655a15b7f276c10fe47075e19b70"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 57,
+    "take": 2,
+    "path": "notes/a3_f_rr2.wav",
+    "blob": "33938e281c8dd05876473b39f83a687177a22116"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 69,
+    "take": 1,
+    "path": "notes/a4_f_rr1.wav",
+    "blob": "5ec5466b42494f9c7e45c4fca28b87181a9d5f96"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 69,
+    "take": 2,
+    "path": "notes/a4_f_rr2.wav",
+    "blob": "bba46ab10501c2e70e64c48361849cb76970b767"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 81,
+    "take": 1,
+    "path": "notes/a5_f_rr1.wav",
+    "blob": "f5aab9e7459db74ad9ee12bde6647f85280bf8f3"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 81,
+    "take": 2,
+    "path": "notes/a5_f_rr2.wav",
+    "blob": "9ec24b42bf96a0afb9b3c999a5b7643fe05d75b9"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 48,
+    "take": 1,
+    "path": "notes/c3_f_rr1.wav",
+    "blob": "0e0e08d0c4687e049dd9ba95425735c1b32eba49"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 48,
+    "take": 2,
+    "path": "notes/c3_f_rr2.wav",
+    "blob": "9d00d99b833b30606e5c8d572301ae0eed6d0408"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 60,
+    "take": 1,
+    "path": "notes/c4_f_rr1.wav",
+    "blob": "5fa6c54ad2ce11a4796a9ea17d76815071c2376a"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 60,
+    "take": 2,
+    "path": "notes/c4_f_rr2.wav",
+    "blob": "e6e10d18f6972cf875a060d4c98d6592db82ad22"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 72,
+    "take": 1,
+    "path": "notes/c5_f_rr1.wav",
+    "blob": "3d91a4a73f77841a48e649a3a408712c133f1b45"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 72,
+    "take": 2,
+    "path": "notes/c5_f_rr2.wav",
+    "blob": "b9c52af2ccad5c0dbe49aa525071cb81a2e54f70"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 84,
+    "take": 1,
+    "path": "notes/c6_f_rr1.wav",
+    "blob": "abf7d3ef5281165fbc071ac1db21e5a300fbfdef"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 84,
+    "take": 2,
+    "path": "notes/c6_f_rr2.wav",
+    "blob": "c1017341ba5339dafdc94e44a8462c5ca3816efd"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 86,
+    "take": 1,
+    "path": "notes/d6_f_rr1.wav",
+    "blob": "13c15011e6275c2aad98c487f7f71375cb6b4ed4"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 86,
+    "take": 2,
+    "path": "notes/d6_f_rr2.wav",
+    "blob": "076dff95e4946f98da714180d7a94c60ee3bd680"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 37,
+    "take": 1,
+    "path": "notes/db2_f_rr1.wav",
+    "blob": "fcc0706a7700dc533871fee0d33b837267f0fcc9"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 37,
+    "take": 2,
+    "path": "notes/db2_f_rr2.wav",
+    "blob": "72374410b759e7ae4e7ed47d4f0f4b2470b2d372"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 40,
+    "take": 1,
+    "path": "notes/e2_f_rr1.wav",
+    "blob": "119f1b8f725d57c9b9007d7dc4ed43958fb5c2bf"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 40,
+    "take": 2,
+    "path": "notes/e2_f_rr2.wav",
+    "blob": "980408a16013f9d2a443bd317fdfecef8540403c"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 51,
+    "take": 1,
+    "path": "notes/eb3_f_rr1.wav",
+    "blob": "cb6fb110405f82a163e2236c8bb3a7014cdaa5b1"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 51,
+    "take": 2,
+    "path": "notes/eb3_f_rr2.wav",
+    "blob": "8b7bf0791ba0371a923c896da49fb71d126812d4"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 63,
+    "take": 1,
+    "path": "notes/eb4_f_rr1.wav",
+    "blob": "d5556865c21a7ded3d23874a65db02686e74852b"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 63,
+    "take": 2,
+    "path": "notes/eb4_f_rr2.wav",
+    "blob": "ba8647e3dfd9024b21f172ac50ae76f0f3e76c4a"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 75,
+    "take": 1,
+    "path": "notes/eb5_f_rr1.wav",
+    "blob": "1fe7aa3b89f64829462ea65913e90ef8b4ebe404"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 75,
+    "take": 2,
+    "path": "notes/eb5_f_rr2.wav",
+    "blob": "630635e0d75c2216c88178366e966f1274c29cee"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 42,
+    "take": 1,
+    "path": "notes/gb2_f_rr1.wav",
+    "blob": "a5b34cf724797896e2fbb20d7c710e03ae08c260"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 42,
+    "take": 2,
+    "path": "notes/gb2_f_rr2.wav",
+    "blob": "2807b0fe9d025c9b7697f100c1ae9e105bdaf891"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 54,
+    "take": 1,
+    "path": "notes/gb3_f_rr1.wav",
+    "blob": "17975ea2f094374879900eea00588290fc4b97c4"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 54,
+    "take": 2,
+    "path": "notes/gb3_f_rr2.wav",
+    "blob": "af5d2d5ca67e6f9d36f903d16fbc241f491f2977"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 66,
+    "take": 1,
+    "path": "notes/gb4_f_rr1.wav",
+    "blob": "7f64026a9974f5e846ba6cc25fcaa06f4bca5fc1"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 66,
+    "take": 2,
+    "path": "notes/gb4_f_rr2.wav",
+    "blob": "2190efb2cba2ac4c69f8b2ae478902f2281c94b8"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 78,
+    "take": 1,
+    "path": "notes/gb5_f_rr1.wav",
+    "blob": "2d48d70a399ddcbbefb9c3d17a3d8aca1f1c715a"
+  },
+  {
+    "bank": "guitar",
+    "voice": "guitar",
+    "key": 78,
+    "take": 2,
+    "path": "notes/gb5_f_rr2.wav",
+    "blob": "63d8be8c3922c530c947dde4acac64d4e5d580d6"
+  },
+  {
+    "bank": "drums",
+    "voice": "htom",
+    "key": 0,
+    "take": 2,
+    "path": "Samples/oh/htom/oh_htom_center_vl13.flac",
+    "blob": "d162346fbebd0e901b8445af258445b9728e7e5b"
+  },
+  {
+    "bank": "drums",
+    "voice": "htom",
+    "key": 0,
+    "take": 1,
+    "path": "Samples/oh/htom/oh_htom_center_vl9.flac",
+    "blob": "56132b2c0f58ecff36eecec9f4a44530feef3a1b"
+  },
+  {
+    "bank": "drums",
+    "voice": "ltom",
+    "key": 0,
+    "take": 2,
+    "path": "Samples/oh/ltom/oh_ltom_center_vl13.flac",
+    "blob": "8b8841cc7767eaea10d8b17070ff9eb7a608b211"
+  },
+  {
+    "bank": "drums",
+    "voice": "ltom",
+    "key": 0,
+    "take": 1,
+    "path": "Samples/oh/ltom/oh_ltom_center_vl9.flac",
+    "blob": "c4ab3aa78c0f2ece1a1f907bfefa1c51bdab7726"
+  },
+  {
+    "bank": "drums",
+    "voice": "crash",
+    "key": 0,
+    "take": 1,
+    "path": "Samples/oh/crash/oh_crash_crash_vl3_rr1.flac",
+    "blob": "464020e19ae66f3c6b1bedcb87877590f705cdff"
+  },
+  {
+    "bank": "drums",
+    "voice": "crash",
+    "key": 0,
+    "take": 2,
+    "path": "Samples/oh/crash/oh_crash_crash_vl3_rr2.flac",
+    "blob": "f80c919d56e5a7229b6eec4a06a8a5b5b4739ba7"
+  }
+]

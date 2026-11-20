@@ -1,0 +1,209 @@
+X:1
+T:
+M:4/4
+L:1/16
+Q:1/4=108
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:Dm
+% intro
+V: Vocal
+Z|
+V: Ins
+=D,6z2=E2z2=A,2z2|
+V: Vocal
+"A7sus4"z8"A7"z8|
+V: Ins
+=d6z2=A2z2^c3z|
+% verse
+V: Vocal
+"Dm"z16|
+V: Ins
+=D,3z3=A,2z2=F,4z2|
+V: Vocal
+"Bb"z16|
+V: Ins
+_B,,3z3=F,2z2=D,4z2|
+V: Vocal
+"C"z16|
+V: Ins
+=C,3z3=G,2z2=E,4z2|
+V: Vocal
+"A7"z16|
+V: Ins
+=A4z=G2z=e3z^c2z2|
+V: Vocal
+"Dm"z16|
+V: Ins
+=D,3z3=A,2z2=F,4z2|
+V: Vocal
+"F"z16|
+V: Ins
+=F,3z3=C2z2=A,4z2|
+V: Vocal
+"Gm"z16|
+V: Ins
+=G,3z3=D2z2_B,4z2|
+V: Vocal
+"A7"z16|
+V: Ins
+=A4z=G2z=e3z^c2z2|
+% pre-chorus
+V: Vocal
+"Gm"z16|
+V: Ins
+=G,3z3=D2z2_B,4z2|
+V: Vocal
+"Bb"z16|
+V: Ins
+_B,,3z3=F,2z2=D,4z2|
+V: Vocal
+"C"z16|
+V: Ins
+=C,3z3=G,2z2=E,4z2|
+V: Vocal
+"A7"z16|
+V: Ins
+=A4z=G2z_B3z^c2z2|
+% chorus
+V: Vocal
+Z|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+V: Vocal
+Z|
+V: Ins
+_B,,3z3=F,2z2_B,3z3|
+V: Vocal
+Z|
+V: Ins
+=C,3z3=G,2z2=C3z3|
+V: Vocal
+Z|
+V: Ins
+=A,,3z3=E,2z2=A,3z3|
+V: Vocal
+Z|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+V: Vocal
+Z|
+V: Ins
+=F,3z3=C2z2=F3z3|
+V: Vocal
+Z|
+V: Ins
+=G,3z3=D2z2=G3z3|
+V: Vocal
+Z|
+V: Ins
+=A,,3z3=E,2z2=A,3z3|
+% interlude
+V: Vocal
+Z|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+V: Vocal
+Z|
+V: Ins
+=D,3z8z_E,2_B,z|
+V: Vocal
+"Gm"z16|
+V: Ins
+=G,3z3=D2z2_B,4z2|
+V: Vocal
+"A7"z16|
+V: Ins
+=A4z=G2z=e3z^c2z2|
+% instrumental
+V: Vocal
+"Dm"z16|
+V: Ins
+=d3=f=a8z=f2z|
+V: Vocal
+"Bb"z16|
+V: Ins
+=f4z2=d2_B6z2|
+V: Vocal
+"Gm"z16|
+V: Ins
+=g6z=f=d4z_B2z|
+V: Vocal
+"A7"z16|
+V: Ins
+=e3z=g2z_b=a4z^c3|
+V: Vocal
+"F"z16|
+V: Ins
+=f2=a2=c'6-=c'z2=a2z|
+V: Vocal
+"C"z16|
+V: Ins
+=g2=c'2=e'4z=d'=c'=b=g3z|
+V: Vocal
+"Gm"z16|
+V: Ins
+=d'6z_b=g_b=d'2=f'4|
+V: Vocal
+"A7"z16|
+V: Ins
+=e'3=d'_b3z=a2^c'4z2|
+% bridge
+V: Vocal
+Z|
+V: Ins
+=D,,4z2=D,2z=A,,2z2=D,,3|
+V: Vocal
+Z|
+V: Ins
+=C,,4z2=C,2z=G,,2z2=C,,3|
+V: Vocal
+Z|
+V: Ins
+_B,,,4z2_B,,2z=F,,2z2_B,,,3|
+V: Vocal
+Z|
+V: Ins
+=A,,,4z2=A,,2z=E,,2z2^C,,3|
+% chorus
+V: Vocal
+Z|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+V: Vocal
+Z|
+V: Ins
+_B,,3z3=F,2z2_B,3z3|
+V: Vocal
+Z|
+V: Ins
+=C,3z3=G,2z2=C3z3|
+V: Vocal
+Z|
+V: Ins
+=A,,3z3=E,2z2=A,3z3|
+V: Vocal
+"Dm"z16|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+V: Vocal
+"Gm"z16|
+V: Ins
+=G,3z3=D2z2=G3z3|
+V: Vocal
+"A7"z16|
+V: Ins
+=A4z=G2z_B3z^c2z2|
+V: Vocal
+"Dm"z16|
+V: Ins
+=D,3z3=A,2z2=D3z3|
+% outro
+V: Vocal
+"Dm"z16|
+V: Ins
+=D6z=F2z=E4z2|
+V: Vocal
+Z|
+V: Ins
+=D12z4|

@@ -1,0 +1,27 @@
+{
+  "engine": "yue2",
+  "genre": "iron-return",
+  "seed": 57,
+  "brief": {
+    "style": "Instrumental guitar trio, instrumental math-metal record, all melodies played on steel electric guitar strings, picked and bent strings, acoustic drum kit, electric bass, drop-D staccato palm-muted chugs, huge open fifths, 8 bars of lead guitar and full band in D minor at 108 bpm, four-bar bass and drum duet, full kit reentry and a ringing low D chord. Entirely instrumental.",
+    "lyrics": "",
+    "duration": 110,
+    "bpm": 108
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/16\nQ:1/4=108\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Dm\n% intro\nV: Vocal\nZ|\nV: Ins\n=D,6z2=E2z2=A,2z2|\nV: Vocal\n\"A7sus4\"z8\"A7\"z8|\nV: Ins\n=d6z2=A2z2^c3z|\n% verse\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=D,3z3=A,2z2=F,4z2|\nV: Vocal\n\"Bb\"z16|\nV: Ins\n_B,,3z3=F,2z2=D,4z2|\nV: Vocal\n\"C\"z16|\nV: Ins\n=C,3z3=G,2z2=E,4z2|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=A4z=G2z=e3z^c2z2|\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=D,3z3=A,2z2=F,4z2|\nV: Vocal\n\"F\"z16|\nV: Ins\n=F,3z3=C2z2=A,4z2|\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=G,3z3=D2z2_B,4z2|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=A4z=G2z=e3z^c2z2|\n% pre-chorus\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=G,3z3=D2z2_B,4z2|\nV: Vocal\n\"Bb\"z16|\nV: Ins\n_B,,3z3=F,2z2=D,4z2|\nV: Vocal\n\"C\"z16|\nV: Ins\n=C,3z3=G,2z2=E,4z2|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=A4z=G2z_B3z^c2z2|\n% chorus\nV: Vocal\nZ|\nV: Ins\n=D,3z3=A,2z2=D3z3|\nV: Vocal\nZ|\nV: Ins\n_B,,3z3=F,2z2_B,3z3|\nV: Vocal\nZ|\nV: Ins\n=C,3z3=G,2z2=C3z3|\nV: Vocal\nZ|\nV: Ins\n=A,,3z3=E,2z2=A,3z3|\nV: Vocal\nZ|\nV: Ins\n=D,3z3=A,2z2=D3z3|\nV: Vocal\nZ|\nV: Ins\n=F,3z3=C2z2=F3z3|\nV: Vocal\nZ|\nV: Ins\n=G,3z3=D2z2=G3z3|\nV: Vocal\nZ|\nV: Ins\n=A,,3z3=E,2z2=A,3z3|\n% interlude\nV: Vocal\nZ|\nV: Ins\n=D,3z3=A,2z2=D3z3|\nV: Vocal\nZ|\nV: Ins\n=D,3z8z_E,2_B,z|\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=G,3z3=D2z2_B,4z2|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=A4z=G2z=e3z^c2z2|\n% instrumental\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=d3=f=a8z=f2z|\nV: Vocal\n\"Bb\"z16|\nV: Ins\n=f4z2=d2_B6z2|\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=g6z=f=d4z_B2z|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=e3z=g2z_b=a4z^c3|\nV: Vocal\n\"F\"z16|\nV: Ins\n=f2=a2=c'6-=c'z2=a2z|\nV: Vocal\n\"C\"z16|\nV: Ins\n=g2=c'2=e'4z=d'=c'=b=g3z|\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=d'6z_b=g_b=d'2=f'4|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=e'3=d'_b3z=a2^c'4z2|\n% bridge\nV: Vocal\nZ|\nV: Ins\n=D,,4z2=D,2z=A,,2z2=D,,3|\nV: Vocal\nZ|\nV: Ins\n=C,,4z2=C,2z=G,,2z2=C,,3|\nV: Vocal\nZ|\nV: Ins\n_B,,,4z2_B,,2z=F,,2z2_B,,,3|\nV: Vocal\nZ|\nV: Ins\n=A,,,4z2=A,,2z=E,,2z2^C,,3|\n% chorus\nV: Vocal\nZ|\nV: Ins\n=D,3z3=A,2z2=D3z3|\nV: Vocal\nZ|\nV: Ins\n_B,,3z3=F,2z2_B,3z3|\nV: Vocal\nZ|\nV: Ins\n=C,3z3=G,2z2=C3z3|\nV: Vocal\nZ|\nV: Ins\n=A,,3z3=E,2z2=A,3z3|\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=D,3z3=A,2z2=D3z3|\nV: Vocal\n\"Gm\"z16|\nV: Ins\n=G,3z3=D2z2=G3z3|\nV: Vocal\n\"A7\"z16|\nV: Ins\n=A4z=G2z_B3z^c2z2|\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=D,3z3=A,2z2=D3z3|\n% outro\nV: Vocal\n\"Dm\"z16|\nV: Ins\n=D6z=F2z=E4z2|\nV: Vocal\nZ|\nV: Ins\n=D12z4|\n",
+  "status": "rendered",
+  "original": "iron-return-original.wav",
+  "run": {
+    "peak_rss_gib": 4.147,
+    "peak_footprint_gib": 4.147,
+    "total_seconds": 426.604
+  },
+  "original_sha256": "8403b4f5de49b41e85974e7a538ca3dde6557ce2ad722ee7fbdd3532c9771aeb",
+  "native_score_echo_identical": true,
+  "model": "YuE2-3B Q8_0; F32 VAE; yue2.cpp Metal",
+  "cot": "full",
+  "steps": 32,
+  "semantic_tokens": 2750,
+  "end": "duration cap, truncated",
+  "raw_duration": 109.99866666666667
+}
