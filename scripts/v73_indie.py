@@ -16,6 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plan", type=Path, default=PLAN)
     parser.add_argument("--write-score", type=Path)
+    parser.add_argument("--output-root", type=Path, default=DATA / "v73-indie")
     parser.add_argument("--seed", type=int, default=518)
     parser.add_argument("--temperature", type=float, default=0.82)
     parser.add_argument("--cfg-scale", type=float, default=2.4)
@@ -31,6 +32,10 @@ def main():
     if args.write_score:
         args.write_score.write_text(score)
         return
+    acoustic_opening = plan.get("acoustic_opening")
+    if acoustic_opening:
+        from evaluation.acoustic_lift import inspect as inspect_guitars
+
     cap = args.duration_cap or (105 if args.preflight else 29)
     source = (
         source_prefix(args.native_prefix, args.prefix_seconds)
@@ -46,25 +51,36 @@ def main():
         from evaluation.indie_motif import require_motif_preflight
 
         require_motif_preflight(args.preflight, plan)
+        if acoustic_opening:
+            evidence = inspect_guitars(args.preflight)["sections"]
+            if not all(
+                result["acoustic_opening_supported"] for result in evidence.values()
+            ):
+                parser.error(
+                    "The short take did not establish the required acoustic opening"
+                )
     take, verdict = produce(
         plan["style"],
         score,
         GENRE,
         args.seed,
         cap,
-        cot="melody",
+        cot="full" if plan.get("chords") else "melody",
         cfg_scale=args.cfg_scale,
         preflight=args.preflight,
         semantic_temperature=args.temperature,
-        output_root=DATA / "v73-indie",
+        output_root=args.output_root,
         duration_range=(60, 110),
         source=source,
         semantic_tokens=tokens,
+        bpm=plan["bpm"],
     )
     if verdict["vocal_status"] == "PASS":
         from evaluation.indie_motif import inspect_take
 
         inspect_take(take, plan)
+        if acoustic_opening:
+            inspect_guitars(take)
     print(take, verdict["vocal_status"], verdict["selection"], flush=True)
 
 

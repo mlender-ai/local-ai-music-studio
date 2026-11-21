@@ -1,0 +1,26 @@
+{
+  "title": "Strange Afternoon · Acoustic Lift",
+  "key": "D",
+  "bpm": 94,
+  "time_signature": "4/4",
+  "subdivisions_per_bar": 32,
+  "acoustic_opening": true,
+  "style": "Instrumental acoustic indie rock, warm and quietly hopeful, 94 BPM, 4/4, D major. Begin with an unplugged steel-string acoustic guitar alone, close wooden body, delicate fingerpicked open strings, alternating thumb and treble, a short falling original melody with rests. D major and G major seventh keep an open, sunlit sound. Bring restrained warm bass and soft acoustic drums under the acoustic picking. Hold back electric guitar until the late climax. A short quiet acoustic passage and held Asus4 resolve into a bright D-major return. At the late emotional peak a NEW chiming lightly overdriven electric guitar enters, long sustained notes and open octave answers, warm live bass and full cymbals; the original acoustic riff stays underneath. Finish with the quiet acoustic sound and a natural string decay. Instrumental performance, no vocals or vocalizations.",
+  "hook": {
+    "fragment": [[[2, 4, 57], [9, 6, 66], [19, 3, 64], [24, 6, 62]]],
+    "A": [[[2, 4, 57], [9, 6, 66], [19, 3, 64], [24, 6, 62]], [[0, 8, 59], [12, 3, 57], [20, 3, 62], [25, 6, 66]]],
+    "A_prime": [[[2, 4, 57], [9, 6, 66], [20, 3, 64], [25, 6, 62]], [[0, 8, 59], [13, 3, 57], [20, 3, 64], [25, 6, 62]]],
+    "B": [[[2, 4, 57], [9, 6, 66], [19, 3, 69], [24, 6, 64]], [[0, 8, 62], [12, 3, 64], [20, 3, 66], [25, 6, 69]]],
+    "final": [[[2, 4, 57], [9, 6, 66], [19, 3, 64], [24, 6, 62]], [[0, 8, 71], [12, 3, 69], [20, 3, 74], [25, 6, 78]]]
+  },
+  "sections": [
+    {"name": "Acoustic opening", "abc": "intro", "bars": 4, "placements": [[1, "A"], [3, "A_prime"]]},
+    {"name": "Bass and brushed kit", "abc": "verse", "bars": 8, "placements": [[1, "A"], [5, "A_prime"]]},
+    {"name": "Open acoustic refrain", "abc": "chorus", "bars": 6, "placements": [[1, "A"], [5, "A_prime"]]},
+    {"name": "Quiet breath", "abc": "interlude", "bars": 4, "placements": [[1, "fragment"]]},
+    {"name": "Suspended build", "abc": "pre-chorus", "bars": 4, "placements": [[1, "B"]]},
+    {"name": "Electric arrival", "abc": "chorus", "bars": 8, "placements": [[1, "final"], [3, "A"], [6, "final"]]},
+    {"name": "Quiet D resolution", "abc": "outro", "bars": 4, "placements": [[1, "fragment"]]}
+  ],
+  "chords": [[0, "D"], [4, "Gmaj7"], [8, "D"], [12, "Gmaj7"], [16, "D"], [20, "Gmaj7"], [24, "Dsus2"], [28, "A"], [32, "D"], [36, "Gmaj7"], [40, "Em7"], [44, "A"], [48, "D"], [52, "Gmaj7"], [56, "Dsus2"], [60, "A"], [64, "D"], [68, "Gmaj7"], [72, "D"], [76, "Gmaj7"], [80, "Dsus2"], [84, "D"], [88, "Gmaj7"], [92, "D/F#"], [96, "Asus4"], [100, "A"], [104, "D"], [108, "Gmaj7"], [112, "D"], [116, "A"], [120, "Gmaj7"], [124, "A"], [128, "D"], [132, "D/F#"], [136, "Gmaj7"], [140, "Asus4"], [144, "D"], [148, "Dsus2"]]
+}

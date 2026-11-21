@@ -1,0 +1,109 @@
+{
+  "native_sha256": "4911c140f1550759835ac0d9ced9e342ee508e9276873186d52eb2880a105c62",
+  "arranged_sha256": "82dfcee07e0b561ad81f3353cc67615bbb49d90f8bb657e32d1c864fb43fce9f",
+  "start_seconds": 88.73,
+  "length_seconds": 6.5732083333333335,
+  "source": {
+    "repo": "sfzinstruments/karoryfer.emilyguitar",
+    "revision": "b4920dc662fd9cad6dcaccdeecffdd91c8725d8c",
+    "license": "CC0-1.0",
+    "author": "D. Smolken / Karoryfer"
+  },
+  "lead_rms_dbfs": -15.75,
+  "lead_to_bed_rms_db": -4.5,
+  "effects": [
+    {
+      "type": "distortion",
+      "drive_db": 5.5,
+      "tone_hz": 5200,
+      "output_db": -2.0
+    },
+    {
+      "type": "reverb",
+      "wet": 0.13,
+      "pre_delay_ms": 20,
+      "decay": 0.46
+    }
+  ],
+  "notes": [
+    [
+      0.16,
+      1.4,
+      76,
+      95
+    ],
+    [
+      1.84,
+      0.62,
+      69,
+      86
+    ],
+    [
+      2.54,
+      0.64,
+      73,
+      91
+    ],
+    [
+      3.28,
+      0.45,
+      76,
+      93
+    ],
+    [
+      4.02,
+      1.75,
+      78,
+      105
+    ],
+    [
+      6.04,
+      0.52,
+      76,
+      87
+    ],
+    [
+      6.66,
+      1.15,
+      74,
+      98
+    ]
+  ],
+  "recordings": [
+    {
+      "pitch": 76,
+      "asset": "notes/eb5_f_rr1.wav",
+      "git_blob_sha1": "1fe7aa3b89f64829462ea65913e90ef8b4ebe404"
+    },
+    {
+      "pitch": 69,
+      "asset": "notes/a4_f_rr2.wav",
+      "git_blob_sha1": "bba46ab10501c2e70e64c48361849cb76970b767"
+    },
+    {
+      "pitch": 73,
+      "asset": "notes/c5_f_rr1.wav",
+      "git_blob_sha1": "3d91a4a73f77841a48e649a3a408712c133f1b45"
+    },
+    {
+      "pitch": 76,
+      "asset": "notes/eb5_f_rr2.wav",
+      "git_blob_sha1": "630635e0d75c2216c88178366e966f1274c29cee"
+    },
+    {
+      "pitch": 78,
+      "asset": "notes/eb5_f_rr1.wav",
+      "git_blob_sha1": "1fe7aa3b89f64829462ea65913e90ef8b4ebe404"
+    },
+    {
+      "pitch": 76,
+      "asset": "notes/eb5_f_rr2.wav",
+      "git_blob_sha1": "630635e0d75c2216c88178366e966f1274c29cee"
+    },
+    {
+      "pitch": 74,
+      "asset": "notes/eb5_f_rr1.wav",
+      "git_blob_sha1": "1fe7aa3b89f64829462ea65913e90ef8b4ebe404"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "start_seconds": 0.0,
+    "end_seconds": 4.0,
+    "rms_dbfs": -15.07,
+    "Acoustic guitar": 0.00111,
+    "Electric guitar": 0.00289,
+    "Guitar": 0.00563,
+    "Bass guitar": 0.00063,
+    "Drum kit": 0.00236,
+    "Singing": 0.00335,
+    "Distortion": 0.00066
+  },
+  {
+    "start_seconds": 2.0,
+    "end_seconds": 6.0,
+    "rms_dbfs": -14.9,
+    "Acoustic guitar": 0.00293,
+    "Electric guitar": 0.00502,
+    "Guitar": 0.00953,
+    "Bass guitar": 0.0019,
+    "Drum kit": 0.0106,
+    "Singing": 0.00234,
+    "Distortion": 0.00184
+  }
+]

@@ -169,7 +169,11 @@ def verify_mix(folder, composition):
         "selection": "not_evaluated",
     }
     if voice["status"] == "PASS":
-        result.update(assess_music(folder, "indie-experimental-rock", (60, 110)))
+        result.update(
+            assess_music(
+                folder, "indie-experimental-rock", (60, 110), bpm=composition["bpm"]
+            )
+        )
     (folder / "strict-result.json").write_text(json.dumps(result, indent=2) + "\n")
     if voice["status"] == "PASS":
         inspect_take(folder, composition)

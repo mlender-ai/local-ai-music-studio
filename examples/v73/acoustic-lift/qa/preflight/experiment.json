@@ -1,0 +1,20 @@
+{
+  "engine": "yue2",
+  "genre": "indie-experimental-rock",
+  "seed": 1185,
+  "brief": {
+    "style": "Instrumental acoustic indie rock, warm and quietly hopeful, 94 BPM, 4/4, D major. Begin with an unplugged steel-string acoustic guitar alone, close wooden body, delicate fingerpicked open strings, alternating thumb and treble, a short falling original melody with rests. D major and G major seventh keep an open, sunlit sound. Bring restrained warm bass and soft acoustic drums under the acoustic picking. Hold back electric guitar until the late climax. A short quiet acoustic passage and held Asus4 resolve into a bright D-major return. At the late emotional peak a NEW chiming lightly overdriven electric guitar enters, long sustained notes and open octave answers, warm live bass and full cymbals; the original acoustic riff stays underneath. Finish with the quiet acoustic sound and a natural string decay. Instrumental performance, no vocals or vocalizations.",
+    "lyrics": "",
+    "duration": 29,
+    "bpm": 94,
+    "instrumental": true
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=94\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:D\n% intro\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"D\"z32|\"Gmaj7\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|B,8z4A,3z4zD3z2F6z|z2A,4z3F6z4zE3z2D6z|B,8z4zA,3z4E3z2D6z|\n% verse\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"Dsus2\"z32|\"A\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|B,8z4A,3z4zD3z2F6z|Z2|\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"Em7\"z32|\"A\"z32|\nV: Ins\nz2A,4z3F6z4zE3z2D6z|B,8z4zA,3z4E3z2D6z|Z2|\n% chorus\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"Dsus2\"z32|\"A\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|B,8z4A,3z4zD3z2F6z|Z2|\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\nV: Ins\nz2A,4z3F6z4zE3z2D6z|B,8z4zA,3z4E3z2D6z|\n% interlude\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"Dsus2\"z32|\"D\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|Z3|\n% pre-chorus\nV: Vocal\n\"Gmaj7\"z32|\"D/F#\"z32|\"Asus4\"z32|\"A\"z32|\nV: Ins\nz2A,4z3F6z4A3z2E6z2|D8z4E3z4zF3z2A6z|Z2|\n% chorus\nV: Vocal\n\"D\"z32|\"Gmaj7\"z32|\"D\"z32|\"A\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|B8z4A3z4zd3z2f6z|z2A,4z3F6z4E3z2D6z2|B,8z4A,3z4zD3z2F6z|\nV: Vocal\n\"Gmaj7\"z32|\"A\"z32|\"D\"z32|\"D/F#\"z32|\nV: Ins\nZ|z2A,4z3F6z4E3z2D6z2|B8z4A3z4zd3z2f6z|Z|\n% outro\nV: Vocal\n\"Gmaj7\"z32|\"Asus4\"z32|\"D\"z32|\"Dsus2\"z32|\nV: Ins\nz2A,4z3F6z4E3z2D6z2|Z3|\n",
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 4.182,
+    "peak_footprint_gib": 4.182,
+    "total_seconds": 91.462
+  }
+}
