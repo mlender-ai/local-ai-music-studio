@@ -1,0 +1,932 @@
+{
+  "original_sha256": "15c283033d1bd991fd7db1ede67460ff9eaf7dffb3ce486b6682d6c882475a2c",
+  "analysis_grid_bpm": 102,
+  "melody_matches": {
+    "guitar_estimate": {
+      "A": {
+        "supported": [
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.93,
+            "above_decoy": 0.344,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.14,
+            "note_strength": 0.879,
+            "above_decoy": 0.335,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.99,
+            "note_strength": 0.983,
+            "above_decoy": 0.358,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.366,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.29,
+            "note_strength": 0.837,
+            "above_decoy": 0.269,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.366,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.99,
+            "note_strength": 0.983,
+            "above_decoy": 0.358,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.93,
+            "above_decoy": 0.344,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.14,
+            "note_strength": 0.879,
+            "above_decoy": 0.335,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          }
+        ]
+      },
+      "A_prime": {
+        "supported": [
+          {
+            "start_seconds": 0.19,
+            "note_strength": 0.946,
+            "above_decoy": 0.345,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.91,
+            "above_decoy": 0.419,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.92,
+            "note_strength": 0.979,
+            "above_decoy": 0.441,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.48,
+            "note_strength": 1.0,
+            "above_decoy": 0.413,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.28,
+            "note_strength": 0.986,
+            "above_decoy": 0.398,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.92,
+            "note_strength": 0.979,
+            "above_decoy": 0.441,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.48,
+            "note_strength": 1.0,
+            "above_decoy": 0.413,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.28,
+            "note_strength": 0.986,
+            "above_decoy": 0.398,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.91,
+            "above_decoy": 0.419,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          }
+        ]
+      },
+      "B": {
+        "supported": [
+          {
+            "start_seconds": 4.64,
+            "note_strength": 0.791,
+            "above_decoy": 0.312,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.39,
+            "note_strength": 0.845,
+            "above_decoy": 0.292,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.18,
+            "note_strength": 0.841,
+            "above_decoy": 0.155,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 23.8,
+            "note_strength": 0.847,
+            "above_decoy": 0.232,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.39,
+            "note_strength": 0.845,
+            "above_decoy": 0.292,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 4.64,
+            "note_strength": 0.791,
+            "above_decoy": 0.312,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 23.8,
+            "note_strength": 0.847,
+            "above_decoy": 0.232,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.18,
+            "note_strength": 0.841,
+            "above_decoy": 0.155,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ]
+      },
+      "final": {
+        "supported": [
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.939,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.22,
+            "note_strength": 0.887,
+            "above_decoy": 0.323,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.98,
+            "note_strength": 0.985,
+            "above_decoy": 0.407,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.317,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.29,
+            "note_strength": 0.857,
+            "above_decoy": 0.164,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.98,
+            "note_strength": 0.985,
+            "above_decoy": 0.407,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.317,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.22,
+            "note_strength": 0.887,
+            "above_decoy": 0.323,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.939,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          }
+        ]
+      },
+      "fragment": {
+        "supported": [
+          {
+            "start_seconds": 0.2,
+            "note_strength": 0.93,
+            "above_decoy": 0.369,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 4.98,
+            "note_strength": 0.799,
+            "above_decoy": 0.331,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.95,
+            "note_strength": 0.97,
+            "above_decoy": 0.355,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 17.76,
+            "note_strength": 0.923,
+            "above_decoy": 0.172,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.56,
+            "note_strength": 0.991,
+            "above_decoy": 0.408,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.34,
+            "note_strength": 0.986,
+            "above_decoy": 0.341,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 25.61,
+            "note_strength": 0.744,
+            "above_decoy": 0.108,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 19.56,
+            "note_strength": 0.991,
+            "above_decoy": 0.408,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.34,
+            "note_strength": 0.986,
+            "above_decoy": 0.341,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.95,
+            "note_strength": 0.97,
+            "above_decoy": 0.355,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.2,
+            "note_strength": 0.93,
+            "above_decoy": 0.369,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          }
+        ]
+      }
+    },
+    "guitar_plus_other": {
+      "A": {
+        "supported": [
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.93,
+            "above_decoy": 0.344,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.14,
+            "note_strength": 0.88,
+            "above_decoy": 0.336,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.99,
+            "note_strength": 0.982,
+            "above_decoy": 0.357,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.365,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.29,
+            "note_strength": 0.837,
+            "above_decoy": 0.266,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.365,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.99,
+            "note_strength": 0.982,
+            "above_decoy": 0.357,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.93,
+            "above_decoy": 0.344,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.14,
+            "note_strength": 0.88,
+            "above_decoy": 0.336,
+            "notes_in_top_three": 7,
+            "notes_total": 7,
+            "supported": true
+          }
+        ]
+      },
+      "A_prime": {
+        "supported": [
+          {
+            "start_seconds": 0.19,
+            "note_strength": 0.946,
+            "above_decoy": 0.345,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.904,
+            "above_decoy": 0.412,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.94,
+            "note_strength": 0.977,
+            "above_decoy": 0.44,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.48,
+            "note_strength": 1.0,
+            "above_decoy": 0.412,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.28,
+            "note_strength": 0.986,
+            "above_decoy": 0.398,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.94,
+            "note_strength": 0.977,
+            "above_decoy": 0.44,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.48,
+            "note_strength": 1.0,
+            "above_decoy": 0.412,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.28,
+            "note_strength": 0.986,
+            "above_decoy": 0.398,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.904,
+            "above_decoy": 0.412,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          }
+        ]
+      },
+      "B": {
+        "supported": [
+          {
+            "start_seconds": 4.61,
+            "note_strength": 0.782,
+            "above_decoy": 0.268,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.33,
+            "note_strength": 0.836,
+            "above_decoy": 0.291,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.18,
+            "note_strength": 0.841,
+            "above_decoy": 0.154,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 23.8,
+            "note_strength": 0.848,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.33,
+            "note_strength": 0.836,
+            "above_decoy": 0.291,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 23.8,
+            "note_strength": 0.848,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 4.61,
+            "note_strength": 0.782,
+            "above_decoy": 0.268,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.18,
+            "note_strength": 0.841,
+            "above_decoy": 0.154,
+            "notes_in_top_three": 6,
+            "notes_total": 7,
+            "supported": true
+          }
+        ]
+      },
+      "final": {
+        "supported": [
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.939,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.895,
+            "above_decoy": 0.29,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 9.98,
+            "note_strength": 0.984,
+            "above_decoy": 0.39,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.316,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.29,
+            "note_strength": 0.857,
+            "above_decoy": 0.16,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 9.98,
+            "note_strength": 0.984,
+            "above_decoy": 0.39,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.58,
+            "note_strength": 0.995,
+            "above_decoy": 0.316,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 5.15,
+            "note_strength": 0.895,
+            "above_decoy": 0.29,
+            "notes_in_top_three": 8,
+            "notes_total": 8,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.27,
+            "note_strength": 0.939,
+            "above_decoy": 0.231,
+            "notes_in_top_three": 7,
+            "notes_total": 8,
+            "supported": true
+          }
+        ]
+      },
+      "fragment": {
+        "supported": [
+          {
+            "start_seconds": 0.2,
+            "note_strength": 0.93,
+            "above_decoy": 0.369,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 4.98,
+            "note_strength": 0.797,
+            "above_decoy": 0.329,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 10.0,
+            "note_strength": 0.969,
+            "above_decoy": 0.35,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 17.76,
+            "note_strength": 0.923,
+            "above_decoy": 0.172,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 19.56,
+            "note_strength": 0.991,
+            "above_decoy": 0.407,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.34,
+            "note_strength": 0.986,
+            "above_decoy": 0.341,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 25.61,
+            "note_strength": 0.748,
+            "above_decoy": 0.087,
+            "notes_in_top_three": 3,
+            "notes_total": 4,
+            "supported": true
+          }
+        ],
+        "best": [
+          {
+            "start_seconds": 19.56,
+            "note_strength": 0.991,
+            "above_decoy": 0.407,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 24.34,
+            "note_strength": 0.986,
+            "above_decoy": 0.341,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 10.0,
+            "note_strength": 0.969,
+            "above_decoy": 0.35,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          },
+          {
+            "start_seconds": 0.2,
+            "note_strength": 0.93,
+            "above_decoy": 0.369,
+            "notes_in_top_three": 4,
+            "notes_total": 4,
+            "supported": true
+          }
+        ]
+      }
+    }
+  },
+  "arrangement": {
+    "two_bar_windows": [
+      {
+        "start_seconds": 0.0,
+        "end_seconds": 4.706,
+        "guitar_dbfs": -23.68,
+        "other_dbfs": -95.7,
+        "drums_dbfs": -91.26,
+        "bass_dbfs": -92.43,
+        "cymbals_dbfs": -104.95,
+        "guitar_mid_dbfs": -25.69,
+        "guitar_side_dbfs": -25.17
+      },
+      {
+        "start_seconds": 2.353,
+        "end_seconds": 7.059,
+        "guitar_dbfs": -24.57,
+        "other_dbfs": -52.55,
+        "drums_dbfs": -91.72,
+        "bass_dbfs": -91.19,
+        "cymbals_dbfs": -106.46,
+        "guitar_mid_dbfs": -26.03,
+        "guitar_side_dbfs": -25.97
+      },
+      {
+        "start_seconds": 4.706,
+        "end_seconds": 9.412,
+        "guitar_dbfs": -25.35,
+        "other_dbfs": -41.46,
+        "drums_dbfs": -90.41,
+        "bass_dbfs": -88.47,
+        "cymbals_dbfs": -106.35,
+        "guitar_mid_dbfs": -26.33,
+        "guitar_side_dbfs": -26.57
+      },
+      {
+        "start_seconds": 7.059,
+        "end_seconds": 11.765,
+        "guitar_dbfs": -24.13,
+        "other_dbfs": -41.03,
+        "drums_dbfs": -89.19,
+        "bass_dbfs": -87.53,
+        "cymbals_dbfs": -105.16,
+        "guitar_mid_dbfs": -25.15,
+        "guitar_side_dbfs": -24.93
+      },
+      {
+        "start_seconds": 9.412,
+        "end_seconds": 14.118,
+        "guitar_dbfs": -23.43,
+        "other_dbfs": -45.51,
+        "drums_dbfs": -89.37,
+        "bass_dbfs": -88.55,
+        "cymbals_dbfs": -104.68,
+        "guitar_mid_dbfs": -24.51,
+        "guitar_side_dbfs": -24.19
+      },
+      {
+        "start_seconds": 11.765,
+        "end_seconds": 16.471,
+        "guitar_dbfs": -23.56,
+        "other_dbfs": -48.24,
+        "drums_dbfs": -90.73,
+        "bass_dbfs": -90.03,
+        "cymbals_dbfs": -104.74,
+        "guitar_mid_dbfs": -24.79,
+        "guitar_side_dbfs": -24.6
+      },
+      {
+        "start_seconds": 14.118,
+        "end_seconds": 18.824,
+        "guitar_dbfs": -23.33,
+        "other_dbfs": -95.99,
+        "drums_dbfs": -89.69,
+        "bass_dbfs": -90.73,
+        "cymbals_dbfs": -100.28,
+        "guitar_mid_dbfs": -24.67,
+        "guitar_side_dbfs": -24.91
+      },
+      {
+        "start_seconds": 16.471,
+        "end_seconds": 21.176,
+        "guitar_dbfs": -21.15,
+        "other_dbfs": -80.77,
+        "drums_dbfs": -21.41,
+        "bass_dbfs": -21.36,
+        "cymbals_dbfs": -36.97,
+        "guitar_mid_dbfs": -21.93,
+        "guitar_side_dbfs": -23.23
+      },
+      {
+        "start_seconds": 18.824,
+        "end_seconds": 23.529,
+        "guitar_dbfs": -19.77,
+        "other_dbfs": -76.02,
+        "drums_dbfs": -18.66,
+        "bass_dbfs": -17.94,
+        "cymbals_dbfs": -35.84,
+        "guitar_mid_dbfs": -20.41,
+        "guitar_side_dbfs": -21.76
+      },
+      {
+        "start_seconds": 21.176,
+        "end_seconds": 25.882,
+        "guitar_dbfs": -19.47,
+        "other_dbfs": -65.0,
+        "drums_dbfs": -18.95,
+        "bass_dbfs": -17.35,
+        "cymbals_dbfs": -39.47,
+        "guitar_mid_dbfs": -20.42,
+        "guitar_side_dbfs": -21.9
+      },
+      {
+        "start_seconds": 23.529,
+        "end_seconds": 28.235,
+        "guitar_dbfs": -19.67,
+        "other_dbfs": -63.47,
+        "drums_dbfs": -19.17,
+        "bass_dbfs": -16.97,
+        "cymbals_dbfs": -39.71,
+        "guitar_mid_dbfs": -20.58,
+        "guitar_side_dbfs": -22.28
+      }
+    ]
+  },
+  "scope": "Separation estimates and pitch-class matches. Evocative sound, guitar technique and exact octave require listening."
+}

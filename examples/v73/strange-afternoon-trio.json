@@ -1,0 +1,24 @@
+{
+  "title": "Strange Afternoon",
+  "key": "Gm",
+  "bpm": 102,
+  "time_signature": "4/4",
+  "subdivisions_per_bar": 32,
+  "style": "An instrumental psychedelic indie guitar trio playing a vintage studio room at 102 BPM, G minor, 4/4. Spare single-coil electric guitar, a distinctive two-bar picked figure with dry attack and suspended notes, electric bass and an acoustic drum kit. Start with the clean guitar in the room, then sparse rim and bass. Give the electric bass small ascending responses and leave a break halfway through with only muted and sustained guitar. Rebuild gradually: bass first, small ghosted snare and tom fill, then brighter cymbals, wider open double-stop guitar voicings, and the exact opening guitar motif returns. Thin restrained overdrive and organic live-room drums. Reduce to the small clean guitar again and let the amplifier and strings decay. Entire recording is a three-piece instrumental performance.",
+  "hook": {
+    "fragment": [[[3, 2, 62], [7, 7, 67], [17, 2, 70], [22, 7, 69]]],
+    "A": [[[3, 2, 62], [7, 7, 67], [17, 2, 70], [22, 7, 69]], [[0, 7, 65], [12, 2, 64], [18, 10, 62]]],
+    "A_prime": [[[3, 2, 62], [7, 7, 67], [18, 2, 70], [23, 5, 69]], [[0, 7, 65], [12, 2, 64], [18, 2, 61], [22, 8, 62]]],
+    "B": [[[3, 2, 62], [7, 7, 67], [16, 3, 72], [23, 6, 70]], [[0, 7, 69], [12, 2, 65], [18, 10, 67]]],
+    "final": [[[3, 2, 62], [7, 7, 67], [17, 2, 70], [22, 7, 69]], [[0, 7, 65], [12, 2, 64], [18, 7, 62], [27, 4, 67]]]
+  },
+  "sections": [
+    {"name": "Opening", "abc": "intro", "bars": 4, "placements": [[1, "A"], [3, "fragment"]], "direction": "Close, dry clean guitar, alternate muted pick and sustained notes. Wait to bring in the kit."},
+    {"name": "Groove A", "abc": "verse", "bars": 6, "placements": [[1, "A"], [5, "A"]], "direction": "Warm bass answers the rests. Live kick, rim and closed hat play a restrained backbeat."},
+    {"name": "Variation", "abc": "chorus", "bars": 8, "placements": [[1, "A_prime"], [5, "B"]], "direction": "Change the phrase ending and let bass move out of the guitar register. Small fill before the pause."},
+    {"name": "Strange Interlude", "abc": "interlude", "bars": 4, "placements": [[2, "fragment"]], "direction": "Withdraw the kit. A single backward guitar swell and brief tape bend bend the space around the held motif."},
+    {"name": "Emotional Build", "abc": "pre-chorus", "bars": 6, "placements": [[1, "B"], [5, "A_prime"]], "direction": "Return the bass and drums in stages. A more open guitar voicing sustains against the short picked reply."},
+    {"name": "Climax", "abc": "chorus", "bars": 8, "placements": [[1, "A"], [3, "final"], [6, "final"]], "direction": "Bring the opening motif back with full kit, cymbal lift, tom answer and another guitar color without hard distortion."},
+    {"name": "Outro", "abc": "outro", "bars": 4, "placements": [[1, "fragment"]], "direction": "Let the drums and bass drop away. Leave the clean guitar and room to decay."}
+  ]
+}

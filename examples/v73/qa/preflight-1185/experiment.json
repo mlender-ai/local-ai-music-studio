@@ -1,0 +1,20 @@
+{
+  "engine": "yue2",
+  "genre": "indie-experimental-rock",
+  "seed": 1185,
+  "brief": {
+    "style": "An instrumental psychedelic indie guitar trio playing a vintage studio room at 102 BPM, G minor, 4/4. Spare single-coil electric guitar, a distinctive two-bar picked figure with dry attack and suspended notes, electric bass and an acoustic drum kit. Start with the clean guitar in the room, then sparse rim and bass. Give the electric bass small ascending responses and leave a break halfway through with only muted and sustained guitar. Rebuild gradually: bass first, small ghosted snare and tom fill, then brighter cymbals, wider open double-stop guitar voicings, and the exact opening guitar motif returns. Thin restrained overdrive and organic live-room drums. Reduce to the small clean guitar again and let the amplifier and strings decay. Entire recording is a three-piece instrumental performance.",
+    "lyrics": "",
+    "duration": 29,
+    "bpm": 102,
+    "instrumental": true
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=102\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Gm\n% intro\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|z3D2z2G6-Gz3B2z3A6-Az3|Z|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|Z2|\nV: Vocal\nZ2|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz4B2z3A4-Az4|F6-Fz4z=E2z4_D2z2=D8z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz2c3z4B6z3|A6-Az4zF2z4G8-G2z4|Z2|\n% interlude\nV: Vocal\nZ4|\nV: Ins\nZ|z3D2z2G6-Gz3B2z3A6-Az3|Z2|\n% pre-chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz2c3z4B6z3|A6-Az4zF2z4G8-G2z4|Z2|\nV: Vocal\nZ2|\nV: Ins\nz3D2z2G6-Gz4B2z3A4-Az4|F6-Fz4z=E2z4_D2z2=D8z2|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|z3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D6-Dz2G4z|\nV: Vocal\nZ4|\nV: Ins\nZ|z3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D6-Dz2G4z|Z|\n% outro\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|Z3|\n",
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 4.264,
+    "peak_footprint_gib": 4.264,
+    "total_seconds": 116.852
+  }
+}

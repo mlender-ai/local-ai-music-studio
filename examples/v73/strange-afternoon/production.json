@@ -1,0 +1,129 @@
+{
+  "native_sha256": "f88ed8693eb57d9cdc4e03d9b98285ba43d8087782d66cb39bab5da7d7628380",
+  "produced_sha256": "0ef734d161d3d0c3485585731164bb9aa41749e59ae2d67802ee3b848cf0a1a0",
+  "frames": 4511936,
+  "gain_automation": {
+    "drums": [
+      [
+        39.6,
+        1.0
+      ],
+      [
+        40.8,
+        0.09
+      ],
+      [
+        45.6,
+        0.09
+      ],
+      [
+        48.0,
+        0.15
+      ],
+      [
+        52.8,
+        0.33
+      ],
+      [
+        57.6,
+        0.53
+      ],
+      [
+        62.4,
+        0.69
+      ],
+      [
+        68.4,
+        0.9
+      ],
+      [
+        69.6,
+        1.0
+      ],
+      [
+        82.8,
+        1.0
+      ],
+      [
+        85.2,
+        0.67
+      ],
+      [
+        87.6,
+        0.34
+      ],
+      [
+        90.0,
+        0.08
+      ],
+      [
+        93.4,
+        0.08
+      ],
+      [
+        93.998,
+        1.0
+      ]
+    ],
+    "bass": [
+      [
+        39.6,
+        1.0
+      ],
+      [
+        40.8,
+        0.35
+      ],
+      [
+        45.6,
+        0.35
+      ],
+      [
+        50.4,
+        0.85
+      ],
+      [
+        55.2,
+        1.0
+      ],
+      [
+        85.2,
+        1.0
+      ],
+      [
+        89.4,
+        0.45
+      ],
+      [
+        92.4,
+        0.32
+      ],
+      [
+        93.4,
+        0.32
+      ],
+      [
+        93.998,
+        1.0
+      ]
+    ]
+  },
+  "effects": [
+    {
+      "type": "reverse_guitar_swell",
+      "source": "Original's Demucs guitar estimate",
+      "source_sha256": "8c8b0aad1ae7233623f3a557b74bf8a00605a40efc0bd748c29e3bfb5d25ca35",
+      "source_start_seconds": 0.45,
+      "placement_seconds": 42.9,
+      "duration_seconds": 1.25,
+      "bandpass_hz": [
+        240,
+        6200
+      ],
+      "edge_fade_ms": 80,
+      "effect_rms_dbfs_before_master_gain": -32.13,
+      "effect_to_local_mix_rms_db": -12.5,
+      "frames_in_edit": 60000
+    }
+  ]
+}

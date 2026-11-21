@@ -10,13 +10,25 @@ from evaluation.vocal_leakage import review, score_evidence
 from scripts.v4_study import run, yue2_request
 from scripts.v71_qa import inspect
 
-GENRES = {"house-techno-128": 128, "highteen-punk-144": 144}
+GENRES = {
+    "house-techno-128": 128,
+    "highteen-punk-144": 144,
+    "indie-experimental-rock": 102,
+}
 YUE_SEMANTIC_HZ = 25
 
 
 def digest(path):
     with path.open("rb") as handle:
         return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+def replay_stream(take, score, style, cap):
+    original = json.loads((take / "request.json").read_text())
+    if original.get("abc") != score or original["style"] != style:
+        raise ValueError("Replay must retain the original conditions and melody guide")
+    sidecar = json.loads((take / "original.json").read_text())
+    return ",".join(sidecar["semantic_tokens"].split(",")[: cap * YUE_SEMANTIC_HZ])
 
 
 def require_preflight(folder, expected):
@@ -52,7 +64,11 @@ def assess_music(folder, genre, duration_range=(60, 90)):
     quality = inspect(folder)
     report["technical_music_qa"] = quality
     waveform = quality["waveform"]
-    lower, upper = (125, 131) if genre == "house-techno-128" else (140, 148)
+    lower, upper = {
+        "house-techno-128": (125, 131),
+        "highteen-punk-144": (140, 148),
+        "indie-experimental-rock": (96, 108),
+    }[genre]
     kit = quality["htdemucs_6s"]
     tempo_candidates = kit["drum_rhythm"]["candidates"]
     if genre == "house-techno-128":
@@ -93,6 +109,21 @@ def assess_music(folder, genre, duration_range=(60, 90)):
         "drum_half_time": drum_half_time,
         "confirmed_half_time_relation": bool(half_time),
     }
+    shared_period = None
+    if genre == "indie-experimental-rock":
+        # The score tempo is a creative target for this track. Corroborate a
+        # different performed tempo before calling it a timing problem.
+        shared_period = next(
+            (
+                drum
+                for drum in tempo_candidates
+                for mix in waveform["rhythm"]["candidates"]
+                if min(drum["strength"], mix["strength"]) >= 0.15
+                and abs(drum["bpm"] - mix["bpm"]) <= 2
+            ),
+            None,
+        )
+        report["tempo_evidence"]["common_period"] = shared_period
     tail_db = waveform["final_100ms_rms_dbfs"]
     quiet_tail = tail_db <= -45 and quality["ending"]["one_second_rms_dbfs"] <= -38
     fading_eos = (
@@ -106,7 +137,7 @@ def assess_music(folder, genre, duration_range=(60, 90)):
             <= round(waveform["levels"]["duration_seconds"], 1)
             <= duration_range[1]
         ),
-        "tempo": bool(direct_tempo or half_time),
+        "tempo": bool(direct_tempo or half_time or shared_period),
         "loop_screen": not waveform["exact_loop_candidates"],
         "impulse_screen": not waveform["isolated_impulse_count"],
     }

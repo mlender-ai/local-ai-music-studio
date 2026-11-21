@@ -1,0 +1,20 @@
+{
+  "engine": "yue2",
+  "genre": "indie-experimental-rock",
+  "seed": 647,
+  "brief": {
+    "style": "Instrumental indie alternative rock, off-center psychedelic guitar band, restrained dream pop, 102 BPM, 4/4. G minor with a brief natural sixth. Clean dry single-coil electric guitar picks a small wistful two-bar motif with a held note, gaps, muted attacks, and a falling answer. Begin with the lone close guitar and its room. Warm moving electric bass and human live drums enter after the first statement, loose hats, rim and snare ghosts, short tom answers. Leave room for bass replies between guitar lines. An unusual middle break takes the kit away and leaves a brief backward guitar swell and subtle magnetic tape flutter. Rebuild through the same melodic shape and a wider open guitar voicing. The last return lifts with a second guitar, real cymbals and bass movement, restrained overdrive, no metal. Resolve to the small clean guitar with a real decay. Guitar, bass, live drums, and tape texture only. Pure instrumental ensemble without voices or vocal-like sounds.",
+    "lyrics": "",
+    "duration": 29,
+    "bpm": 102,
+    "instrumental": true
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=102\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Gm\n% intro\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|z3D2z2G6-Gz3B2z3A6-Az3|Z|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|Z2|\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|Z2|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz4B2z3A4-Az4|F6-Fz4z=E2z4_D2z2=D8z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz2c3z4B6z3|A6-Az4zF2z4G8-G2z4|Z2|\n% interlude\nV: Vocal\nZ4|\nV: Ins\nZ|z3D2z2G6-Gz3B2z3A6-Az3|Z2|\n% pre-chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz2c3z4B6z3|A6-Az4zF2z4G8-G2z4|Z2|\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz4B2z3A4-Az4|F6-Fz4z=E2z4_D2z2=D8z2|Z2|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D8-D2z4|z3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D6-Dz2G4z|\nV: Vocal\nZ4|\nV: Ins\nZ|z3D2z2G6-Gz3B2z3A6-Az3|F6-Fz4z=E2z4D6-Dz2G4z|Z|\n% outro\nV: Vocal\nZ4|\nV: Ins\nz3D2z2G6-Gz3B2z3A6-Az3|Z3|\n",
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 4.215,
+    "peak_footprint_gib": 4.215,
+    "total_seconds": 77.813
+  }
+}

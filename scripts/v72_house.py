@@ -7,7 +7,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from engine.paths import DATA, ROOT, RUNTIME
-from scripts.v71_strict import YUE_SEMANTIC_HZ, digest, produce
+from scripts.v71_strict import YUE_SEMANTIC_HZ, digest, produce, replay_stream
 
 PLAN = ROOT / "examples/v72/magnetic-afterhours.json"
 
@@ -105,18 +105,11 @@ def main():
         else None
     )
     cap = args.duration_cap or (105 if args.preflight else 28)
-    semantic_tokens = None
-    if args.replay_from:
-        stored = json.loads((args.replay_from / "original.json").read_text())
-        original_request = json.loads((args.replay_from / "request.json").read_text())
-        if (
-            original_request.get("abc") != score
-            or original_request["style"] != plan["style"]
-        ):
-            raise ValueError("Replay must retain the original conditions and hook")
-        semantic_tokens = ",".join(
-            stored["semantic_tokens"].split(",")[: cap * YUE_SEMANTIC_HZ]
-        )
+    semantic_tokens = (
+        replay_stream(args.replay_from, score, plan["style"], cap)
+        if args.replay_from
+        else None
+    )
     take, verdict = produce(
         plan["style"],
         score,
