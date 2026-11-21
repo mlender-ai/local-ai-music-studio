@@ -59,7 +59,7 @@ def require_preflight(folder, expected):
         raise ValueError("This exact short take needs a passing vocal leakage report")
 
 
-def assess_music(folder, genre, duration_range=(60, 90)):
+def assess_music(folder, genre, duration_range=(60, 90), *, bpm=None):
     report = {}
     quality = inspect(folder)
     report["technical_music_qa"] = quality
@@ -69,6 +69,8 @@ def assess_music(folder, genre, duration_range=(60, 90)):
         "highteen-punk-144": (140, 148),
         "indie-experimental-rock": (96, 108),
     }[genre]
+    if bpm is not None and genre == "indie-experimental-rock":
+        lower, upper = bpm - 6, bpm + 6
     kit = quality["htdemucs_6s"]
     tempo_candidates = kit["drum_rhythm"]["candidates"]
     if genre == "house-techno-128":
@@ -167,12 +169,13 @@ def produce(
     duration_range=(60, 90),
     source=None,
     semantic_tokens=None,
+    bpm=None,
 ):
     brief = {
         "style": style.strip(),
         "lyrics": "",
         "duration": cap,
-        "bpm": GENRES[genre],
+        "bpm": GENRES[genre] if bpm is None else bpm,
         "instrumental": True,
     }
     expected = yue2_request(
@@ -216,7 +219,7 @@ def produce(
         "selection": "not_evaluated",
     }
     if preflight and checks["status"] == "PASS":
-        report.update(assess_music(folder, genre, duration_range))
+        report.update(assess_music(folder, genre, duration_range, bpm=bpm))
     (folder / "strict-result.json").write_text(json.dumps(report, indent=2) + "\n")
     return folder, report
 

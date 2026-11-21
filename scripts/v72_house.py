@@ -37,7 +37,13 @@ def compile_abc(plan):
         from compile_score import compile_events
 
         text, _ = compile_events(
-            {"key": plan["key"], "bpm": plan["bpm"], "bars": bars, "notes": notes}
+            {
+                "key": plan["key"],
+                "bpm": plan["bpm"],
+                "bars": bars,
+                "notes": notes,
+                "chords": plan.get("chords", []),
+            }
         )
     except ImportError as error:
         raise ValueError(

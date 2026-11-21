@@ -1,0 +1,187 @@
+{
+  "levels": {
+    "sample_rate": 48000,
+    "channels": 2,
+    "frames": 4751936,
+    "duration_seconds": 98.99866666666667,
+    "peak": 0.8285765647888184,
+    "peak_dbfs": -1.6333470863791635,
+    "rms": 0.08591643553919352,
+    "rms_dbfs": -21.318474981533466,
+    "clipped_samples": 0,
+    "finite": true,
+    "low_band_power": 0.000687252062977731,
+    "high_band_power": 7.129891662454967e-06,
+    "low_mid_fraction": 0.33571910475420025,
+    "presence_fraction": 0.014783240324435547,
+    "air_fraction": 0.004279611767117215,
+    "lr_correlation": 0.7736412186506316,
+    "crest_db": 19.685127895154302,
+    "mono_fold_db": -0.6213927141647112,
+    "integrated_lufs": -19.6,
+    "true_peak_dbtp": -1.6,
+    "pcm_sha256": "7f7e9f23d67fba6e297fdd3d4cac5ea56c35c23cda20721c73aa4535a39af0ea",
+    "section_rms_dbfs": {}
+  },
+  "subtype": "PCM_24",
+  "sha256": "4e4d071f458a0a547ece883843d9eabff4fdd5a06eaccc9a66f4a134c2e7bbf9",
+  "max_silence_seconds": 0.1,
+  "isolated_impulse_count": 0,
+  "exact_loop_candidates": [],
+  "quarters_rms_dbfs": [
+    -26.62,
+    -21.38,
+    -19.53,
+    -20.5
+  ],
+  "final_100ms_rms_dbfs": -86.39,
+  "rhythm": {
+    "method": "spectral-flux autocorrelation; unconditioned 60\u2013180 BPM search",
+    "estimated_bpm": null,
+    "dominant_period_bpm": 86.1,
+    "requested_bpm": 94,
+    "absolute_error_bpm": null,
+    "candidates": [
+      {
+        "bpm": 86.1,
+        "strength": 0.309
+      },
+      {
+        "bpm": 172.6,
+        "strength": 0.246
+      },
+      {
+        "bpm": 116.0,
+        "strength": 0.198
+      },
+      {
+        "bpm": 69.6,
+        "strength": 0.09
+      }
+    ],
+    "windows": [
+      {
+        "start_seconds": 0.0,
+        "bpm": 81.0,
+        "strength": 0.204
+      },
+      {
+        "start_seconds": 7.5,
+        "bpm": 81.4,
+        "strength": 0.178
+      },
+      {
+        "start_seconds": 11.25,
+        "bpm": 64.8,
+        "strength": 0.213
+      },
+      {
+        "start_seconds": 15.0,
+        "bpm": 64.7,
+        "strength": 0.219
+      },
+      {
+        "start_seconds": 18.75,
+        "bpm": 82.7,
+        "strength": 0.393
+      },
+      {
+        "start_seconds": 22.5,
+        "bpm": 83.5,
+        "strength": 0.372
+      },
+      {
+        "start_seconds": 26.25,
+        "bpm": 84.3,
+        "strength": 0.469
+      },
+      {
+        "start_seconds": 30.0,
+        "bpm": 84.4,
+        "strength": 0.444
+      },
+      {
+        "start_seconds": 33.75,
+        "bpm": 84.7,
+        "strength": 0.346
+      },
+      {
+        "start_seconds": 37.5,
+        "bpm": 85.0,
+        "strength": 0.382
+      },
+      {
+        "start_seconds": 41.25,
+        "bpm": 112.9,
+        "strength": 0.151
+      },
+      {
+        "start_seconds": 45.0,
+        "bpm": 112.9,
+        "strength": 0.359
+      },
+      {
+        "start_seconds": 48.75,
+        "bpm": 86.1,
+        "strength": 0.466
+      },
+      {
+        "start_seconds": 52.5,
+        "bpm": 86.1,
+        "strength": 0.433
+      },
+      {
+        "start_seconds": 56.25,
+        "bpm": 86.6,
+        "strength": 0.389
+      },
+      {
+        "start_seconds": 60.0,
+        "bpm": 86.7,
+        "strength": 0.426
+      },
+      {
+        "start_seconds": 63.75,
+        "bpm": 86.7,
+        "strength": 0.411
+      },
+      {
+        "start_seconds": 67.5,
+        "bpm": 86.8,
+        "strength": 0.448
+      },
+      {
+        "start_seconds": 71.25,
+        "bpm": 86.8,
+        "strength": 0.477
+      },
+      {
+        "start_seconds": 75.0,
+        "bpm": 115.6,
+        "strength": 0.213
+      },
+      {
+        "start_seconds": 78.75,
+        "bpm": 116.5,
+        "strength": 0.293
+      },
+      {
+        "start_seconds": 82.5,
+        "bpm": 116.1,
+        "strength": 0.338
+      },
+      {
+        "start_seconds": 86.25,
+        "bpm": 117.8,
+        "strength": 0.308
+      },
+      {
+        "start_seconds": 90.0,
+        "bpm": 118.3,
+        "strength": 0.266
+      }
+    ],
+    "assessment": "half_double_time_ambiguous",
+    "note": "\ud15c\ud3ec \ucd94\uc815\uce58\uc785\ub2c8\ub2e4. \ubc18\ubc15\u00b7\ubc30\ubc15 \ub610\ub294 \uc2f1\ucf54\ud398\uc774\uc158\uc73c\ub85c \uc624\ucc28\uac00 \uc0dd\uae38 \uc218 \uc788\uc73c\uba70, \uc7a5\ub974\u00b7\ubc15\uc790 \uc815\ud655\ub3c4\ub294 \uccad\ucde8 \ud3c9\uac00\uac00 \ud544\uc694\ud569\ub2c8\ub2e4."
+  }
+}

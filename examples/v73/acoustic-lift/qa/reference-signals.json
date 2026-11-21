@@ -1,0 +1,236 @@
+{
+  "source": "https://music.apple.com/us/album/godspeed-single/6800201199",
+  "scope": "Official 30-second preview. Offsets are relative to the preview; release timecodes are unknown.",
+  "duration_seconds": 29.97553125,
+  "instrument_event_evidence": [
+    {
+      "start_seconds": 0.0,
+      "end_seconds": 4.0,
+      "rms_dbfs": -10.11,
+      "Acoustic guitar": 0.00879,
+      "Electric guitar": 0.00834,
+      "Guitar": 0.04796,
+      "Bass guitar": 0.02625,
+      "Drum kit": 0.01737,
+      "Singing": 0.19579,
+      "Distortion": 0.00122
+    },
+    {
+      "start_seconds": 2.0,
+      "end_seconds": 6.0,
+      "rms_dbfs": -10.24,
+      "Acoustic guitar": 0.00421,
+      "Electric guitar": 0.00554,
+      "Guitar": 0.03535,
+      "Bass guitar": 0.01783,
+      "Drum kit": 0.02483,
+      "Singing": 0.20682,
+      "Distortion": 0.00072
+    },
+    {
+      "start_seconds": 4.0,
+      "end_seconds": 8.0,
+      "rms_dbfs": -11.1,
+      "Acoustic guitar": 0.00531,
+      "Electric guitar": 0.00129,
+      "Guitar": 0.01978,
+      "Bass guitar": 0.00322,
+      "Drum kit": 0.00656,
+      "Singing": 0.19518,
+      "Distortion": 0.00017
+    },
+    {
+      "start_seconds": 6.0,
+      "end_seconds": 10.0,
+      "rms_dbfs": -11.42,
+      "Acoustic guitar": 0.01744,
+      "Electric guitar": 0.00561,
+      "Guitar": 0.0586,
+      "Bass guitar": 0.01126,
+      "Drum kit": 0.00614,
+      "Singing": 0.15096,
+      "Distortion": 0.00058
+    },
+    {
+      "start_seconds": 8.0,
+      "end_seconds": 12.0,
+      "rms_dbfs": -10.47,
+      "Acoustic guitar": 0.01178,
+      "Electric guitar": 0.00585,
+      "Guitar": 0.05631,
+      "Bass guitar": 0.01479,
+      "Drum kit": 0.01827,
+      "Singing": 0.22392,
+      "Distortion": 0.00052
+    },
+    {
+      "start_seconds": 10.0,
+      "end_seconds": 14.0,
+      "rms_dbfs": -10.5,
+      "Acoustic guitar": 0.00655,
+      "Electric guitar": 0.00213,
+      "Guitar": 0.02102,
+      "Bass guitar": 0.00419,
+      "Drum kit": 0.02323,
+      "Singing": 0.19623,
+      "Distortion": 0.00061
+    },
+    {
+      "start_seconds": 12.0,
+      "end_seconds": 16.0,
+      "rms_dbfs": -10.17,
+      "Acoustic guitar": 0.00408,
+      "Electric guitar": 0.00112,
+      "Guitar": 0.01487,
+      "Bass guitar": 0.00292,
+      "Drum kit": 0.02409,
+      "Singing": 0.18445,
+      "Distortion": 0.00033
+    },
+    {
+      "start_seconds": 14.0,
+      "end_seconds": 18.0,
+      "rms_dbfs": -10.31,
+      "Acoustic guitar": 0.00551,
+      "Electric guitar": 0.00227,
+      "Guitar": 0.02478,
+      "Bass guitar": 0.00747,
+      "Drum kit": 0.01205,
+      "Singing": 0.23722,
+      "Distortion": 0.00017
+    },
+    {
+      "start_seconds": 16.0,
+      "end_seconds": 20.0,
+      "rms_dbfs": -11.22,
+      "Acoustic guitar": 0.00727,
+      "Electric guitar": 0.00502,
+      "Guitar": 0.03255,
+      "Bass guitar": 0.01371,
+      "Drum kit": 0.01064,
+      "Singing": 0.17217,
+      "Distortion": 0.00051
+    },
+    {
+      "start_seconds": 18.0,
+      "end_seconds": 22.0,
+      "rms_dbfs": -10.64,
+      "Acoustic guitar": 0.00722,
+      "Electric guitar": 0.00411,
+      "Guitar": 0.03784,
+      "Bass guitar": 0.01246,
+      "Drum kit": 0.01783,
+      "Singing": 0.16547,
+      "Distortion": 0.00037
+    },
+    {
+      "start_seconds": 20.0,
+      "end_seconds": 24.0,
+      "rms_dbfs": -11.4,
+      "Acoustic guitar": 0.01349,
+      "Electric guitar": 0.00439,
+      "Guitar": 0.05026,
+      "Bass guitar": 0.01022,
+      "Drum kit": 0.01104,
+      "Singing": 0.17472,
+      "Distortion": 0.00024
+    },
+    {
+      "start_seconds": 22.0,
+      "end_seconds": 26.0,
+      "rms_dbfs": -10.99,
+      "Acoustic guitar": 0.00387,
+      "Electric guitar": 0.00181,
+      "Guitar": 0.01609,
+      "Bass guitar": 0.00416,
+      "Drum kit": 0.00577,
+      "Singing": 0.16976,
+      "Distortion": 0.00019
+    },
+    {
+      "start_seconds": 24.0,
+      "end_seconds": 28.0,
+      "rms_dbfs": -10.71,
+      "Acoustic guitar": 0.01513,
+      "Electric guitar": 0.00733,
+      "Guitar": 0.05927,
+      "Bass guitar": 0.01868,
+      "Drum kit": 0.01487,
+      "Singing": 0.15415,
+      "Distortion": 0.00049
+    }
+  ],
+  "rhythm": {
+    "method": "spectral-flux autocorrelation; unconditioned 60\u2013180 BPM search",
+    "estimated_bpm": null,
+    "dominant_period_bpm": 75.8,
+    "requested_bpm": null,
+    "absolute_error_bpm": null,
+    "candidates": [
+      {
+        "bpm": 75.8,
+        "strength": 0.337
+      },
+      {
+        "bpm": 151.6,
+        "strength": 0.239
+      },
+      {
+        "bpm": 64.6,
+        "strength": 0.111
+      },
+      {
+        "bpm": 112.4,
+        "strength": 0.105
+      }
+    ],
+    "windows": [
+      {
+        "start_seconds": 0.0,
+        "bpm": 75.7,
+        "strength": 0.351
+      },
+      {
+        "start_seconds": 3.75,
+        "bpm": 75.7,
+        "strength": 0.292
+      },
+      {
+        "start_seconds": 7.5,
+        "bpm": 75.9,
+        "strength": 0.294
+      },
+      {
+        "start_seconds": 11.25,
+        "bpm": 76.0,
+        "strength": 0.34
+      },
+      {
+        "start_seconds": 15.0,
+        "bpm": 75.8,
+        "strength": 0.288
+      },
+      {
+        "start_seconds": 18.75,
+        "bpm": 75.8,
+        "strength": 0.222
+      }
+    ],
+    "assessment": "half_double_time_ambiguous",
+    "note": "\ud15c\ud3ec \ucd94\uc815\uce58\uc785\ub2c8\ub2e4. \ubc18\ubc15\u00b7\ubc30\ubc15 \ub610\ub294 \uc2f1\ucf54\ud398\uc774\uc158\uc73c\ub85c \uc624\ucc28\uac00 \uc0dd\uae38 \uc218 \uc788\uc73c\uba70, \uc7a5\ub974\u00b7\ubc15\uc790 \uc815\ud655\ub3c4\ub294 \uccad\ucde8 \ud3c9\uac00\uac00 \ud544\uc694\ud569\ub2c8\ub2e4."
+  },
+  "pitch_class_profile": {
+    "C": 0.221,
+    "C#": 0.607,
+    "D": 0.123,
+    "D#": 0.469,
+    "E": 0.407,
+    "F": 0.38,
+    "F#": 0.465,
+    "G": 0.2,
+    "G#": 0.596,
+    "A": 0.42,
+    "A#": 0.276,
+    "B": 0.594
+  }
+}

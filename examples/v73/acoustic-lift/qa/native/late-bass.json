@@ -1,0 +1,24 @@
+{
+  "source_sha256": "4911c140f1550759835ac0d9ced9e342ee508e9276873186d52eb2880a105c62",
+  "scope": "Spectral peaks of bass-separation estimate at three positions; not full chord transcription",
+  "rows": [
+    {
+      "start_seconds": 87.48,
+      "end_seconds": 87.93,
+      "strongest_low_peak_hz": 48.45,
+      "pitch_class": "G"
+    },
+    {
+      "start_seconds": 89.53,
+      "end_seconds": 89.98,
+      "strongest_low_peak_hz": 55.18,
+      "pitch_class": "A"
+    },
+    {
+      "start_seconds": 92.27,
+      "end_seconds": 92.72,
+      "strongest_low_peak_hz": 72.67,
+      "pitch_class": "D"
+    }
+  ]
+}
