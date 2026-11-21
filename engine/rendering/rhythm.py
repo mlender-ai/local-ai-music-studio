@@ -42,6 +42,10 @@ def _candidates(envelope, rate=100):
 
 def estimate_rhythm(path, requested_bpm=None):
     x, sr = read_audio(path)
+    return estimate_pcm_rhythm(x, sr, requested_bpm)
+
+
+def estimate_pcm_rhythm(x, sr, requested_bpm=None):
     mono = x.mean(axis=1)
     factor = math.gcd(sr, 12000)
     mono = signal.resample_poly(mono, 12000 // factor, sr // factor)
