@@ -1,0 +1,615 @@
+{
+  "status": "REJECT",
+  "score": {
+    "status": "PASS",
+    "vocal_notes": 0,
+    "instrumental_notes": 42,
+    "chord_annotations": 46,
+    "lyrics": "",
+    "cot": "full",
+    "score_bpm": 144
+  },
+  "human_listening": "unverified",
+  "audio": {
+    "status": "REJECT",
+    "events": [
+      {
+        "start_seconds": 16.0,
+        "end_seconds": 20.0,
+        "status": "REJECT",
+        "reason": "aligned_transcript_and_audible_voice_estimates",
+        "corroborated_tags": []
+      },
+      {
+        "start_seconds": 18.0,
+        "end_seconds": 22.0,
+        "status": "REJECT",
+        "reason": "aligned_transcript_and_audible_voice_estimates",
+        "corroborated_tags": []
+      },
+      {
+        "start_seconds": 19.9986875,
+        "end_seconds": 23.9986875,
+        "status": "UNCERTAIN",
+        "reason": "unresolved_voice_like_evidence",
+        "corroborated_tags": []
+      }
+    ],
+    "coverage_complete": true
+  },
+  "windows": [
+    {
+      "start_seconds": 0.0,
+      "end_seconds": 4.0,
+      "rms_dbfs": [
+        -21.512678146362305,
+        -83.99305725097656,
+        -88.24494934082031
+      ],
+      "tags": [
+        {
+          "Speech": 0.02604,
+          "Singing": 0.01092,
+          "Humming": 8e-05,
+          "Choir": 0.001,
+          "Chant": 0.00033,
+          "Shout": 0.00044,
+          "Vocal music": 0.00086,
+          "Breathing": 0.00053,
+          "Sigh": 0.00038,
+          "Groan": 0.00033
+        },
+        {
+          "Speech": 0.03556,
+          "Singing": 0.00115,
+          "Humming": 9e-05,
+          "Choir": 0.00037,
+          "Chant": 0.00022,
+          "Shout": 8e-05,
+          "Vocal music": 0.00039,
+          "Breathing": 0.00128,
+          "Sigh": 0.00054,
+          "Groan": 0.0004
+        },
+        {
+          "Speech": 0.03865,
+          "Singing": 0.00118,
+          "Humming": 6e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00024,
+          "Shout": 8e-05,
+          "Vocal music": 0.00041,
+          "Breathing": 0.0015,
+          "Sigh": 0.0003,
+          "Groan": 0.00019
+        }
+      ]
+    },
+    {
+      "start_seconds": 2.0,
+      "end_seconds": 6.0,
+      "rms_dbfs": [
+        -21.042911529541016,
+        -84.0933609008789,
+        -88.77360534667969
+      ],
+      "tags": [
+        {
+          "Speech": 0.02013,
+          "Singing": 0.0118,
+          "Humming": 8e-05,
+          "Choir": 0.00079,
+          "Chant": 0.00023,
+          "Shout": 0.00034,
+          "Vocal music": 0.00092,
+          "Breathing": 0.0004,
+          "Sigh": 0.00034,
+          "Groan": 0.00034
+        },
+        {
+          "Speech": 0.03448,
+          "Singing": 0.00125,
+          "Humming": 0.00023,
+          "Choir": 0.00029,
+          "Chant": 0.0001,
+          "Shout": 0.0001,
+          "Vocal music": 0.00036,
+          "Breathing": 0.00186,
+          "Sigh": 0.00151,
+          "Groan": 0.00134
+        },
+        {
+          "Speech": 0.03983,
+          "Singing": 0.00156,
+          "Humming": 0.00013,
+          "Choir": 0.00042,
+          "Chant": 0.00013,
+          "Shout": 0.00014,
+          "Vocal music": 0.00041,
+          "Breathing": 0.00191,
+          "Sigh": 0.00076,
+          "Groan": 0.00132
+        }
+      ]
+    },
+    {
+      "start_seconds": 4.0,
+      "end_seconds": 8.0,
+      "rms_dbfs": [
+        -21.050512313842773,
+        -85.57858276367188,
+        -90.71417999267578
+      ],
+      "tags": [
+        {
+          "Speech": 0.02875,
+          "Singing": 0.01479,
+          "Humming": 7e-05,
+          "Choir": 0.00057,
+          "Chant": 0.00024,
+          "Shout": 0.00035,
+          "Vocal music": 0.00101,
+          "Breathing": 0.00022,
+          "Sigh": 0.00022,
+          "Groan": 0.00023
+        },
+        {
+          "Speech": 0.0356,
+          "Singing": 0.00138,
+          "Humming": 0.00011,
+          "Choir": 0.00047,
+          "Chant": 0.00021,
+          "Shout": 9e-05,
+          "Vocal music": 0.00043,
+          "Breathing": 0.00174,
+          "Sigh": 0.0007,
+          "Groan": 0.00041
+        },
+        {
+          "Speech": 0.03894,
+          "Singing": 0.00119,
+          "Humming": 6e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00024,
+          "Shout": 8e-05,
+          "Vocal music": 0.00041,
+          "Breathing": 0.0015,
+          "Sigh": 0.00029,
+          "Groan": 0.00019
+        }
+      ]
+    },
+    {
+      "start_seconds": 6.0,
+      "end_seconds": 10.0,
+      "rms_dbfs": [
+        -19.77519416809082,
+        -84.41535186767578,
+        -89.87300872802734
+      ],
+      "tags": [
+        {
+          "Speech": 0.02031,
+          "Singing": 0.01452,
+          "Humming": 0.00011,
+          "Choir": 0.00046,
+          "Chant": 0.00018,
+          "Shout": 0.00039,
+          "Vocal music": 0.00079,
+          "Breathing": 0.00028,
+          "Sigh": 0.00015,
+          "Groan": 0.00015
+        },
+        {
+          "Speech": 0.04024,
+          "Singing": 0.00149,
+          "Humming": 0.00012,
+          "Choir": 0.0005,
+          "Chant": 0.00019,
+          "Shout": 0.00012,
+          "Vocal music": 0.00042,
+          "Breathing": 0.00175,
+          "Sigh": 0.00104,
+          "Groan": 0.00052
+        },
+        {
+          "Speech": 0.04285,
+          "Singing": 0.00119,
+          "Humming": 7e-05,
+          "Choir": 0.00033,
+          "Chant": 0.00024,
+          "Shout": 9e-05,
+          "Vocal music": 0.00046,
+          "Breathing": 0.00185,
+          "Sigh": 0.00038,
+          "Groan": 0.00025
+        }
+      ]
+    },
+    {
+      "start_seconds": 8.0,
+      "end_seconds": 12.0,
+      "rms_dbfs": [
+        -20.980552673339844,
+        -84.69012451171875,
+        -89.81582641601562
+      ],
+      "tags": [
+        {
+          "Speech": 0.02285,
+          "Singing": 0.00954,
+          "Humming": 9e-05,
+          "Choir": 0.00055,
+          "Chant": 0.00019,
+          "Shout": 0.00029,
+          "Vocal music": 0.00072,
+          "Breathing": 0.00025,
+          "Sigh": 0.0001,
+          "Groan": 0.00012
+        },
+        {
+          "Speech": 0.0349,
+          "Singing": 0.00111,
+          "Humming": 9e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00021,
+          "Shout": 7e-05,
+          "Vocal music": 0.00036,
+          "Breathing": 0.00116,
+          "Sigh": 0.00054,
+          "Groan": 0.00041
+        },
+        {
+          "Speech": 0.03583,
+          "Singing": 0.00106,
+          "Humming": 9e-05,
+          "Choir": 0.00041,
+          "Chant": 0.00023,
+          "Shout": 7e-05,
+          "Vocal music": 0.00036,
+          "Breathing": 0.001,
+          "Sigh": 0.00052,
+          "Groan": 0.0004
+        }
+      ]
+    },
+    {
+      "start_seconds": 10.0,
+      "end_seconds": 14.0,
+      "rms_dbfs": [
+        -19.998886108398438,
+        -82.94318389892578,
+        -89.02027130126953
+      ],
+      "tags": [
+        {
+          "Speech": 0.02509,
+          "Singing": 0.01564,
+          "Humming": 8e-05,
+          "Choir": 0.00088,
+          "Chant": 0.00028,
+          "Shout": 0.00041,
+          "Vocal music": 0.00104,
+          "Breathing": 0.00022,
+          "Sigh": 9e-05,
+          "Groan": 0.00011
+        },
+        {
+          "Speech": 0.03896,
+          "Singing": 0.0013,
+          "Humming": 0.00018,
+          "Choir": 0.00038,
+          "Chant": 0.00017,
+          "Shout": 9e-05,
+          "Vocal music": 0.00037,
+          "Breathing": 0.00385,
+          "Sigh": 0.00244,
+          "Groan": 0.00033
+        },
+        {
+          "Speech": 0.03752,
+          "Singing": 0.00114,
+          "Humming": 7e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00024,
+          "Shout": 7e-05,
+          "Vocal music": 0.00041,
+          "Breathing": 0.00146,
+          "Sigh": 0.00036,
+          "Groan": 0.00023
+        }
+      ]
+    },
+    {
+      "start_seconds": 12.0,
+      "end_seconds": 16.0,
+      "rms_dbfs": [
+        -20.826337814331055,
+        -82.46566009521484,
+        -89.63200378417969
+      ],
+      "tags": [
+        {
+          "Speech": 0.02199,
+          "Singing": 0.0111,
+          "Humming": 8e-05,
+          "Choir": 0.00054,
+          "Chant": 0.00016,
+          "Shout": 0.00026,
+          "Vocal music": 0.00061,
+          "Breathing": 0.00022,
+          "Sigh": 8e-05,
+          "Groan": 0.0001
+        },
+        {
+          "Speech": 0.03606,
+          "Singing": 0.00157,
+          "Humming": 0.00022,
+          "Choir": 0.00036,
+          "Chant": 0.00014,
+          "Shout": 0.00013,
+          "Vocal music": 0.00042,
+          "Breathing": 0.00337,
+          "Sigh": 0.00218,
+          "Groan": 0.00077
+        },
+        {
+          "Speech": 0.03724,
+          "Singing": 0.00134,
+          "Humming": 7e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00022,
+          "Shout": 9e-05,
+          "Vocal music": 0.00042,
+          "Breathing": 0.00194,
+          "Sigh": 0.00038,
+          "Groan": 0.00026
+        }
+      ]
+    },
+    {
+      "start_seconds": 14.0,
+      "end_seconds": 18.0,
+      "rms_dbfs": [
+        -21.031719207763672,
+        -81.80780029296875,
+        -88.8454360961914
+      ],
+      "tags": [
+        {
+          "Speech": 0.0291,
+          "Singing": 0.00793,
+          "Humming": 7e-05,
+          "Choir": 0.00053,
+          "Chant": 0.00016,
+          "Shout": 0.00025,
+          "Vocal music": 0.00058,
+          "Breathing": 0.00017,
+          "Sigh": 6e-05,
+          "Groan": 9e-05
+        },
+        {
+          "Speech": 0.03761,
+          "Singing": 0.00209,
+          "Humming": 0.00026,
+          "Choir": 0.00047,
+          "Chant": 0.00019,
+          "Shout": 0.00016,
+          "Vocal music": 0.00057,
+          "Breathing": 0.00598,
+          "Sigh": 0.00363,
+          "Groan": 0.00051
+        },
+        {
+          "Speech": 0.03838,
+          "Singing": 0.00118,
+          "Humming": 7e-05,
+          "Choir": 0.00038,
+          "Chant": 0.00024,
+          "Shout": 8e-05,
+          "Vocal music": 0.00041,
+          "Breathing": 0.0015,
+          "Sigh": 0.00032,
+          "Groan": 0.0002
+        }
+      ]
+    },
+    {
+      "start_seconds": 16.0,
+      "end_seconds": 20.0,
+      "rms_dbfs": [
+        -18.919170379638672,
+        -25.388097763061523,
+        -25.37701416015625
+      ],
+      "tags": [
+        {
+          "Speech": 0.02053,
+          "Singing": 0.06764,
+          "Humming": 0.00041,
+          "Choir": 0.00121,
+          "Chant": 0.00019,
+          "Shout": 0.00051,
+          "Vocal music": 0.00204,
+          "Breathing": 7e-05,
+          "Sigh": 0.0001,
+          "Groan": 0.00023
+        },
+        {
+          "Speech": 0.04665,
+          "Singing": 0.1097,
+          "Humming": 0.07853,
+          "Choir": 0.00774,
+          "Chant": 0.00455,
+          "Shout": 0.00076,
+          "Vocal music": 0.0334,
+          "Breathing": 0.00188,
+          "Sigh": 0.01216,
+          "Groan": 0.00469
+        },
+        {
+          "Speech": 0.04602,
+          "Singing": 0.06098,
+          "Humming": 0.00781,
+          "Choir": 0.00396,
+          "Chant": 0.00352,
+          "Shout": 0.00118,
+          "Vocal music": 0.01349,
+          "Breathing": 0.00085,
+          "Sigh": 0.00248,
+          "Groan": 0.0031
+        }
+      ],
+      "asr": {
+        "no_speech": [
+          0.73077,
+          0.45381,
+          0.54174
+        ],
+        "transcripts": [
+          " Yeah",
+          " Yeah",
+          " Yeah"
+        ],
+        "start_seconds": 15.0,
+        "end_seconds": 21.0
+      }
+    },
+    {
+      "start_seconds": 18.0,
+      "end_seconds": 22.0,
+      "rms_dbfs": [
+        -17.408111572265625,
+        -20.791730880737305,
+        -20.79857635498047
+      ],
+      "tags": [
+        {
+          "Speech": 0.01838,
+          "Singing": 0.13261,
+          "Humming": 0.00068,
+          "Choir": 0.00289,
+          "Chant": 0.00049,
+          "Shout": 0.00089,
+          "Vocal music": 0.00381,
+          "Breathing": 5e-05,
+          "Sigh": 0.00015,
+          "Groan": 0.00024
+        },
+        {
+          "Speech": 0.05809,
+          "Singing": 0.11462,
+          "Humming": 0.00277,
+          "Choir": 0.00733,
+          "Chant": 0.00606,
+          "Shout": 0.00089,
+          "Vocal music": 0.02011,
+          "Breathing": 0.00056,
+          "Sigh": 0.002,
+          "Groan": 0.00194
+        },
+        {
+          "Speech": 0.04023,
+          "Singing": 0.09205,
+          "Humming": 0.00134,
+          "Choir": 0.00362,
+          "Chant": 0.00241,
+          "Shout": 0.00064,
+          "Vocal music": 0.01523,
+          "Breathing": 0.00055,
+          "Sigh": 0.00235,
+          "Groan": 0.00171
+        }
+      ],
+      "asr": {
+        "no_speech": [
+          0.76844,
+          0.55007,
+          0.59326
+        ],
+        "transcripts": [
+          " Yeah",
+          " Yeah",
+          " Yeah"
+        ],
+        "start_seconds": 17.0,
+        "end_seconds": 23.0
+      }
+    },
+    {
+      "start_seconds": 19.9986875,
+      "end_seconds": 23.9986875,
+      "rms_dbfs": [
+        -16.43816566467285,
+        -20.34227180480957,
+        -20.35452651977539
+      ],
+      "tags": [
+        {
+          "Speech": 0.03248,
+          "Singing": 0.07329,
+          "Humming": 0.00041,
+          "Choir": 0.0017,
+          "Chant": 0.00064,
+          "Shout": 0.00065,
+          "Vocal music": 0.00312,
+          "Breathing": 0.00015,
+          "Sigh": 0.0002,
+          "Groan": 0.00021
+        },
+        {
+          "Speech": 0.26746,
+          "Singing": 0.07142,
+          "Humming": 0.00107,
+          "Choir": 0.00502,
+          "Chant": 0.00767,
+          "Shout": 0.00083,
+          "Vocal music": 0.01702,
+          "Breathing": 0.00041,
+          "Sigh": 0.00032,
+          "Groan": 0.00114
+        },
+        {
+          "Speech": 0.44953,
+          "Singing": 0.04826,
+          "Humming": 0.00081,
+          "Choir": 0.00322,
+          "Chant": 0.00385,
+          "Shout": 0.00056,
+          "Vocal music": 0.01141,
+          "Breathing": 0.00043,
+          "Sigh": 0.00032,
+          "Groan": 0.00101
+        }
+      ],
+      "asr": {
+        "no_speech": [
+          0.806,
+          0.73239,
+          0.71082
+        ],
+        "transcripts": [
+          " Dead love",
+          " Dead love",
+          " Dead love"
+        ],
+        "start_seconds": 18.9986875,
+        "end_seconds": 23.9986875
+      }
+    }
+  ],
+  "seconds": 23.9986875,
+  "models": {
+    "audio_tags": {
+      "panns_mobilenetv1": "d2f4b8c18eab44737fcc0de1248ae21eb43f6aa4",
+      "checkpoint_md5": "a419303e1c88aa1b9d2ac3811563d371"
+    },
+    "asr": "openai/whisper-small@973afd24965f72e36ca33b3055d56a652f456b4d",
+    "voice_estimates": [
+      "htdemucs",
+      "htdemucs_6s"
+    ]
+  },
+  "wav_sha256": "4380e7a42b16eda6381f37c0ff5dce8ad03c26e18c97d356ebc1da623ed25764",
+  "request_sha256": "b03de94351a3ac2e0c66e2c4799ca72b8ee5b42bdce3ea8ae10d992b942e157e"
+}

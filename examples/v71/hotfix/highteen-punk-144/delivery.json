@@ -1,0 +1,62 @@
+{
+  "original_sha256": "c47078d1273e36401cc4284370ffc8fbef3cc0ed1492bd3bcfc38189d604b6ce",
+  "playback_gain_db": -3.03,
+  "pcm24_max_rounding_error": 1.1897645420255731e-07,
+  "copies": {
+    "final.wav": {
+      "sha256": "07849976e20b6655dc7c0b0424dba50ceb749621bb7ec358fa3f5d30d6537d99",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 3361856,
+        "duration_seconds": 70.03866666666667,
+        "peak": 0.8224081993103027,
+        "peak_dbfs": -1.6982513692748982,
+        "rms": 0.1028409196029189,
+        "rms_dbfs": -19.756680971060476,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.001314931024455753,
+        "high_band_power": 1.9754194494083254e-05,
+        "low_mid_fraction": 0.09670099508346988,
+        "presence_fraction": 0.11348683322809208,
+        "air_fraction": 0.006556357593794762,
+        "lr_correlation": 0.8950204630630169,
+        "crest_db": 18.058429601785576,
+        "mono_fold_db": -0.23416759211911667,
+        "integrated_lufs": -17.67,
+        "true_peak_dbtp": -1.6,
+        "pcm_sha256": "1b8cc48404c456547d2e2d6d67d752d74ccc2975336f23367a5d3ee430f770e2",
+        "section_rms_dbfs": {}
+      }
+    },
+    "final.mp3": {
+      "sha256": "c9c8b68f2a50c68241eb7738513eebd480f576cf52af09a3fa0621cb14348064",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 3361856,
+        "duration_seconds": 70.03866666666667,
+        "peak": 0.8274067044258118,
+        "peak_dbfs": -1.6456192872936297,
+        "rms": 0.10284289433889272,
+        "rms_dbfs": -19.756514187506586,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.0013148757055024011,
+        "high_band_power": 1.976846545109017e-05,
+        "low_mid_fraction": 0.0966706504374132,
+        "presence_fraction": 0.11351630299825284,
+        "air_fraction": 0.0065744306543184285,
+        "lr_correlation": 0.8949591626841056,
+        "crest_db": 18.110894900212955,
+        "mono_fold_db": -0.2343081369927269,
+        "integrated_lufs": -17.67,
+        "true_peak_dbtp": -1.55,
+        "pcm_sha256": "82c0ed4d169e3f3c7dddeeedd41826436761bef4c59834fb6d8b9cac87cd13b3",
+        "section_rms_dbfs": {}
+      }
+    }
+  },
+  "human_listening": "unverified"
+}

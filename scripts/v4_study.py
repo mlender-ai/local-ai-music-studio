@@ -13,6 +13,26 @@ class ScoreRejected(ValueError):
     """The score was retained for review and must not be sent to synthesis."""
 
 
+def yue2_request(brief, seed, *, cot, score, cfg_scale=None, semantic_temperature=None):
+    request = {
+        "style": brief["style"],
+        "lyrics": brief["lyrics"],
+        "duration": brief["duration"],
+        "seed": seed,
+        "lm_seed": seed,
+        "cot": cot,
+        "steps": 32,
+        "output_format": "wav32",
+    }
+    if cfg_scale is not None:
+        request["cfg_scale"] = cfg_scale
+    if semantic_temperature is not None:
+        request["semantic_sampling"] = {"temperature": semantic_temperature}
+    if score is not None:
+        request["abc"] = score
+    return request
+
+
 def run(
     engine,
     genre,
@@ -23,6 +43,8 @@ def run(
     cot="full",
     output_root=None,
     plan_gate=None,
+    cfg_scale=None,
+    semantic_temperature=None,
 ):
     if score is not None and (engine != "yue2" or not score.strip()):
         raise ValueError("Provide a nonempty ABC score for YuE2")
@@ -50,15 +72,13 @@ def run(
         else:
             base = RUNTIME / "v4"
             binary = base / "yue2cpp/build/yue-synth"
-            req = dict(
-                style=brief["style"],
-                lyrics=brief["lyrics"],
-                duration=brief["duration"],
-                seed=seed,
-                lm_seed=seed,
+            req = yue2_request(
+                brief,
+                seed,
                 cot=cot,
-                steps=32,
-                output_format="wav32",
+                score=score,
+                cfg_scale=cfg_scale,
+                semantic_temperature=semantic_temperature,
             )
             if plan_gate is not None and score is None:
                 planner_request = folder / "planner-request.json"

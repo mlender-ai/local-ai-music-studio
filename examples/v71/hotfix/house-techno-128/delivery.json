@@ -1,0 +1,62 @@
+{
+  "original_sha256": "682e1cc66cd764697a572c59961253d6c166a3e1e17ac177fd2a4201c667988c",
+  "playback_gain_db": -3.12,
+  "pcm24_max_rounding_error": 1.1897645130481017e-07,
+  "copies": {
+    "final.wav": {
+      "sha256": "8b733129b115e8bff5aa06fdbb790431bfce89ef8371c021c72efc893fa496d0",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 3083456,
+        "duration_seconds": 64.23866666666666,
+        "peak": 0.8277666568756104,
+        "peak_dbfs": -1.641841426464923,
+        "rms": 0.1594868272544157,
+        "rms_dbfs": -15.945503629812222,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.0030959927773969676,
+        "high_band_power": 6.324361928662829e-05,
+        "low_mid_fraction": 0.1076580563830939,
+        "presence_fraction": 0.03432765653372951,
+        "air_fraction": 0.011500741469684042,
+        "lr_correlation": 0.9410740323893053,
+        "crest_db": 14.303662203347299,
+        "mono_fold_db": -0.1299495990189717,
+        "integrated_lufs": -14.38,
+        "true_peak_dbtp": -1.6,
+        "pcm_sha256": "f1e08bc48d268a03d98607964aad3a4e07e1c5d811ad450afa6abde849c72db1",
+        "section_rms_dbfs": {}
+      }
+    },
+    "final.mp3": {
+      "sha256": "c48275aee108127de97c0e4e7738d7fdc76bf419abfe53d778c54b8d8cdf4ef5",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 3083456,
+        "duration_seconds": 64.23866666666666,
+        "peak": 0.8274205923080444,
+        "peak_dbfs": -1.6454734973219265,
+        "rms": 0.1594837487871224,
+        "rms_dbfs": -15.94567128933428,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.003095669452545298,
+        "high_band_power": 6.330682315889945e-05,
+        "low_mid_fraction": 0.10765193835422603,
+        "presence_fraction": 0.034351533997395906,
+        "air_fraction": 0.011520564898492413,
+        "lr_correlation": 0.9410468591932045,
+        "crest_db": 14.300197792012353,
+        "mono_fold_db": -0.1300106117369821,
+        "integrated_lufs": -14.38,
+        "true_peak_dbtp": -1.59,
+        "pcm_sha256": "cddbb0e37e3cca2ae75d6bb16b830737f374f869cfe50858780b96b8293ff060",
+        "section_rms_dbfs": {}
+      }
+    }
+  },
+  "human_listening": "unverified"
+}
