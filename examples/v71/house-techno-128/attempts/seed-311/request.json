@@ -1,0 +1,11 @@
+{
+  "style": "128 BPM. Instrumental tech house, melodic techno, 4/4. True four-on-the-floor kick, tight clap and bright offbeat open hi-hat, sidechained analog bass, clean repeating short analog pluck riff. A filtered quiet breakdown and a full return of the original pluck hook, energetic electronic transitions and a clean ending. No vocals, no singing, no choir, no spoken words, no vocal samples. Oscillator-only synthesizers and electronic drums.",
+  "lyrics": "[Intro]\n\n[Verse]\n\n[Chorus]\n\n[Interlude]\n\n[Bridge]\n\n[Chorus]\n\n[Outro]\n",
+  "duration": 95,
+  "seed": 311,
+  "lm_seed": 311,
+  "cot": "full",
+  "steps": 32,
+  "output_format": "wav32",
+  "abc": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=128\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Am\n% intro\nV: Vocal\n\"Am\"z32|Z3|\nV: Ins\nZ4|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"Am\"z32|Z3|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% interlude\nV: Vocal\n\"F\"z32|Z3|\nV: Ins\nz4A4z12c4z8|Z3|\n% bridge\nV: Vocal\n\"G\"z32|Z3|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% chorus\nV: Vocal\n\"Am\"z32|Z3|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% outro\nV: Vocal\n\"Am\"z32|Z3|\nV: Ins\nZ2|z4A4z24|A8z24|\n"
+}

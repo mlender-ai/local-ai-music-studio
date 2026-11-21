@@ -10,6 +10,8 @@ V7 제작은 자연어 브리프에서 YuE2가 자체 악보와 스테레오 음
 .venv/bin/python -m scripts.v7_native examples/v7/slate.txt --seed 41
 ```
 
+128 BPM 하우스와 144 BPM 펑크 록의 입력, 악보 사전 검사 및 오디오 실측은 [V7.1 두 장르 실험](examples/v71/comparison.md)에 있습니다.
+
 ## 음악 품질 수정 — 2026-11-16
 
 사용자 청취에서 펑키 디스코 요청의 스타일·리듬 불일치가 보고됐습니다. 기존 기능 QA는 요청한 음악적 결과의 합격을 뜻하지 않습니다. 펑크/디스코의 영어 장르·기타·리듬 설명, 4/4 메타데이터, Turbo 권장 `shift=3.0`을 추가했습니다. [실제 재생성 비교](docs/QUALITY_FIX.md)를 참고하세요.

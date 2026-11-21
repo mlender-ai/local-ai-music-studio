@@ -1,0 +1,1662 @@
+{
+  "attempt": {
+    "engine": "yue2",
+    "genre": "house-techno-128",
+    "seed": 73,
+    "brief": {
+      "style": "128 BPM. Instrumental hypnotic tech house and melodic techno, steady 4/4 club groove. Solid four-on-the-floor kick, offbeat open hats, dry clap and elastic syncopated analog sub bass that ducks under the kick. A bright short resonant analog pluck motif is the hook. Evolve its filter, accents, note lengths, octaves and tiny rhythmic variations. Start with kick, hats and bass, reveal the pluck, let it lock with the bass, reduce the beat to filtered hook and space in a breakdown, build with percussion, return to the full groove, and resolve with a clean club outro. Stereo synth width above a tight centered low end. Pure analog synthesizers and electronic percussion, with glassy pluck transients and oscillator tones.",
+      "lyrics": "",
+      "duration": 95,
+      "instrumental": true,
+      "bpm": 128
+    },
+    "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=128\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Am\n% intro\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% interlude\nV: Vocal\nZ4|\nV: Ins\nz4A4z12c4z8|Z3|\n% bridge\nV: Vocal\nZ4|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% outro\nV: Vocal\nZ4|\nV: Ins\nZ2|z4A4z24|A8z24|\n",
+    "status": "rendered",
+    "original": "original.wav",
+    "run": {
+      "peak_rss_gib": 4.263,
+      "peak_footprint_gib": 4.263,
+      "total_seconds": 247.855
+    }
+  },
+  "score_bpm": 128,
+  "score_screen": "resting_vocal_lane",
+  "waveform": {
+    "levels": {
+      "sample_rate": 48000,
+      "channels": 2,
+      "frames": 3755456,
+      "duration_seconds": 78.23866666666666,
+      "peak": 0.9443395137786865,
+      "peak_dbfs": -0.4974367570124798,
+      "rms": 0.17062055114400995,
+      "rms_dbfs": -15.359373190111029,
+      "clipped_samples": 0,
+      "finite": true,
+      "low_band_power": 0.0036424629006960737,
+      "high_band_power": 0.000166387369828115,
+      "low_mid_fraction": 0.1491425495697923,
+      "presence_fraction": 0.026554498016062765,
+      "air_fraction": 0.028405377700927725,
+      "lr_correlation": 0.9648279886767201,
+      "crest_db": 14.861936433098549,
+      "mono_fold_db": -0.077097730150014,
+      "integrated_lufs": -13.73,
+      "true_peak_dbtp": -0.01,
+      "pcm_sha256": "5c04dd6b05c94e563dc313a2e3fb7e4f4849e481ab6c2fcd2e6df6b3462b9921",
+      "section_rms_dbfs": {}
+    },
+    "subtype": "FLOAT",
+    "sha256": "9e5283922ab055cea6c835820f2f4b01605c00146e754ae01e67909ddbf9c3be",
+    "max_silence_seconds": 0.6,
+    "isolated_impulse_count": 0,
+    "exact_loop_candidates": [],
+    "quarters_rms_dbfs": [
+      -16.28,
+      -14.59,
+      -14.7,
+      -16.15
+    ],
+    "final_100ms_rms_dbfs": -86.1,
+    "rhythm": {
+      "method": "spectral-flux autocorrelation; unconditioned 60–180 BPM search",
+      "estimated_bpm": null,
+      "dominant_period_bpm": 127.9,
+      "requested_bpm": 128,
+      "absolute_error_bpm": null,
+      "candidates": [
+        {
+          "bpm": 127.9,
+          "strength": 0.765
+        },
+        {
+          "bpm": 64.0,
+          "strength": 0.754
+        },
+        {
+          "bpm": 85.4,
+          "strength": 0.392
+        },
+        {
+          "bpm": 171.0,
+          "strength": 0.232
+        }
+      ],
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "bpm": 135.2,
+          "strength": 0.178
+        },
+        {
+          "start_seconds": 3.75,
+          "bpm": 127.9,
+          "strength": 0.613
+        },
+        {
+          "start_seconds": 7.5,
+          "bpm": 127.9,
+          "strength": 0.731
+        },
+        {
+          "start_seconds": 11.25,
+          "bpm": 127.9,
+          "strength": 0.771
+        },
+        {
+          "start_seconds": 15.0,
+          "bpm": 127.9,
+          "strength": 0.774
+        },
+        {
+          "start_seconds": 18.75,
+          "bpm": 127.9,
+          "strength": 0.744
+        },
+        {
+          "start_seconds": 22.5,
+          "bpm": 127.9,
+          "strength": 0.759
+        },
+        {
+          "start_seconds": 26.25,
+          "bpm": 127.9,
+          "strength": 0.748
+        },
+        {
+          "start_seconds": 30.0,
+          "bpm": 128.0,
+          "strength": 0.66
+        },
+        {
+          "start_seconds": 33.75,
+          "bpm": 128.0,
+          "strength": 0.669
+        },
+        {
+          "start_seconds": 37.5,
+          "bpm": 127.9,
+          "strength": 0.714
+        },
+        {
+          "start_seconds": 41.25,
+          "bpm": 127.9,
+          "strength": 0.713
+        },
+        {
+          "start_seconds": 45.0,
+          "bpm": 127.9,
+          "strength": 0.644
+        },
+        {
+          "start_seconds": 48.75,
+          "bpm": 63.9,
+          "strength": 0.47
+        },
+        {
+          "start_seconds": 52.5,
+          "bpm": 64.0,
+          "strength": 0.503
+        },
+        {
+          "start_seconds": 56.25,
+          "bpm": 127.9,
+          "strength": 0.744
+        },
+        {
+          "start_seconds": 60.0,
+          "bpm": 127.9,
+          "strength": 0.786
+        },
+        {
+          "start_seconds": 63.75,
+          "bpm": 127.9,
+          "strength": 0.813
+        },
+        {
+          "start_seconds": 67.5,
+          "bpm": 127.9,
+          "strength": 0.81
+        }
+      ],
+      "assessment": "half_double_time_ambiguous",
+      "note": "템포 추정치입니다. 반박·배박 또는 싱코페이션으로 오차가 생길 수 있으며, 장르·박자 정확도는 청취 평가가 필요합니다."
+    }
+  },
+  "ending": {
+    "semantic_eos": true,
+    "one_second_rms_dbfs": -60.69839859008789
+  },
+  "htdemucs": {
+    "vocal_minus_mix_rms_db": -9.86330795288086,
+    "vocal_windows": [
+      {
+        "start": 0,
+        "vocal_dbfs": -21.179311752319336,
+        "mix_dbfs": -21.148025512695312
+      },
+      {
+        "start": 2,
+        "vocal_dbfs": -25.440855026245117,
+        "mix_dbfs": -25.432334899902344
+      },
+      {
+        "start": 4,
+        "vocal_dbfs": -22.474361419677734,
+        "mix_dbfs": -22.462745666503906
+      },
+      {
+        "start": 6,
+        "vocal_dbfs": -23.077892303466797,
+        "mix_dbfs": -23.05774688720703
+      },
+      {
+        "start": 8,
+        "vocal_dbfs": -30.093101501464844,
+        "mix_dbfs": -15.158839225769043
+      },
+      {
+        "start": 10,
+        "vocal_dbfs": -24.016742706298828,
+        "mix_dbfs": -14.2091703414917
+      },
+      {
+        "start": 12,
+        "vocal_dbfs": -23.862401962280273,
+        "mix_dbfs": -14.369161605834961
+      },
+      {
+        "start": 14,
+        "vocal_dbfs": -24.205045700073242,
+        "mix_dbfs": -14.099559783935547
+      },
+      {
+        "start": 16,
+        "vocal_dbfs": -26.10029411315918,
+        "mix_dbfs": -14.24744701385498
+      },
+      {
+        "start": 18,
+        "vocal_dbfs": -26.904315948486328,
+        "mix_dbfs": -14.371491432189941
+      },
+      {
+        "start": 20,
+        "vocal_dbfs": -27.453426361083984,
+        "mix_dbfs": -14.471136093139648
+      },
+      {
+        "start": 22,
+        "vocal_dbfs": -24.76799201965332,
+        "mix_dbfs": -13.884008407592773
+      },
+      {
+        "start": 24,
+        "vocal_dbfs": -21.984264373779297,
+        "mix_dbfs": -14.323344230651855
+      },
+      {
+        "start": 26,
+        "vocal_dbfs": -23.18277359008789,
+        "mix_dbfs": -13.934479713439941
+      },
+      {
+        "start": 28,
+        "vocal_dbfs": -22.71019744873047,
+        "mix_dbfs": -14.120565414428711
+      },
+      {
+        "start": 30,
+        "vocal_dbfs": -24.03477668762207,
+        "mix_dbfs": -13.775165557861328
+      },
+      {
+        "start": 32,
+        "vocal_dbfs": -22.024593353271484,
+        "mix_dbfs": -14.1585111618042
+      },
+      {
+        "start": 34,
+        "vocal_dbfs": -22.784709930419922,
+        "mix_dbfs": -16.681909561157227
+      },
+      {
+        "start": 36,
+        "vocal_dbfs": -23.4229736328125,
+        "mix_dbfs": -18.133508682250977
+      },
+      {
+        "start": 38,
+        "vocal_dbfs": -24.326295852661133,
+        "mix_dbfs": -13.82624626159668
+      },
+      {
+        "start": 40,
+        "vocal_dbfs": -20.979490280151367,
+        "mix_dbfs": -13.714226722717285
+      },
+      {
+        "start": 42,
+        "vocal_dbfs": -21.545326232910156,
+        "mix_dbfs": -13.788841247558594
+      },
+      {
+        "start": 44,
+        "vocal_dbfs": -22.255041122436523,
+        "mix_dbfs": -13.433314323425293
+      },
+      {
+        "start": 46,
+        "vocal_dbfs": -23.90215301513672,
+        "mix_dbfs": -13.585020065307617
+      },
+      {
+        "start": 48,
+        "vocal_dbfs": -22.320796966552734,
+        "mix_dbfs": -13.659209251403809
+      },
+      {
+        "start": 50,
+        "vocal_dbfs": -25.392688751220703,
+        "mix_dbfs": -14.667652130126953
+      },
+      {
+        "start": 52,
+        "vocal_dbfs": -78.25499725341797,
+        "mix_dbfs": -21.683500289916992
+      },
+      {
+        "start": 54,
+        "vocal_dbfs": -79.94151306152344,
+        "mix_dbfs": -19.735008239746094
+      },
+      {
+        "start": 56,
+        "vocal_dbfs": -76.79606628417969,
+        "mix_dbfs": -15.809660911560059
+      },
+      {
+        "start": 58,
+        "vocal_dbfs": -77.88993072509766,
+        "mix_dbfs": -14.06554126739502
+      },
+      {
+        "start": 60,
+        "vocal_dbfs": -77.52825927734375,
+        "mix_dbfs": -13.729275703430176
+      },
+      {
+        "start": 62,
+        "vocal_dbfs": -56.3237190246582,
+        "mix_dbfs": -13.685527801513672
+      },
+      {
+        "start": 64,
+        "vocal_dbfs": -61.055389404296875,
+        "mix_dbfs": -13.711639404296875
+      },
+      {
+        "start": 66,
+        "vocal_dbfs": -78.72945404052734,
+        "mix_dbfs": -13.87005615234375
+      },
+      {
+        "start": 68,
+        "vocal_dbfs": -78.36003112792969,
+        "mix_dbfs": -18.171327590942383
+      },
+      {
+        "start": 70,
+        "vocal_dbfs": -78.83085632324219,
+        "mix_dbfs": -19.844602584838867
+      },
+      {
+        "start": 72,
+        "vocal_dbfs": -77.35899353027344,
+        "mix_dbfs": -19.032440185546875
+      },
+      {
+        "start": 74,
+        "vocal_dbfs": -77.81029510498047,
+        "mix_dbfs": -21.004228591918945
+      },
+      {
+        "start": 76,
+        "vocal_dbfs": -93.15562438964844,
+        "mix_dbfs": -49.235069274902344
+      }
+    ],
+    "drum_rhythm": {
+      "method": "spectral-flux autocorrelation; unconditioned 60–180 BPM search",
+      "estimated_bpm": null,
+      "dominant_period_bpm": 127.9,
+      "requested_bpm": 128,
+      "absolute_error_bpm": null,
+      "candidates": [
+        {
+          "bpm": 127.9,
+          "strength": 0.936
+        },
+        {
+          "bpm": 64.0,
+          "strength": 0.916
+        },
+        {
+          "bpm": 85.4,
+          "strength": 0.253
+        },
+        {
+          "bpm": 170.3,
+          "strength": -0.09
+        }
+      ],
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "bpm": 90.5,
+          "strength": 0.225
+        },
+        {
+          "start_seconds": 3.75,
+          "bpm": 127.9,
+          "strength": 0.859
+        },
+        {
+          "start_seconds": 7.5,
+          "bpm": 127.9,
+          "strength": 0.91
+        },
+        {
+          "start_seconds": 11.25,
+          "bpm": 127.9,
+          "strength": 0.92
+        },
+        {
+          "start_seconds": 15.0,
+          "bpm": 127.9,
+          "strength": 0.935
+        },
+        {
+          "start_seconds": 18.75,
+          "bpm": 127.9,
+          "strength": 0.911
+        },
+        {
+          "start_seconds": 22.5,
+          "bpm": 127.9,
+          "strength": 0.913
+        },
+        {
+          "start_seconds": 26.25,
+          "bpm": 127.9,
+          "strength": 0.912
+        },
+        {
+          "start_seconds": 30.0,
+          "bpm": 127.9,
+          "strength": 0.868
+        },
+        {
+          "start_seconds": 33.75,
+          "bpm": 127.9,
+          "strength": 0.858
+        },
+        {
+          "start_seconds": 37.5,
+          "bpm": 127.9,
+          "strength": 0.901
+        },
+        {
+          "start_seconds": 41.25,
+          "bpm": 127.9,
+          "strength": 0.905
+        },
+        {
+          "start_seconds": 45.0,
+          "bpm": 64.0,
+          "strength": 0.808
+        },
+        {
+          "start_seconds": 48.75,
+          "bpm": 63.9,
+          "strength": 0.681
+        },
+        {
+          "start_seconds": 52.5,
+          "bpm": 127.9,
+          "strength": 0.768
+        },
+        {
+          "start_seconds": 56.25,
+          "bpm": 127.9,
+          "strength": 0.907
+        },
+        {
+          "start_seconds": 60.0,
+          "bpm": 127.9,
+          "strength": 0.905
+        },
+        {
+          "start_seconds": 63.75,
+          "bpm": 127.9,
+          "strength": 0.912
+        },
+        {
+          "start_seconds": 67.5,
+          "bpm": 127.9,
+          "strength": 0.888
+        }
+      ],
+      "assessment": "half_double_time_ambiguous",
+      "note": "템포 추정치입니다. 반박·배박 또는 싱코페이션으로 오차가 생길 수 있으며, 장르·박자 정확도는 청취 평가가 필요합니다."
+    },
+    "drum_kick": {
+      "kick_periods": [
+        {
+          "bpm": 127.9,
+          "strength": 0.914
+        },
+        {
+          "bpm": 64.0,
+          "strength": 0.883
+        }
+      ],
+      "grids": [
+        {
+          "bpm": 127.9,
+          "beat_count": 164,
+          "beat_fraction_with_kick_band_attack_within_50ms": 0.7560975609756098,
+          "four_beat_groups": 41,
+          "four_beat_groups_with_attack_at_every_beat": 29
+        },
+        {
+          "bpm": 64.0,
+          "beat_count": 81,
+          "beat_fraction_with_kick_band_attack_within_50ms": 0.8024691358024691,
+          "four_beat_groups": 20,
+          "four_beat_groups_with_attack_at_every_beat": 14
+        }
+      ]
+    }
+  },
+  "htdemucs_6s": {
+    "vocal_minus_mix_rms_db": -9.788389205932617,
+    "vocal_windows": [
+      {
+        "start": 0,
+        "vocal_dbfs": -21.19245147705078,
+        "mix_dbfs": -21.148025512695312
+      },
+      {
+        "start": 2,
+        "vocal_dbfs": -25.454971313476562,
+        "mix_dbfs": -25.432334899902344
+      },
+      {
+        "start": 4,
+        "vocal_dbfs": -22.475482940673828,
+        "mix_dbfs": -22.462745666503906
+      },
+      {
+        "start": 6,
+        "vocal_dbfs": -23.100282669067383,
+        "mix_dbfs": -23.05774688720703
+      },
+      {
+        "start": 8,
+        "vocal_dbfs": -30.116561889648438,
+        "mix_dbfs": -15.158839225769043
+      },
+      {
+        "start": 10,
+        "vocal_dbfs": -23.90848159790039,
+        "mix_dbfs": -14.2091703414917
+      },
+      {
+        "start": 12,
+        "vocal_dbfs": -23.772815704345703,
+        "mix_dbfs": -14.369161605834961
+      },
+      {
+        "start": 14,
+        "vocal_dbfs": -24.152280807495117,
+        "mix_dbfs": -14.099559783935547
+      },
+      {
+        "start": 16,
+        "vocal_dbfs": -25.914976119995117,
+        "mix_dbfs": -14.24744701385498
+      },
+      {
+        "start": 18,
+        "vocal_dbfs": -26.795289993286133,
+        "mix_dbfs": -14.371491432189941
+      },
+      {
+        "start": 20,
+        "vocal_dbfs": -27.28466033935547,
+        "mix_dbfs": -14.471136093139648
+      },
+      {
+        "start": 22,
+        "vocal_dbfs": -24.748043060302734,
+        "mix_dbfs": -13.884008407592773
+      },
+      {
+        "start": 24,
+        "vocal_dbfs": -22.00444221496582,
+        "mix_dbfs": -14.323344230651855
+      },
+      {
+        "start": 26,
+        "vocal_dbfs": -23.214122772216797,
+        "mix_dbfs": -13.934479713439941
+      },
+      {
+        "start": 28,
+        "vocal_dbfs": -22.574464797973633,
+        "mix_dbfs": -14.120565414428711
+      },
+      {
+        "start": 30,
+        "vocal_dbfs": -23.860916137695312,
+        "mix_dbfs": -13.775165557861328
+      },
+      {
+        "start": 32,
+        "vocal_dbfs": -21.976539611816406,
+        "mix_dbfs": -14.1585111618042
+      },
+      {
+        "start": 34,
+        "vocal_dbfs": -22.678569793701172,
+        "mix_dbfs": -16.681909561157227
+      },
+      {
+        "start": 36,
+        "vocal_dbfs": -23.05396842956543,
+        "mix_dbfs": -18.133508682250977
+      },
+      {
+        "start": 38,
+        "vocal_dbfs": -24.22369956970215,
+        "mix_dbfs": -13.82624626159668
+      },
+      {
+        "start": 40,
+        "vocal_dbfs": -20.909339904785156,
+        "mix_dbfs": -13.714226722717285
+      },
+      {
+        "start": 42,
+        "vocal_dbfs": -21.45334243774414,
+        "mix_dbfs": -13.788841247558594
+      },
+      {
+        "start": 44,
+        "vocal_dbfs": -22.211816787719727,
+        "mix_dbfs": -13.433314323425293
+      },
+      {
+        "start": 46,
+        "vocal_dbfs": -23.680389404296875,
+        "mix_dbfs": -13.585020065307617
+      },
+      {
+        "start": 48,
+        "vocal_dbfs": -22.17625617980957,
+        "mix_dbfs": -13.659209251403809
+      },
+      {
+        "start": 50,
+        "vocal_dbfs": -25.50726318359375,
+        "mix_dbfs": -14.667652130126953
+      },
+      {
+        "start": 52,
+        "vocal_dbfs": -87.86170196533203,
+        "mix_dbfs": -21.683500289916992
+      },
+      {
+        "start": 54,
+        "vocal_dbfs": -88.42568969726562,
+        "mix_dbfs": -19.735008239746094
+      },
+      {
+        "start": 56,
+        "vocal_dbfs": -85.00672912597656,
+        "mix_dbfs": -15.809660911560059
+      },
+      {
+        "start": 58,
+        "vocal_dbfs": -86.0768814086914,
+        "mix_dbfs": -14.06554126739502
+      },
+      {
+        "start": 60,
+        "vocal_dbfs": -84.84408569335938,
+        "mix_dbfs": -13.729275703430176
+      },
+      {
+        "start": 62,
+        "vocal_dbfs": -83.84650421142578,
+        "mix_dbfs": -13.685527801513672
+      },
+      {
+        "start": 64,
+        "vocal_dbfs": -85.00154113769531,
+        "mix_dbfs": -13.711639404296875
+      },
+      {
+        "start": 66,
+        "vocal_dbfs": -84.80122375488281,
+        "mix_dbfs": -13.87005615234375
+      },
+      {
+        "start": 68,
+        "vocal_dbfs": -86.5363998413086,
+        "mix_dbfs": -18.171327590942383
+      },
+      {
+        "start": 70,
+        "vocal_dbfs": -85.19929504394531,
+        "mix_dbfs": -19.844602584838867
+      },
+      {
+        "start": 72,
+        "vocal_dbfs": -83.25308227539062,
+        "mix_dbfs": -19.032440185546875
+      },
+      {
+        "start": 74,
+        "vocal_dbfs": -84.0135498046875,
+        "mix_dbfs": -21.004228591918945
+      },
+      {
+        "start": 76,
+        "vocal_dbfs": -96.60551452636719,
+        "mix_dbfs": -49.235069274902344
+      }
+    ],
+    "drum_rhythm": {
+      "method": "spectral-flux autocorrelation; unconditioned 60–180 BPM search",
+      "estimated_bpm": null,
+      "dominant_period_bpm": 127.9,
+      "requested_bpm": 128,
+      "absolute_error_bpm": null,
+      "candidates": [
+        {
+          "bpm": 127.9,
+          "strength": 0.934
+        },
+        {
+          "bpm": 64.0,
+          "strength": 0.911
+        },
+        {
+          "bpm": 85.4,
+          "strength": 0.247
+        },
+        {
+          "bpm": 170.1,
+          "strength": -0.086
+        }
+      ],
+      "windows": [
+        {
+          "start_seconds": 0.0,
+          "bpm": 91.4,
+          "strength": 0.252
+        },
+        {
+          "start_seconds": 3.75,
+          "bpm": 127.9,
+          "strength": 0.861
+        },
+        {
+          "start_seconds": 7.5,
+          "bpm": 127.9,
+          "strength": 0.91
+        },
+        {
+          "start_seconds": 11.25,
+          "bpm": 127.9,
+          "strength": 0.916
+        },
+        {
+          "start_seconds": 15.0,
+          "bpm": 127.9,
+          "strength": 0.938
+        },
+        {
+          "start_seconds": 18.75,
+          "bpm": 127.9,
+          "strength": 0.908
+        },
+        {
+          "start_seconds": 22.5,
+          "bpm": 127.9,
+          "strength": 0.907
+        },
+        {
+          "start_seconds": 26.25,
+          "bpm": 127.9,
+          "strength": 0.908
+        },
+        {
+          "start_seconds": 30.0,
+          "bpm": 127.9,
+          "strength": 0.866
+        },
+        {
+          "start_seconds": 33.75,
+          "bpm": 127.9,
+          "strength": 0.853
+        },
+        {
+          "start_seconds": 37.5,
+          "bpm": 127.9,
+          "strength": 0.899
+        },
+        {
+          "start_seconds": 41.25,
+          "bpm": 127.9,
+          "strength": 0.899
+        },
+        {
+          "start_seconds": 45.0,
+          "bpm": 127.9,
+          "strength": 0.801
+        },
+        {
+          "start_seconds": 48.75,
+          "bpm": 63.9,
+          "strength": 0.682
+        },
+        {
+          "start_seconds": 52.5,
+          "bpm": 127.9,
+          "strength": 0.775
+        },
+        {
+          "start_seconds": 56.25,
+          "bpm": 127.9,
+          "strength": 0.905
+        },
+        {
+          "start_seconds": 60.0,
+          "bpm": 127.9,
+          "strength": 0.903
+        },
+        {
+          "start_seconds": 63.75,
+          "bpm": 127.9,
+          "strength": 0.909
+        },
+        {
+          "start_seconds": 67.5,
+          "bpm": 127.9,
+          "strength": 0.889
+        }
+      ],
+      "assessment": "half_double_time_ambiguous",
+      "note": "템포 추정치입니다. 반박·배박 또는 싱코페이션으로 오차가 생길 수 있으며, 장르·박자 정확도는 청취 평가가 필요합니다."
+    },
+    "drum_kick": {
+      "kick_periods": [
+        {
+          "bpm": 127.9,
+          "strength": 0.912
+        },
+        {
+          "bpm": 64.0,
+          "strength": 0.883
+        }
+      ],
+      "grids": [
+        {
+          "bpm": 127.9,
+          "beat_count": 164,
+          "beat_fraction_with_kick_band_attack_within_50ms": 0.7560975609756098,
+          "four_beat_groups": 41,
+          "four_beat_groups_with_attack_at_every_beat": 29
+        },
+        {
+          "bpm": 64.0,
+          "beat_count": 81,
+          "beat_fraction_with_kick_band_attack_within_50ms": 0.8024691358024691,
+          "four_beat_groups": 20,
+          "four_beat_groups_with_attack_at_every_beat": 14
+        }
+      ]
+    }
+  },
+  "score_source": "accepted_caller_guide",
+  "audio_synthesized": true,
+  "whisper": {
+    "whisper_model": "openai/whisper-small@973afd24965f72e36ca33b3055d56a652f456b4d",
+    "sources": [
+      "original.wav",
+      "diagnostics/htdemucs/vocals.wav",
+      "diagnostics/htdemucs_6s/vocals.wav"
+    ],
+    "windows": [
+      [
+        {
+          "seconds": 0,
+          "rms_dbfs": -22.88,
+          "no_speech": 0.1165,
+          "transcription": "Hold me down. Wherever you go, but you're already a spot"
+        },
+        {
+          "seconds": 0,
+          "rms_dbfs": -22.89,
+          "no_speech": 0.1111,
+          "transcription": "Hold me down. Wherever you go, but you're already a spot"
+        },
+        {
+          "seconds": 0,
+          "rms_dbfs": -22.9,
+          "no_speech": 0.1119,
+          "transcription": "Hold me down. Wherever you go, but you're already a spot"
+        }
+      ],
+      [
+        {
+          "seconds": 6,
+          "rms_dbfs": -16.27,
+          "no_speech": 0.7218
+        },
+        {
+          "seconds": 6,
+          "rms_dbfs": -25.09,
+          "no_speech": 0.4725
+        },
+        {
+          "seconds": 6,
+          "rms_dbfs": -25.06,
+          "no_speech": 0.5099
+        }
+      ],
+      [
+        {
+          "seconds": 12,
+          "rms_dbfs": -14.29,
+          "no_speech": 0.8369
+        },
+        {
+          "seconds": 12,
+          "rms_dbfs": -25.2,
+          "no_speech": 0.6194
+        },
+        {
+          "seconds": 12,
+          "rms_dbfs": -25.1,
+          "no_speech": 0.6425
+        }
+      ],
+      [
+        {
+          "seconds": 18,
+          "rms_dbfs": -14.25,
+          "no_speech": 0.6837,
+          "transcription": "Come here, we need, where you"
+        },
+        {
+          "seconds": 18,
+          "rms_dbfs": -26.37,
+          "no_speech": 0.2738,
+          "transcription": "Come here. We need... Where are you?"
+        },
+        {
+          "seconds": 18,
+          "rms_dbfs": -26.3,
+          "no_speech": 0.2176,
+          "transcription": "Don't come here. We need... where you..."
+        }
+      ],
+      [
+        {
+          "seconds": 24,
+          "rms_dbfs": -14.25,
+          "no_speech": 0.7455
+        },
+        {
+          "seconds": 24,
+          "rms_dbfs": -22.77,
+          "no_speech": 0.4706
+        },
+        {
+          "seconds": 24,
+          "rms_dbfs": -22.76,
+          "no_speech": 0.3921
+        }
+      ],
+      [
+        {
+          "seconds": 30,
+          "rms_dbfs": -14.84,
+          "no_speech": 0.7987
+        },
+        {
+          "seconds": 30,
+          "rms_dbfs": -23.14,
+          "no_speech": 0.6592
+        },
+        {
+          "seconds": 30,
+          "rms_dbfs": -23.04,
+          "no_speech": 0.5951
+        }
+      ],
+      [
+        {
+          "seconds": 36,
+          "rms_dbfs": -15.03,
+          "no_speech": 0.7679
+        },
+        {
+          "seconds": 36,
+          "rms_dbfs": -22.86,
+          "no_speech": 0.5019
+        },
+        {
+          "seconds": 36,
+          "rms_dbfs": -22.69,
+          "no_speech": 0.6176
+        }
+      ],
+      [
+        {
+          "seconds": 42,
+          "rms_dbfs": -13.74,
+          "no_speech": 0.6276
+        },
+        {
+          "seconds": 42,
+          "rms_dbfs": -22.75,
+          "no_speech": 0.3422
+        },
+        {
+          "seconds": 42,
+          "rms_dbfs": -22.63,
+          "no_speech": 0.2305
+        }
+      ],
+      [
+        {
+          "seconds": 48,
+          "rms_dbfs": -15.79,
+          "no_speech": 0.6397,
+          "transcription": "We all into this natural plus"
+        },
+        {
+          "seconds": 48,
+          "rms_dbfs": -25.71,
+          "no_speech": 0.0862,
+          "transcription": "We all went to this natural place."
+        },
+        {
+          "seconds": 48,
+          "rms_dbfs": -25.66,
+          "no_speech": 0.0713,
+          "transcription": "We all enter this natural place."
+        }
+      ],
+      [
+        {
+          "seconds": 54,
+          "rms_dbfs": -16.25,
+          "no_speech": 0.788
+        },
+        {
+          "seconds": 54,
+          "rms_dbfs": -78.73,
+          "no_speech": 0.8015
+        },
+        {
+          "seconds": 54,
+          "rms_dbfs": -87.07,
+          "no_speech": 0.8998
+        }
+      ],
+      [
+        {
+          "seconds": 60,
+          "rms_dbfs": -13.91,
+          "no_speech": 0.8337
+        },
+        {
+          "seconds": 60,
+          "rms_dbfs": -60.59,
+          "no_speech": 0.7084
+        },
+        {
+          "seconds": 60,
+          "rms_dbfs": -85.46,
+          "no_speech": 0.923
+        }
+      ],
+      [
+        {
+          "seconds": 66,
+          "rms_dbfs": -16.79,
+          "no_speech": 0.7922
+        },
+        {
+          "seconds": 66,
+          "rms_dbfs": -79.38,
+          "no_speech": 0.85
+        },
+        {
+          "seconds": 66,
+          "rms_dbfs": -86.4,
+          "no_speech": 0.9422
+        }
+      ],
+      [
+        {
+          "seconds": 72,
+          "rms_dbfs": -22.72,
+          "no_speech": 0.8006
+        },
+        {
+          "seconds": 72,
+          "rms_dbfs": -79.85,
+          "no_speech": 0.9091
+        },
+        {
+          "seconds": 72,
+          "rms_dbfs": -85.78,
+          "no_speech": 0.9016
+        }
+      ]
+    ]
+  },
+  "panns": {
+    "original.wav": [
+      {
+        "seconds": 0.0,
+        "tags": {
+          "Speech": 0.6682,
+          "Singing": 0.0261,
+          "Vocal music": 0.0045,
+          "Humming": 0.0009,
+          "Chant": 0.001,
+          "Shout": 0.0014,
+          "Electric guitar": 0.0007,
+          "Music": 0.8105,
+          "Guitar": 0.0039,
+          "Drum kit": 0.0031,
+          "Rock music": 0.001,
+          "Heavy metal": 0.0006
+        }
+      },
+      {
+        "seconds": 5.0,
+        "tags": {
+          "Speech": 0.5317,
+          "Singing": 0.0309,
+          "Vocal music": 0.0038,
+          "Humming": 0.0005,
+          "Chant": 0.0006,
+          "Shout": 0.0007,
+          "Electric guitar": 0.0004,
+          "Music": 0.8325,
+          "Guitar": 0.0018,
+          "Drum kit": 0.0028,
+          "Rock music": 0.0012,
+          "Heavy metal": 0.0006
+        }
+      },
+      {
+        "seconds": 10.0,
+        "tags": {
+          "Speech": 0.0737,
+          "Singing": 0.033,
+          "Vocal music": 0.0025,
+          "Humming": 0.0003,
+          "Chant": 0.0004,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0006,
+          "Music": 0.8754,
+          "Guitar": 0.0026,
+          "Drum kit": 0.0033,
+          "Rock music": 0.0019,
+          "Heavy metal": 0.0008
+        }
+      },
+      {
+        "seconds": 15.0,
+        "tags": {
+          "Speech": 0.08,
+          "Singing": 0.0439,
+          "Vocal music": 0.0027,
+          "Humming": 0.0004,
+          "Chant": 0.0006,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0005,
+          "Music": 0.8793,
+          "Guitar": 0.0024,
+          "Drum kit": 0.0028,
+          "Rock music": 0.0017,
+          "Heavy metal": 0.0007
+        }
+      },
+      {
+        "seconds": 20.0,
+        "tags": {
+          "Speech": 0.1371,
+          "Singing": 0.0257,
+          "Vocal music": 0.0017,
+          "Humming": 0.0003,
+          "Chant": 0.0003,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0004,
+          "Music": 0.8489,
+          "Guitar": 0.0017,
+          "Drum kit": 0.0027,
+          "Rock music": 0.0017,
+          "Heavy metal": 0.0009
+        }
+      },
+      {
+        "seconds": 25.0,
+        "tags": {
+          "Speech": 0.1396,
+          "Singing": 0.0263,
+          "Vocal music": 0.0022,
+          "Humming": 0.0003,
+          "Chant": 0.0005,
+          "Shout": 0.0003,
+          "Electric guitar": 0.0006,
+          "Music": 0.8491,
+          "Guitar": 0.0025,
+          "Drum kit": 0.005,
+          "Rock music": 0.0029,
+          "Heavy metal": 0.0015
+        }
+      },
+      {
+        "seconds": 30.0,
+        "tags": {
+          "Speech": 0.0504,
+          "Singing": 0.0538,
+          "Vocal music": 0.0024,
+          "Humming": 0.0005,
+          "Chant": 0.0004,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0005,
+          "Music": 0.8685,
+          "Guitar": 0.002,
+          "Drum kit": 0.0038,
+          "Rock music": 0.0023,
+          "Heavy metal": 0.001
+        }
+      },
+      {
+        "seconds": 35.0,
+        "tags": {
+          "Speech": 0.0817,
+          "Singing": 0.0324,
+          "Vocal music": 0.0028,
+          "Humming": 0.0004,
+          "Chant": 0.0004,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0004,
+          "Music": 0.8535,
+          "Guitar": 0.0017,
+          "Drum kit": 0.0037,
+          "Rock music": 0.002,
+          "Heavy metal": 0.0008
+        }
+      },
+      {
+        "seconds": 40.0,
+        "tags": {
+          "Speech": 0.0752,
+          "Singing": 0.0261,
+          "Vocal music": 0.0029,
+          "Humming": 0.0004,
+          "Chant": 0.0006,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0005,
+          "Music": 0.8355,
+          "Guitar": 0.0018,
+          "Drum kit": 0.0041,
+          "Rock music": 0.0025,
+          "Heavy metal": 0.0014
+        }
+      },
+      {
+        "seconds": 45.0,
+        "tags": {
+          "Speech": 0.0842,
+          "Singing": 0.0251,
+          "Vocal music": 0.0013,
+          "Humming": 0.0002,
+          "Chant": 0.0005,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0004,
+          "Music": 0.8648,
+          "Guitar": 0.0021,
+          "Drum kit": 0.0038,
+          "Rock music": 0.0028,
+          "Heavy metal": 0.0009
+        }
+      },
+      {
+        "seconds": 50.0,
+        "tags": {
+          "Speech": 0.0864,
+          "Singing": 0.0071,
+          "Vocal music": 0.0004,
+          "Humming": 0.0002,
+          "Chant": 0.0003,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0007,
+          "Music": 0.894,
+          "Guitar": 0.0036,
+          "Drum kit": 0.0055,
+          "Rock music": 0.0024,
+          "Heavy metal": 0.0008
+        }
+      },
+      {
+        "seconds": 55.0,
+        "tags": {
+          "Speech": 0.0182,
+          "Singing": 0.0028,
+          "Vocal music": 0.0004,
+          "Humming": 0.0002,
+          "Chant": 0.0002,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0011,
+          "Music": 0.8926,
+          "Guitar": 0.0049,
+          "Drum kit": 0.0078,
+          "Rock music": 0.0021,
+          "Heavy metal": 0.0009
+        }
+      },
+      {
+        "seconds": 60.0,
+        "tags": {
+          "Speech": 0.0192,
+          "Singing": 0.0028,
+          "Vocal music": 0.0004,
+          "Humming": 0.0001,
+          "Chant": 0.0002,
+          "Shout": 0.0001,
+          "Electric guitar": 0.001,
+          "Music": 0.8946,
+          "Guitar": 0.0043,
+          "Drum kit": 0.0114,
+          "Rock music": 0.0024,
+          "Heavy metal": 0.0011
+        }
+      },
+      {
+        "seconds": 65.0,
+        "tags": {
+          "Speech": 0.0228,
+          "Singing": 0.0021,
+          "Vocal music": 0.0004,
+          "Humming": 0.0001,
+          "Chant": 0.0002,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0008,
+          "Music": 0.902,
+          "Guitar": 0.0036,
+          "Drum kit": 0.0104,
+          "Rock music": 0.0022,
+          "Heavy metal": 0.0011
+        }
+      },
+      {
+        "seconds": 70.0,
+        "tags": {
+          "Speech": 0.0329,
+          "Singing": 0.0018,
+          "Vocal music": 0.0005,
+          "Humming": 0.0001,
+          "Chant": 0.0002,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0003,
+          "Music": 0.8534,
+          "Guitar": 0.0022,
+          "Drum kit": 0.0136,
+          "Rock music": 0.0015,
+          "Heavy metal": 0.0005
+        }
+      }
+    ],
+    "vocals.wav": [
+      {
+        "seconds": 0.0,
+        "tags": {
+          "Speech": 0.7849,
+          "Singing": 0.0182,
+          "Vocal music": 0.0037,
+          "Humming": 0.0016,
+          "Chant": 0.0056,
+          "Shout": 0.0044,
+          "Electric guitar": 0.0008,
+          "Music": 0.129,
+          "Guitar": 0.0036,
+          "Drum kit": 0.0008,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 5.0,
+        "tags": {
+          "Speech": 0.8116,
+          "Singing": 0.0176,
+          "Vocal music": 0.0025,
+          "Humming": 0.0023,
+          "Chant": 0.0036,
+          "Shout": 0.0033,
+          "Electric guitar": 0.0003,
+          "Music": 0.0471,
+          "Guitar": 0.0015,
+          "Drum kit": 0.0003,
+          "Rock music": 0.0002,
+          "Heavy metal": 0.0001
+        }
+      },
+      {
+        "seconds": 10.0,
+        "tags": {
+          "Speech": 0.8134,
+          "Singing": 0.018,
+          "Vocal music": 0.0031,
+          "Humming": 0.0122,
+          "Chant": 0.0021,
+          "Shout": 0.0006,
+          "Electric guitar": 0.0004,
+          "Music": 0.033,
+          "Guitar": 0.0028,
+          "Drum kit": 0.0006,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 15.0,
+        "tags": {
+          "Speech": 0.8368,
+          "Singing": 0.0131,
+          "Vocal music": 0.0025,
+          "Humming": 0.0073,
+          "Chant": 0.0021,
+          "Shout": 0.0007,
+          "Electric guitar": 0.0005,
+          "Music": 0.0227,
+          "Guitar": 0.0032,
+          "Drum kit": 0.0005,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 20.0,
+        "tags": {
+          "Speech": 0.8255,
+          "Singing": 0.0089,
+          "Vocal music": 0.0026,
+          "Humming": 0.0072,
+          "Chant": 0.0026,
+          "Shout": 0.001,
+          "Electric guitar": 0.0004,
+          "Music": 0.0212,
+          "Guitar": 0.0021,
+          "Drum kit": 0.0004,
+          "Rock music": 0.0002,
+          "Heavy metal": 0.0001
+        }
+      },
+      {
+        "seconds": 25.0,
+        "tags": {
+          "Speech": 0.7104,
+          "Singing": 0.0234,
+          "Vocal music": 0.0049,
+          "Humming": 0.004,
+          "Chant": 0.0097,
+          "Shout": 0.0025,
+          "Electric guitar": 0.0004,
+          "Music": 0.0766,
+          "Guitar": 0.0024,
+          "Drum kit": 0.0003,
+          "Rock music": 0.0002,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 30.0,
+        "tags": {
+          "Speech": 0.7372,
+          "Singing": 0.0158,
+          "Vocal music": 0.0066,
+          "Humming": 0.037,
+          "Chant": 0.011,
+          "Shout": 0.0007,
+          "Electric guitar": 0.0003,
+          "Music": 0.0979,
+          "Guitar": 0.0021,
+          "Drum kit": 0.0002,
+          "Rock music": 0.0002,
+          "Heavy metal": 0.0001
+        }
+      },
+      {
+        "seconds": 35.0,
+        "tags": {
+          "Speech": 0.7812,
+          "Singing": 0.0099,
+          "Vocal music": 0.0063,
+          "Humming": 0.0123,
+          "Chant": 0.004,
+          "Shout": 0.0003,
+          "Electric guitar": 0.0004,
+          "Music": 0.0329,
+          "Guitar": 0.0025,
+          "Drum kit": 0.0004,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0001
+        }
+      },
+      {
+        "seconds": 40.0,
+        "tags": {
+          "Speech": 0.6932,
+          "Singing": 0.0176,
+          "Vocal music": 0.0033,
+          "Humming": 0.0017,
+          "Chant": 0.0034,
+          "Shout": 0.0005,
+          "Electric guitar": 0.0004,
+          "Music": 0.0192,
+          "Guitar": 0.0028,
+          "Drum kit": 0.0004,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 45.0,
+        "tags": {
+          "Speech": 0.7367,
+          "Singing": 0.0086,
+          "Vocal music": 0.0019,
+          "Humming": 0.0018,
+          "Chant": 0.002,
+          "Shout": 0.0004,
+          "Electric guitar": 0.0005,
+          "Music": 0.021,
+          "Guitar": 0.0034,
+          "Drum kit": 0.0005,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 50.0,
+        "tags": {
+          "Speech": 0.7824,
+          "Singing": 0.0026,
+          "Vocal music": 0.0007,
+          "Humming": 0.0005,
+          "Chant": 0.0002,
+          "Shout": 0.0003,
+          "Electric guitar": 0.0005,
+          "Music": 0.0314,
+          "Guitar": 0.0031,
+          "Drum kit": 0.0006,
+          "Rock music": 0.0003,
+          "Heavy metal": 0.0001
+        }
+      },
+      {
+        "seconds": 55.0,
+        "tags": {
+          "Speech": 0.076,
+          "Singing": 0.0015,
+          "Vocal music": 0.0004,
+          "Humming": 0.0008,
+          "Chant": 0.0001,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0008,
+          "Music": 0.0504,
+          "Guitar": 0.003,
+          "Drum kit": 0.0006,
+          "Rock music": 0.0004,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 60.0,
+        "tags": {
+          "Speech": 0.0613,
+          "Singing": 0.0014,
+          "Vocal music": 0.0005,
+          "Humming": 0.0006,
+          "Chant": 0.0001,
+          "Shout": 0.0002,
+          "Electric guitar": 0.0007,
+          "Music": 0.0353,
+          "Guitar": 0.0031,
+          "Drum kit": 0.0008,
+          "Rock music": 0.0004,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 65.0,
+        "tags": {
+          "Speech": 0.0586,
+          "Singing": 0.0013,
+          "Vocal music": 0.0005,
+          "Humming": 0.0006,
+          "Chant": 0.0001,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0006,
+          "Music": 0.0337,
+          "Guitar": 0.0029,
+          "Drum kit": 0.0012,
+          "Rock music": 0.0004,
+          "Heavy metal": 0.0002
+        }
+      },
+      {
+        "seconds": 70.0,
+        "tags": {
+          "Speech": 0.0487,
+          "Singing": 0.0014,
+          "Vocal music": 0.0005,
+          "Humming": 0.0005,
+          "Chant": 0.0002,
+          "Shout": 0.0001,
+          "Electric guitar": 0.0006,
+          "Music": 0.0564,
+          "Guitar": 0.0028,
+          "Drum kit": 0.001,
+          "Rock music": 0.0004,
+          "Heavy metal": 0.0002
+        }
+      }
+    ]
+  },
+  "selection": {
+    "accepted": false,
+    "reason": "confirmed_repeated_words_in_stereo_and_both_voice_estimates",
+    "human_listening": "unverified"
+  },
+  "review_export": {
+    "purpose": "rejected_candidate_audition",
+    "gain_db": -1.59,
+    "sha256": "77abd6ce8803c78beea249fe43c468d93646a1b38d510174d9b6fc1de78f3724"
+  }
+}
