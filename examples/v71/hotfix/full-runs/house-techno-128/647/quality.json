@@ -1,0 +1,11 @@
+{
+  "phase": "full",
+  "preflight": "yue2-house-techno-128-6bbeb8f54c",
+  "vocal_status": "REJECT",
+  "selection": "not_evaluated",
+  "preflight_prefix": {
+    "same_tokens": true,
+    "short_tokens": 600,
+    "full_tokens": 2250
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "style": "Instrumental, 128 BPM, hypnotic tech house, melodic techno, instrumental arpeggiated synth theme, 4/4. A clean resonant plucked analog oscillator plays a two-bar hook above a hard four-on-the-floor kick and a tight sidechained analog bass. Closed-to-open filter movement, offbeat hats, clear dry clap. A thin filtered pluck breakdown and a clean return of the full kick and main riff. An oscillator tail and a decisive club ending. Synth oscillators and drum machine only, no vocals, no singing, no choir, no spoken words.",
+  "lyrics": "",
+  "duration": 24,
+  "seed": 151,
+  "lm_seed": 151,
+  "cot": "full",
+  "steps": 32,
+  "output_format": "wav32",
+  "abc": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=128\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Am\n% intro\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nZ4|\n% verse\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\n\"F\"z32|\"F\"z32|\"F\"z32|\"F\"z32|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nZ4|\nV: Vocal\n\"C\"z32|\"C\"z32|\"C\"z32|\"C\"z32|\nV: Ins\nZ4|\n% interlude\nV: Vocal\n\"F\"z32|\"F\"z32|\"F\"z32|\"F\"z32|\nV: Ins\nz4A4z12c4z8|Z3|\n% bridge\nV: Vocal\n\"G\"z32|\"G\"z32|\"G\"z32|\"G\"z32|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% chorus\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% outro\nV: Vocal\n\"Am\"z32|\"Am\"z32|\"Am\"z32|\"Am\"z32|\nV: Ins\nZ2|z4A4z24|A8z24|\n"
+}

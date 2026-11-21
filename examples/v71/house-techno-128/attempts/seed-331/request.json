@@ -1,0 +1,10 @@
+{
+  "style": "128 BPM. Instrumental hypnotic tech house and melodic techno, steady 4/4 club groove. Solid four-on-the-floor kick, offbeat open hats, dry clap and elastic syncopated analog sub bass that ducks under the kick. A bright short resonant analog pluck motif is the hook. Evolve its filter, accents, note lengths, octaves and tiny rhythmic variations. Start with kick, hats and bass, reveal the pluck, let it lock with the bass, reduce the beat to filtered hook and space in a breakdown, build with percussion, return to the full groove, and resolve with a clean club outro. Stereo synth width above a tight centered low end. Pure analog synthesizers and electronic percussion, with glassy pluck transients and oscillator tones.",
+  "lyrics": "",
+  "duration": 95,
+  "seed": 331,
+  "lm_seed": 331,
+  "cot": "full",
+  "steps": 32,
+  "output_format": "wav32"
+}

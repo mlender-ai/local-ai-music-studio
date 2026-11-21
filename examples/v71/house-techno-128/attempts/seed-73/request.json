@@ -1,0 +1,11 @@
+{
+  "style": "128 BPM. Instrumental hypnotic tech house and melodic techno, steady 4/4 club groove. Solid four-on-the-floor kick, offbeat open hats, dry clap and elastic syncopated analog sub bass that ducks under the kick. A bright short resonant analog pluck motif is the hook. Evolve its filter, accents, note lengths, octaves and tiny rhythmic variations. Start with kick, hats and bass, reveal the pluck, let it lock with the bass, reduce the beat to filtered hook and space in a breakdown, build with percussion, return to the full groove, and resolve with a clean club outro. Stereo synth width above a tight centered low end. Pure analog synthesizers and electronic percussion, with glassy pluck transients and oscillator tones.",
+  "lyrics": "",
+  "duration": 95,
+  "seed": 73,
+  "lm_seed": 73,
+  "cot": "melody",
+  "steps": 32,
+  "output_format": "wav32",
+  "abc": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=128\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Am\n% intro\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% interlude\nV: Vocal\nZ4|\nV: Ins\nz4A4z12c4z8|Z3|\n% bridge\nV: Vocal\nZ4|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4A2z4c2z4e4z6d2z4|z4A2z4c2z8e2z4G4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4a4z8e2z8g2z4|Z3|\n% outro\nV: Vocal\nZ4|\nV: Ins\nZ2|z4A4z24|A8z24|\n"
+}

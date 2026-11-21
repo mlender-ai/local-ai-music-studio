@@ -1,0 +1,20 @@
+{
+  "engine": "yue2",
+  "genre": "highteen-punk-144",
+  "seed": 43,
+  "brief": {
+    "style": "Instrumental, 144 BPM, 2000s melodic punk rock guitar trio, instrumental guitar theme, A major, four-four. Bright close-picked electric guitar, palm-muted downstrokes with funky gaps, fast electric bass and live acoustic kit. A short answering guitar riff gives way to clear open power chords and a bright picked lead above the band. A short band stop, dynamic tom and snare fills and a return of the guitar melody. Tight decisive final band chord with natural amplifier decay. Electric guitars, electric bass and acoustic kit, no vocals, no singing, no choir, no spoken words.",
+    "duration": 24,
+    "lyrics": "",
+    "bpm": 144,
+    "instrumental": true
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=144\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:A\n% intro\nV: Vocal\n\"A\"z32|\"A\"z32|\"A\"z32|\"A\"z32|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\n% verse\nV: Vocal\n\"F#m\"z32|\"F#m\"z32|\"F#m\"z32|\"F#m\"z32|\nV: Ins\nz4A,,2z8E,2z4A,,2z8z2|Z3|\nV: Vocal\n\"D\"z32|\"D\"z32|\"D\"z32|\"D\"z32|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"A\"z32|\"A\"z32|\"A\"z32|\"A\"z32|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\n\"E\"z32|\"E\"z32|\"E\"z32|\"E\"z32|\nV: Ins\nZ4|\n% bridge\nV: Vocal\n\"F#m\"z32|\"F#m\"z32|\"F#m\"z32|\"F#m\"z32|\nV: Ins\nA,4z24z4|Z3|\n% instrumental\nV: Vocal\n\"D\"z32|\"D\"z32|\"D\"z32|\"D\"z32|\nV: Ins\nz4f4z4a6z2g2z2e4z4|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\n\"E\"z32|\"E\"z32|\"E\"z32|\"E\"z32|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"A\"z32|\"A\"z32|\"A\"z32|\"A\"z32|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\n\"A\"z32|\"A\"z32|\"A\"z32|\"A\"z32|\nV: Ins\nZ4|\nV: Vocal\n\"D\"z32|\"D\"z32|\"D\"z32|\"D\"z32|\nV: Ins\nZ4|\n% outro\nV: Vocal\n\"A\"z32|\"A\"z32|\nV: Ins\nA8z8c8z8|A16z16|\n",
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 4.445,
+    "peak_footprint_gib": 4.445,
+    "total_seconds": 73.897
+  }
+}

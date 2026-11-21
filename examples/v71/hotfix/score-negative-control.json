@@ -1,0 +1,8 @@
+{
+  "source": "highteen-punk-144/attempts/seed-17",
+  "result": {
+    "status": "REJECT",
+    "vocal_notes": 312,
+    "reason": "Vocal contains sounding notes; move the intended lead to Ins and replace Vocal notes with rests"
+  }
+}

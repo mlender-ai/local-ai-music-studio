@@ -1,0 +1,11 @@
+{
+  "style": "144 BPM. Instrumental 2000s melodic pop punk, bright high-energy skate punk band in 4/4. Choppy palm-muted downstrokes, open power-chord chorus, a picked electric guitar melody hook and expressive lead break. Real acoustic kit, double-time snare fills, a driving bouncy electric bass line and a tight band ending. Live electric guitars, electric bass and acoustic drums. No vocals, no singing, no choir, no spoken words.",
+  "lyrics": "[Intro]\n\n[Verse]\n\n[Chorus]\n\n[Bridge]\n\n[Instrumental]\n\n[Chorus]\n\n[Outro]\n",
+  "duration": 95,
+  "seed": 419,
+  "lm_seed": 419,
+  "cot": "full",
+  "steps": 32,
+  "output_format": "wav32",
+  "abc": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=144\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:A\n% intro\nV: Vocal\n\"A\"z32|Z3|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz4A,,2z8E,2z4A,,2z8z2|Z3|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"D\"z32|Z3|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% bridge\nV: Vocal\n\"F#m\"z32|Z3|\nV: Ins\nA,4z24z4|Z3|\n% instrumental\nV: Vocal\n\"E\"z32|Z3|\nV: Ins\nz4f4z4a6z2g2z2e4z4|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% chorus\nV: Vocal\n\"D\"z32|Z3|\nV: Ins\nF4z2A2z4c4z4B4z2A4z2|A4z4B4z4e6z4c4z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\nV: Vocal\nZ4|\nV: Ins\nZ4|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% outro\nV: Vocal\n\"A\"z32|Z|\nV: Ins\nA8z8c8z8|A16z16|\n"
+}

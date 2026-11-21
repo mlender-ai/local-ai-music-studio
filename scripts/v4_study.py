@@ -9,7 +9,43 @@ from engine.generation.supervisor import run_guarded, run_worker
 from engine.paths import DATA, ROOT, RUNTIME
 
 
-def run(engine, genre, seed, brief, *, score=None, cot="full", output_root=None):
+class ScoreRejected(ValueError):
+    """The score was retained for review and must not be sent to synthesis."""
+
+
+def yue2_request(brief, seed, *, cot, score, cfg_scale=None, semantic_temperature=None):
+    request = {
+        "style": brief["style"],
+        "lyrics": brief["lyrics"],
+        "duration": brief["duration"],
+        "seed": seed,
+        "lm_seed": seed,
+        "cot": cot,
+        "steps": 32,
+        "output_format": "wav32",
+    }
+    if cfg_scale is not None:
+        request["cfg_scale"] = cfg_scale
+    if semantic_temperature is not None:
+        request["semantic_sampling"] = {"temperature": semantic_temperature}
+    if score is not None:
+        request["abc"] = score
+    return request
+
+
+def run(
+    engine,
+    genre,
+    seed,
+    brief,
+    *,
+    score=None,
+    cot="full",
+    output_root=None,
+    plan_gate=None,
+    cfg_scale=None,
+    semantic_temperature=None,
+):
     if score is not None and (engine != "yue2" or not score.strip()):
         raise ValueError("Provide a nonempty ABC score for YuE2")
     folder = (output_root or DATA / "v4") / f"{engine}-{genre}-{uuid4().hex[:10]}"
@@ -36,16 +72,37 @@ def run(engine, genre, seed, brief, *, score=None, cot="full", output_root=None)
         else:
             base = RUNTIME / "v4"
             binary = base / "yue2cpp/build/yue-synth"
-            req = dict(
-                style=brief["style"],
-                lyrics=brief["lyrics"],
-                duration=brief["duration"],
-                seed=seed,
-                lm_seed=seed,
+            req = yue2_request(
+                brief,
+                seed,
                 cot=cot,
-                steps=32,
-                output_format="wav32",
+                score=score,
+                cfg_scale=cfg_scale,
+                semantic_temperature=semantic_temperature,
             )
+            if plan_gate is not None and score is None:
+                planner_request = folder / "planner-request.json"
+                planner_request.write_text(
+                    json.dumps(req, ensure_ascii=False, indent=2)
+                )
+                plan = folder / "planned.abc"
+                result["planning"] = run_guarded(
+                    [
+                        str(base / "yue2cpp/build/yue-plan"),
+                        "--model",
+                        str(base / "models/YuE2-3B-Q8_0.gguf"),
+                        "--request",
+                        str(planner_request),
+                        "--max-seq",
+                        "8192",
+                        "--out",
+                        str(plan),
+                    ],
+                    folder / "planner.log",
+                )
+                score = plan.read_text(encoding="utf-8")
+                plan_gate(score)
+                result["score_source"] = "native_preflight"
             if score is not None:
                 req["abc"] = score
                 result["input_score"] = score
@@ -71,6 +128,8 @@ def run(engine, genre, seed, brief, *, score=None, cot="full", output_root=None)
         if not path.is_file():
             raise RuntimeError("Missing model output")
         result.update(status="rendered", original=path.name, run=record)
+    except ScoreRejected as exc:
+        result.update(status="rejected", error=str(exc))
     except Exception as exc:
         result.update(status="failed", error=str(exc))
         raise
