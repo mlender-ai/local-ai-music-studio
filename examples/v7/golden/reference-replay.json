@@ -1,0 +1,17 @@
+{
+  "same_request": true,
+  "same_native_abc": true,
+  "same_semantic_tokens": true,
+  "same_wav_bytes": true,
+  "wav_sha256": "252477c558829f365369d15fb66fbb151f2a86780f0ddac7f2e616c469345414",
+  "frames": 2879936,
+  "sample_rate": 48000,
+  "max_pcm_difference": 0.0,
+  "pcm_difference_rms": 0.0,
+  "waveform_correlation": 0.9999999999999998,
+  "execution": {
+    "peak_rss_gib": 4.022,
+    "peak_footprint_gib": 4.022,
+    "total_seconds": 195.082
+  }
+}

@@ -15,8 +15,7 @@ from scipy.ndimage import uniform_filter1d
 
 from engine.daw.qa import levels
 from engine.paths import RUNTIME
-from engine.rendering.audio import read_audio
-from engine.rendering.rhythm import estimate_rhythm
+from engine.rendering.rhythm import estimate_pcm_rhythm
 
 
 def loop_screen(mono, sr):
@@ -48,10 +47,16 @@ def loop_screen(mono, sr):
 
 
 def waveform(path, brief):
-    x, sr = read_audio(path)
     info = sf.info(path)
-    if info.format not in ("WAV", "WAVEX") or x.shape[1] != 2:
-        raise ValueError("Expected a stereo WAV")
+    if (
+        info.format not in ("WAV", "WAVEX")
+        or info.channels != 2
+        or not 8000 <= info.samplerate <= 192000
+        or not 0 < info.duration <= 120
+        or info.frames > 120 * 48000
+    ):
+        raise ValueError("Expected a bounded stereo WAV up to 120 seconds")
+    x, sr = sf.read(path, always_2d=True)
     stats = levels(path)
     hop = sr // 10
     blocks = x[: len(x) // hop * hop].reshape(-1, hop, 2)
@@ -80,7 +85,7 @@ def waveform(path, brief):
         final_100ms_rms_dbfs=round(
             float(10 * np.log10(max(np.mean(x[-hop:] ** 2), 1e-14))), 2
         ),
-        rhythm=estimate_rhythm(path, brief["bpm"]),
+        rhythm=estimate_pcm_rhythm(x, sr, brief.get("bpm")),
     )
 
 

@@ -9,10 +9,10 @@ from engine.generation.supervisor import run_guarded, run_worker
 from engine.paths import DATA, ROOT, RUNTIME
 
 
-def run(engine, genre, seed, brief, *, score=None):
+def run(engine, genre, seed, brief, *, score=None, cot="full", output_root=None):
     if score is not None and (engine != "yue2" or not score.strip()):
         raise ValueError("Provide a nonempty ABC score for YuE2")
-    folder = DATA / "v4" / f"{engine}-{genre}-{uuid4().hex[:10]}"
+    folder = (output_root or DATA / "v4") / f"{engine}-{genre}-{uuid4().hex[:10]}"
     folder.mkdir(parents=True)
     result = dict(engine=engine, genre=genre, seed=seed, brief=brief)
     log = folder / "worker.log"
@@ -42,7 +42,7 @@ def run(engine, genre, seed, brief, *, score=None):
                 duration=brief["duration"],
                 seed=seed,
                 lm_seed=seed,
-                cot="full",
+                cot=cot,
                 steps=32,
                 output_format="wav32",
             )
@@ -79,6 +79,7 @@ def run(engine, genre, seed, brief, *, score=None):
             json.dumps(result, ensure_ascii=False, indent=2)
         )
         print(folder, result["status"], flush=True)
+    return folder
 
 
 if __name__ == "__main__":

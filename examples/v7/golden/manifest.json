@@ -1,0 +1,98 @@
+{
+  "pr6_commit": "af58c45b79e62def24ce1ea9034586781437fdce",
+  "yue2_cpp_commit": "e646d5228911ae1b81ac2a261115a255848ce85f",
+  "weights_repo_revision": "Serveurperso/YuE2-GGUF@e630f2b8f6aedf8254c3186438633c1b5eeaf80a",
+  "weights_sha256": {
+    "YuE2-3B-Q8_0.gguf": "41121ce97786d7795a325bcf123ca196956c03bb252c9e75384cfc1f2fc19e6b",
+    "YuE2-Vae-F32.gguf": "93e49dfb1970e89ad64cacb17cf13b5d05f6bb30ef7ed3adae3050bcb728638a"
+  },
+  "max_seq": 8192,
+  "reference_score_is_model_generated": true,
+  "same_abc": true,
+  "semantic_prefix_identical": true,
+  "semantic_counts": [
+    1500,
+    2399
+  ],
+  "tracks": [
+    {
+      "name": "reference",
+      "seconds": 59.998666666666665,
+      "preview": {
+        "file": "examples/challengers/previews/rock-1-yue2-reference.mp3",
+        "sha256": "9e13a6a102f45a215f01634b259592cd8b31f87a02d36e813d581504fd3bf953"
+      },
+      "files": {
+        "original.wav": {
+          "file": "reference-original.wav",
+          "sha256": "252477c558829f365369d15fb66fbb151f2a86780f0ddac7f2e616c469345414"
+        },
+        "request.json": {
+          "file": "reference-request.json",
+          "sha256": "6e0b4023fc6682f10cfad5bf3a24968eddb72519390b419585dde4955ec09d8b"
+        },
+        "model-plan.abc": {
+          "file": "reference-model-plan.abc",
+          "sha256": "211b86d91d8863038d726cfe6dca10a411cc9c0b35d0acc85ac661f4bc0b0ba8"
+        },
+        "native-output.json": {
+          "file": "reference-native-output.json",
+          "sha256": "04ec0dcf118fc7cf2add938ebfb800558e6831c83febbaa0c25e73a5e8fd18bf"
+        },
+        "experiment.json": {
+          "file": "reference-experiment.json",
+          "sha256": "8eae83183621c3cdef88d4bfaa10ffa1c877500991ea6f441dfab9e88375f111"
+        }
+      },
+      "recorded_measurements": {
+        "original_lufs": -13.85,
+        "original_dbtp": 0.26,
+        "original_final_100ms_dbfs": -15.75,
+        "gain_db": -4.15,
+        "measured_lufs": -17.98,
+        "measured_dbtp": -3.89
+      },
+      "termination": "duration_cap",
+      "original_matches_existing_v4_wav": true
+    },
+    {
+      "name": "ending",
+      "seconds": 95.95866666666667,
+      "preview": {
+        "file": "examples/challengers/previews/rock-3-yue2-ending.mp3",
+        "sha256": "c0ccb204c31d3b607caa677a7a8491c76695fd1ea7cf258b12ccaa36fb3a93d0"
+      },
+      "files": {
+        "original.wav": {
+          "file": "ending-original.wav",
+          "sha256": "fa006db5473114051901c7e97d9f6ccd3380e0bdca3a27aaad23212c980e5c5d"
+        },
+        "request.json": {
+          "file": "ending-request.json",
+          "sha256": "23fa95634e9a6dd5a5ec715bc3301d4cfbbb69c7e17e35b692fc78912b806433"
+        },
+        "model-plan.abc": {
+          "file": "ending-model-plan.abc",
+          "sha256": "211b86d91d8863038d726cfe6dca10a411cc9c0b35d0acc85ac661f4bc0b0ba8"
+        },
+        "native-output.json": {
+          "file": "ending-native-output.json",
+          "sha256": "ed0418a479e7d9bb7cbedbb721d2495da906f02af1064e1f3da0dc67535c0394"
+        },
+        "experiment.json": {
+          "file": "ending-experiment.json",
+          "sha256": "fedecca1fbaff912b7bca4f36c108df2d0b4a92b5d492d4b6e1c791435fe3a32"
+        }
+      },
+      "recorded_measurements": {
+        "original_lufs": -12.83,
+        "original_dbtp": 0.89,
+        "original_final_100ms_dbfs": -69.49,
+        "gain_db": -5.17,
+        "measured_lufs": -18.0,
+        "measured_dbtp": -4.28
+      },
+      "termination": "end_of_song"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "style": "Melodic indie rock, 116 BPM, live kit and electric bass, two answering electric guitars. A spare guitar intro opens into an intimate Korean sung verse, a rising chorus with backing harmonies, a brief instrumental turn and a final band cadence.",
+  "lyrics": "[Intro]\n\n[Verse]\n빈 정류장에 남은 온기\n종이컵 속에 접힌 저녁\n낡은 운동화 끈을 묶고\n너의 보폭을 따라가\n\n[Chorus]\n한 칸 더 불을 켜 줘\n우리 그림자가 춤추게\n한 칸 더 길을 열어\n오늘은 걸어서 갈래\n\n[Outro]\n오늘은 걸어서 갈래",
+  "duration": 120,
+  "seed": 41,
+  "lm_seed": 41,
+  "cot": "full",
+  "steps": 32,
+  "output_format": "wav32"
+}

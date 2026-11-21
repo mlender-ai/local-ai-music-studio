@@ -1,0 +1,11 @@
+{
+  "style": "Instrumental alternative rock, heavy grunge guitar trio recorded live. Electric bass and real drums make the low riff move, with uneven snare answers and space around the attacks. Start with a clean guitar figure, let the same riff widen in a warm dirty guitar sound. A quiet break exposes the pick and strings, followed by an expressive lead guitar passage with sustained bent notes and answering toms. Brief shoegaze noise behind the loudest band moment, then a decisive final band chord and amplifier decay. Pure guitar, bass and drums.",
+  "lyrics": "",
+  "duration": 110,
+  "seed": 57,
+  "lm_seed": 57,
+  "cot": "melody",
+  "steps": 32,
+  "output_format": "wav32",
+  "abc": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=85\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:D#m\n% intro\nV: Vocal\nZ4|\nV: Ins\nD,4A,4F4E8z12|F,4C4F4G8z12|Z2|\n% verse\nV: Vocal\nZ4|\nV: Ins\nD,4A,4F4E8z12|F,4C4F4G8z12|Z2|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% bridge\nV: Vocal\nZ4|\nV: Ins\nF4c4f4g8z12|Z3|\n% instrumental\nV: Vocal\nZ4|\nV: Ins\nA4A4A4G8F8z4|Z2|a4a4a4g8f8z4|\nV: Vocal\nZ2|\nV: Ins\nZ2|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nD,4A,4F4E8z12|Z3|\n% outro\nV: Vocal\nZ2|\nV: Ins\nD,16z16|D,24z8|\n"
+}
