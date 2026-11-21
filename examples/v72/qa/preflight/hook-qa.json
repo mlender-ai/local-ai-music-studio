@@ -1,0 +1,252 @@
+{
+  "original_sha256": "4d47a42351fd1a652647e9bdd378d6b6f28a20d1656f5ef4bd50a345195a8154",
+  "melody_matches": {
+    "A": {
+      "supported": [
+        {
+          "start_seconds": 9.6,
+          "note_strength": 0.849,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 9.6,
+          "note_strength": 0.849,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 8.05,
+          "note_strength": 0.926,
+          "above_decoy": 0.195,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 3.43,
+          "note_strength": 0.904,
+          "above_decoy": 0.189,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 23.01,
+          "note_strength": 0.836,
+          "above_decoy": 0.252,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        }
+      ]
+    },
+    "A_prime": {
+      "supported": [
+        {
+          "start_seconds": 4.43,
+          "note_strength": 0.881,
+          "above_decoy": 0.225,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 4.43,
+          "note_strength": 0.881,
+          "above_decoy": 0.225,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 2.94,
+          "note_strength": 0.859,
+          "above_decoy": 0.132,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 6.18,
+          "note_strength": 0.864,
+          "above_decoy": 0.119,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 8.07,
+          "note_strength": 0.835,
+          "above_decoy": 0.065,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        }
+      ]
+    },
+    "B": {
+      "supported": [
+        {
+          "start_seconds": 7.78,
+          "note_strength": 0.997,
+          "above_decoy": 0.124,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 10.79,
+          "note_strength": 0.979,
+          "above_decoy": 0.08,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 14.28,
+          "note_strength": 0.828,
+          "above_decoy": 0.121,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 7.78,
+          "note_strength": 0.997,
+          "above_decoy": 0.124,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 10.79,
+          "note_strength": 0.979,
+          "above_decoy": 0.08,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 14.28,
+          "note_strength": 0.828,
+          "above_decoy": 0.121,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 12.49,
+          "note_strength": 0.94,
+          "above_decoy": 0.138,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        }
+      ]
+    },
+    "final": {
+      "supported": [
+        {
+          "start_seconds": 9.6,
+          "note_strength": 0.849,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 9.6,
+          "note_strength": 0.849,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 8.05,
+          "note_strength": 0.926,
+          "above_decoy": 0.195,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 3.43,
+          "note_strength": 0.904,
+          "above_decoy": 0.189,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 23.01,
+          "note_strength": 0.836,
+          "above_decoy": 0.252,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        }
+      ]
+    },
+    "fragment": {
+      "supported": [
+        {
+          "start_seconds": 2.12,
+          "note_strength": 0.994,
+          "above_decoy": 0.131,
+          "notes_in_top_three": 3,
+          "notes_total": 3,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 2.12,
+          "note_strength": 0.994,
+          "above_decoy": 0.131,
+          "notes_in_top_three": 3,
+          "notes_total": 3,
+          "supported": true
+        },
+        {
+          "start_seconds": 8.04,
+          "note_strength": 0.922,
+          "above_decoy": 0.141,
+          "notes_in_top_three": 2,
+          "notes_total": 3,
+          "supported": false
+        },
+        {
+          "start_seconds": 3.54,
+          "note_strength": 0.925,
+          "above_decoy": 0.104,
+          "notes_in_top_three": 2,
+          "notes_total": 3,
+          "supported": false
+        },
+        {
+          "start_seconds": 6.13,
+          "note_strength": 0.909,
+          "above_decoy": 0.008,
+          "notes_in_top_three": 2,
+          "notes_total": 3,
+          "supported": false
+        }
+      ]
+    }
+  },
+  "scope": "Pitch-class motif screening of a separated accompaniment estimate; octave and perception unchecked."
+}

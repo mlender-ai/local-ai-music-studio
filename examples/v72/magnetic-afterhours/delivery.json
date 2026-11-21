@@ -1,0 +1,64 @@
+{
+  "original_sha256": "b0ac94c1a25a421a612abda780630c7cbd1937f0f4220e2a2a9863c081411d7f",
+  "playback_gain_db": -2.57,
+  "outro_fade_seconds": 3.75,
+  "playback_last_100ms_rms_dbfs": -101.487767219049,
+  "pcm24_max_rounding_error": 1.1897645602054752e-07,
+  "copies": {
+    "final.wav": {
+      "sha256": "20f10bc2565b6050b46154e35fc5557b6f3b304b048baa031dcd0967660ac2d5",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 4607936,
+        "duration_seconds": 95.99866666666667,
+        "peak": 0.8281393051147461,
+        "peak_dbfs": -1.6379320480244919,
+        "rms": 0.12896820082187124,
+        "rms_dbfs": -17.790347175412624,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.0022784729929260423,
+        "high_band_power": 1.641664281686488e-05,
+        "low_mid_fraction": 0.10590598364920693,
+        "presence_fraction": 0.012244973098478709,
+        "air_fraction": 0.004635945540855866,
+        "lr_correlation": 0.9157671175349194,
+        "crest_db": 16.15241512738813,
+        "mono_fold_db": -0.18691788573170504,
+        "integrated_lufs": -16.7,
+        "true_peak_dbtp": -1.6,
+        "pcm_sha256": "b64750b36c4455d8d389845ffa4e069bf84050fe768d1edf376d6a08db52d456",
+        "section_rms_dbfs": {}
+      }
+    },
+    "final.mp3": {
+      "sha256": "3eb6ff0714da376b7b64f07615c537de7a1b8357de714b74b62cdcfb4b5d8be9",
+      "levels": {
+        "sample_rate": 48000,
+        "channels": 2,
+        "frames": 4607936,
+        "duration_seconds": 95.99866666666667,
+        "peak": 0.8309536576271057,
+        "peak_dbfs": -1.6084639237891891,
+        "rms": 0.12896492950192087,
+        "rms_dbfs": -17.790567498595035,
+        "clipped_samples": 0,
+        "finite": true,
+        "low_band_power": 0.0022782672255900684,
+        "high_band_power": 1.643854555589314e-05,
+        "low_mid_fraction": 0.10590809542324889,
+        "presence_fraction": 0.012251927689297282,
+        "air_fraction": 0.004643094622567242,
+        "lr_correlation": 0.9157410603356703,
+        "crest_db": 16.182103574805847,
+        "mono_fold_db": -0.18697736059804992,
+        "integrated_lufs": -16.7,
+        "true_peak_dbtp": -1.55,
+        "pcm_sha256": "1561388fa9f4a137a83bc6d66426273a4a803453a8425b6c5975e0b704ffafa0",
+        "section_rms_dbfs": {}
+      }
+    }
+  },
+  "human_listening": "unverified"
+}

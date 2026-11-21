@@ -1,0 +1,365 @@
+{
+  "original_sha256": "56ec7357513a0ad826066610838b844234466e9b2ede417ccc48904917d888e0",
+  "melody_matches": {
+    "A": {
+      "supported": [
+        {
+          "start_seconds": 2.13,
+          "note_strength": 0.844,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 3.48,
+          "note_strength": 0.95,
+          "above_decoy": 0.283,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 6.2,
+          "note_strength": 0.891,
+          "above_decoy": 0.176,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 13.13,
+          "note_strength": 0.827,
+          "above_decoy": 0.21,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 18.83,
+          "note_strength": 0.88,
+          "above_decoy": 0.203,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 20.92,
+          "note_strength": 0.797,
+          "above_decoy": 0.136,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 23.09,
+          "note_strength": 0.971,
+          "above_decoy": 0.138,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 3.48,
+          "note_strength": 0.95,
+          "above_decoy": 0.283,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 23.09,
+          "note_strength": 0.971,
+          "above_decoy": 0.138,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 18.83,
+          "note_strength": 0.88,
+          "above_decoy": 0.203,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 6.2,
+          "note_strength": 0.891,
+          "above_decoy": 0.176,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ]
+    },
+    "A_prime": {
+      "supported": [
+        {
+          "start_seconds": 2.03,
+          "note_strength": 0.878,
+          "above_decoy": 0.137,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 3.47,
+          "note_strength": 0.993,
+          "above_decoy": 0.285,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 3.47,
+          "note_strength": 0.993,
+          "above_decoy": 0.285,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 2.03,
+          "note_strength": 0.878,
+          "above_decoy": 0.137,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 22.96,
+          "note_strength": 0.917,
+          "above_decoy": 0.131,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        },
+        {
+          "start_seconds": 6.13,
+          "note_strength": 0.826,
+          "above_decoy": 0.123,
+          "notes_in_top_three": 5,
+          "notes_total": 8,
+          "supported": false
+        }
+      ]
+    },
+    "B": {
+      "supported": [
+        {
+          "start_seconds": 3.46,
+          "note_strength": 0.877,
+          "above_decoy": 0.178,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 17.77,
+          "note_strength": 0.796,
+          "above_decoy": 0.134,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 19.96,
+          "note_strength": 0.878,
+          "above_decoy": 0.157,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 23.2,
+          "note_strength": 0.998,
+          "above_decoy": 0.115,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 23.2,
+          "note_strength": 0.998,
+          "above_decoy": 0.115,
+          "notes_in_top_three": 8,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 3.46,
+          "note_strength": 0.877,
+          "above_decoy": 0.178,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 19.96,
+          "note_strength": 0.878,
+          "above_decoy": 0.157,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 17.77,
+          "note_strength": 0.796,
+          "above_decoy": 0.134,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ]
+    },
+    "final": {
+      "supported": [
+        {
+          "start_seconds": 2.13,
+          "note_strength": 0.844,
+          "above_decoy": 0.109,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 3.48,
+          "note_strength": 0.95,
+          "above_decoy": 0.283,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 6.2,
+          "note_strength": 0.891,
+          "above_decoy": 0.176,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 13.13,
+          "note_strength": 0.827,
+          "above_decoy": 0.21,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 18.83,
+          "note_strength": 0.88,
+          "above_decoy": 0.203,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 20.92,
+          "note_strength": 0.797,
+          "above_decoy": 0.136,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 23.09,
+          "note_strength": 0.971,
+          "above_decoy": 0.138,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 3.48,
+          "note_strength": 0.95,
+          "above_decoy": 0.283,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 23.09,
+          "note_strength": 0.971,
+          "above_decoy": 0.138,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 18.83,
+          "note_strength": 0.88,
+          "above_decoy": 0.203,
+          "notes_in_top_three": 7,
+          "notes_total": 8,
+          "supported": true
+        },
+        {
+          "start_seconds": 6.2,
+          "note_strength": 0.891,
+          "above_decoy": 0.176,
+          "notes_in_top_three": 6,
+          "notes_total": 8,
+          "supported": true
+        }
+      ]
+    },
+    "fragment": {
+      "supported": [
+        {
+          "start_seconds": 2.13,
+          "note_strength": 1.0,
+          "above_decoy": 0.198,
+          "notes_in_top_three": 3,
+          "notes_total": 3,
+          "supported": true
+        }
+      ],
+      "best": [
+        {
+          "start_seconds": 2.13,
+          "note_strength": 1.0,
+          "above_decoy": 0.198,
+          "notes_in_top_three": 3,
+          "notes_total": 3,
+          "supported": true
+        },
+        {
+          "start_seconds": 24.83,
+          "note_strength": 0.971,
+          "above_decoy": 0.301,
+          "notes_in_top_three": 2,
+          "notes_total": 3,
+          "supported": false
+        },
+        {
+          "start_seconds": 22.97,
+          "note_strength": 0.991,
+          "above_decoy": 0.176,
+          "notes_in_top_three": 2,
+          "notes_total": 3,
+          "supported": false
+        },
+        {
+          "start_seconds": 3.52,
+          "note_strength": 1.0,
+          "above_decoy": 0.025,
+          "notes_in_top_three": 3,
+          "notes_total": 3,
+          "supported": false
+        }
+      ]
+    }
+  },
+  "analysis_grid_bpm": 128,
+  "scope": "Pitch-class motif screening of a separated accompaniment estimate; octave and perception unchecked."
+}

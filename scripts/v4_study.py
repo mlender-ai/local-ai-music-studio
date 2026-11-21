@@ -13,7 +13,10 @@ class ScoreRejected(ValueError):
     """The score was retained for review and must not be sent to synthesis."""
 
 
-def yue2_request(brief, seed, *, cot, score, cfg_scale=None, semantic_temperature=None):
+def yue2_request(
+    brief, seed, *, cot, score, cfg_scale=None, semantic_temperature=None, source=None,
+    semantic_tokens=None,
+):
     request = {
         "style": brief["style"],
         "lyrics": brief["lyrics"],
@@ -30,6 +33,13 @@ def yue2_request(brief, seed, *, cot, score, cfg_scale=None, semantic_temperatur
         request["semantic_sampling"] = {"temperature": semantic_temperature}
     if score is not None:
         request["abc"] = score
+    if source is not None:
+        tokens, end_seconds = source
+        request.update(source_tokens=tokens, source_start=0.0, source_end=end_seconds)
+    if semantic_tokens is not None:
+        if source is not None:
+            raise ValueError("Replay and native continuation are separate modes")
+        request["semantic_tokens"] = semantic_tokens
     return request
 
 
@@ -45,6 +55,8 @@ def run(
     plan_gate=None,
     cfg_scale=None,
     semantic_temperature=None,
+    source=None,
+    semantic_tokens=None,
 ):
     if score is not None and (engine != "yue2" or not score.strip()):
         raise ValueError("Provide a nonempty ABC score for YuE2")
@@ -79,6 +91,8 @@ def run(
                 score=score,
                 cfg_scale=cfg_scale,
                 semantic_temperature=semantic_temperature,
+                source=source,
+                semantic_tokens=semantic_tokens,
             )
             if plan_gate is not None and score is None:
                 planner_request = folder / "planner-request.json"

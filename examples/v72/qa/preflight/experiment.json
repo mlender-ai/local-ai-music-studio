@@ -1,0 +1,20 @@
+{
+  "engine": "yue2",
+  "genre": "house-techno-128",
+  "seed": 518,
+  "brief": {
+    "style": "Instrumental, 128 BPM, hypnotic progressive tech house, 4/4, F minor. A sharp dry metallic FM pluck plays a recognizable syncopated two-bar lead motif with gaps, a held high answer and a falling cadence. Tight four-on-the-floor kick, elastic sidechained sub bass answering the pluck, dry clap and bright offbeat open hat. Begin with fragments, state the theme early, vary its cadence once, then omit kick and sub in a real breakdown that reveals the exposed pluck. Build tension with shorter answers and rising percussion. Big late drop with the original recognizable pluck over returning full kick and bass, brighter octave accents only on its answer, open hats and hard transients. A clean decisive instrumental ending. Synth oscillators and drum machines only, no voice, no vocals, no humming, no choirs, no vocal samples.",
+    "lyrics": "",
+    "duration": 28,
+    "bpm": 128,
+    "instrumental": true
+  },
+  "input_score": "X:1\nT:\nM:4/4\nL:1/32\nQ:1/4=128\nV: Vocal clef=treble name=\"Vocal Melody\" snm=\"Vocal\"\nV: Ins clef=treble name=\"Ins Melody\" snm=\"Inst.\"\nK:Fm\n% intro\nV: Vocal\nZ4|\nV: Ins\nZ2|z6ze6z2=d2z3A6z6|Z|\n% verse\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2=d2z3A6z6|B6-Bz4e2z3G2z4F8z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2=d2z3A6z6|B6-Bz4e2z3G2z4F8z2|Z2|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z3=d2z3A4z6z|z2B4-Bz4e2z4zG2z4A6z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z3=d2z3A4z6z|z2B4-Bz4e2z4zG2z4A6z2|Z2|\n% interlude\nV: Vocal\nZ4|\nV: Ins\nZ2|z6ze6z2=d2z3A6z6|Z|\nV: Vocal\nZ4|\nV: Ins\nZ4|\n% pre-chorus\nV: Vocal\nZ4|\nV: Ins\nz6ze6z2=d2z3A6z6|Z3|\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2f2z3c6z6|B6-Bz4e2z4G2z4zc6z2|Z|z6ze6z2=d2z3A6z6|\n% chorus\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2=d2z3A6z6|B6-Bz4e2z3G2z4F8z2|z4c2ze6z2=d2z3A6z6|B6-Bz4e'2z3G2z4F8z2|\nV: Vocal\nZ4|\nV: Ins\nZ2|z4c2ze6z2=d2z3A6z6|B6-Bz4e'2z3G2z4F8z2|\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z3=d2z3A4z6z|z2B4-Bz4e2z4zG2z4A6z2|Z2|\n% outro\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2f2z3c6z6|B6-Bz4e2z4G2z4zc6z2|Z2|\nV: Vocal\nZ4|\nV: Ins\nz4c2ze6z2=d2z3F8z4|Z3|\n",
+  "status": "rendered",
+  "original": "original.wav",
+  "run": {
+    "peak_rss_gib": 4.244,
+    "peak_footprint_gib": 4.244,
+    "total_seconds": 82.536
+  }
+}
