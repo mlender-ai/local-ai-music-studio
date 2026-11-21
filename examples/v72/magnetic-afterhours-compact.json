@@ -1,0 +1,25 @@
+{
+  "title": "Magnetic Afterhours",
+  "key": "Fm",
+  "bpm": 128,
+  "time_signature": "4/4",
+  "subdivisions_per_bar": 32,
+  "style": "128 BPM instrumental progressive tech house in F minor, 4/4. Instrumental drum machine and hardware synth ensemble. Short metallic FM pluck, snappy syncopated two-bar motif, sharp attack and gaps. Hard dry quarter-note kick, round analog bass alternating with the kick, bright offbeat hat, dry clap. The first full statement comes early. Variation shifts the last notes. Middle breakdown with no kick or sub and only the exposed filtered FM synth motif. Build with chopped pluck answers and denser closed hats. Return the same melody with brighter octave synth stabs, closed-to-open hats, full kick and elastic bass. Return to F and stop the drums for a clean natural synth tail.",
+  "hook": {
+    "fragment": [[[7, 6, 75], [15, 2, 74], [20, 6, 68]]],
+    "A": [[[4, 2, 72], [7, 6, 75], [15, 2, 74], [20, 6, 68]], [[0, 7, 70], [11, 2, 75], [16, 2, 67], [22, 8, 65]]],
+    "A_prime": [[[4, 2, 72], [7, 6, 75], [16, 2, 74], [21, 4, 68]], [[2, 5, 70], [11, 2, 75], [18, 2, 67], [24, 6, 68]]],
+    "B": [[[4, 2, 72], [7, 6, 75], [15, 2, 77], [20, 6, 72]], [[0, 7, 70], [11, 2, 75], [17, 2, 67], [24, 6, 72]]],
+    "final": [[[4, 2, 72], [7, 6, 75], [15, 2, 74], [20, 6, 68]], [[0, 7, 70], [11, 2, 87], [16, 2, 67], [22, 8, 65]]],
+    "resolve": [[[4, 2, 72], [7, 6, 75], [15, 2, 74], [20, 8, 65]]]
+  },
+  "sections": [
+    {"name": "Intro", "abc": "intro", "bars": 4, "placements": [[3, "fragment"]], "production": "Closed top rhythm, bass restrained, leave space for one dry fragment."},
+    {"name": "Hook introduction", "abc": "verse", "bars": 8, "placements": [[1, "A"], [5, "A"]], "production": "State the complete pluck motif, with elastic bass in the gaps."},
+    {"name": "Groove development", "abc": "chorus", "bars": 6, "placements": [[1, "A_prime"], [3, "A_prime"]], "production": "Shift the cadence and give the bass more room to answer."},
+    {"name": "Breakdown", "abc": "interlude", "bars": 8, "placements": [[3, "fragment"]], "production": "Withdraw kick and sub, leave a recognizably incomplete pluck answer and widen its tail."},
+    {"name": "Build-up", "abc": "pre-chorus", "bars": 6, "placements": [[1, "fragment"], [3, "B"], [6, "fragment"]], "production": "Expose more of the contour, increase syncopated hats and harmonic suspension, leave a brief breath before the return."},
+    {"name": "Main drop", "abc": "chorus", "bars": 12, "placements": [[1, "A"], [3, "final"], [7, "final"], [9, "A_prime"]], "production": "Return full kick and sub under A, then open the pluck and introduce a high answer over the same theme."},
+    {"name": "Final variation / outro", "abc": "outro", "bars": 8, "placements": [[1, "B"], [5, "resolve"]], "production": "Answer once, return to F, remove the rhythm and let the natural tail end."}
+  ]
+}

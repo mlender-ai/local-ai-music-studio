@@ -11,6 +11,7 @@ from scripts.v4_study import run, yue2_request
 from scripts.v71_qa import inspect
 
 GENRES = {"house-techno-128": 128, "highteen-punk-144": 144}
+YUE_SEMANTIC_HZ = 25
 
 
 def digest(path):
@@ -24,7 +25,16 @@ def require_preflight(folder, expected):
     evidence = json.loads((folder / "vocal-leakage.json").read_text())
     if not 8 <= previous["duration"] <= 30:
         raise ValueError("Use a verified 8–30 second preflight")
-    if {**previous, "duration": expected["duration"]} != expected:
+    short_settings = {**previous, "duration": expected["duration"]}
+    full_settings = expected.copy()
+    if "semantic_tokens" in full_settings:
+        prefix = ",".join(
+            full_settings["semantic_tokens"].split(",")[
+                : previous["duration"] * YUE_SEMANTIC_HZ
+            ]
+        )
+        full_settings["semantic_tokens"] = prefix
+    if short_settings != full_settings:
         raise ValueError(
             "Full take must reuse the preflight's seed, style, score and settings"
         )
@@ -37,7 +47,7 @@ def require_preflight(folder, expected):
         raise ValueError("This exact short take needs a passing vocal leakage report")
 
 
-def assess_music(folder, genre):
+def assess_music(folder, genre, duration_range=(60, 90)):
     report = {}
     quality = inspect(folder)
     report["technical_music_qa"] = quality
@@ -91,7 +101,11 @@ def assess_music(folder, genre):
     )
     report["measured_ending_supported"] = quiet_tail or fading_eos
     checks = {
-        "duration": 60 <= round(waveform["levels"]["duration_seconds"], 1) <= 90,
+        "duration": (
+            duration_range[0]
+            <= round(waveform["levels"]["duration_seconds"], 1)
+            <= duration_range[1]
+        ),
         "tempo": bool(direct_tempo or half_time),
         "loop_screen": not waveform["exact_loop_candidates"],
         "impulse_screen": not waveform["isolated_impulse_count"],
@@ -118,6 +132,10 @@ def produce(
     cfg_scale,
     preflight,
     semantic_temperature=None,
+    output_root=DATA / "v71-hotfix",
+    duration_range=(60, 90),
+    source=None,
+    semantic_tokens=None,
 ):
     brief = {
         "style": style.strip(),
@@ -133,13 +151,16 @@ def produce(
         score=score,
         cfg_scale=cfg_scale,
         semantic_temperature=semantic_temperature,
+        source=source,
+        semantic_tokens=semantic_tokens,
     )
     gate = score_evidence(expected, score, RUNTIME / "v6/instrumental")
     if gate["status"] != "PASS":
         raise ValueError(f"Instrumental score gate: {gate['reason']}")
     if preflight:
-        if not 60 <= cap <= 90:
-            raise ValueError("Full duration cap must be 60–90 seconds")
+        start, end = duration_range
+        if not start <= cap <= end:
+            raise ValueError(f"Full duration cap must be {start}–{end} seconds")
         require_preflight(preflight, expected)
     elif not 8 <= cap <= 30:
         raise ValueError("Run an 8–30 second preflight before full generation")
@@ -152,7 +173,9 @@ def produce(
         cot=cot,
         cfg_scale=cfg_scale,
         semantic_temperature=semantic_temperature,
-        output_root=DATA / "v71-hotfix",
+        output_root=output_root,
+        source=source,
+        semantic_tokens=semantic_tokens,
     )
     checks = review(folder)
     report = {
@@ -162,7 +185,7 @@ def produce(
         "selection": "not_evaluated",
     }
     if preflight and checks["status"] == "PASS":
-        report.update(assess_music(folder, genre))
+        report.update(assess_music(folder, genre, duration_range))
     (folder / "strict-result.json").write_text(json.dumps(report, indent=2) + "\n")
     return folder, report
 
