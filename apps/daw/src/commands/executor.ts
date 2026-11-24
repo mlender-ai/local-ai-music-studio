@@ -98,7 +98,7 @@ export function executeCommand(project: Project, cmd: ProjectCommand): Project {
         mute: false,
         solo: false,
         stemLabel: cmd.payload.stemLabel ?? null,
-        instrumentRef: cmd.payload.type === "midi" ? "basic-poly-synth" : null,
+        instrumentRef: cmd.payload.instrumentRef ?? (cmd.payload.type === "midi" ? "basic-poly-synth" : null),
         effects: [],
         clips: [],
       });
@@ -151,6 +151,11 @@ export function executeCommand(project: Project, cmd: ProjectCommand): Project {
 
     case "track.setSolo": {
       findTrack(p, cmd.payload.trackId).solo = cmd.payload.solo;
+      break;
+    }
+
+    case "track.setInstrument": {
+      findTrack(p, cmd.payload.trackId).instrumentRef = cmd.payload.instrumentRef;
       break;
     }
 

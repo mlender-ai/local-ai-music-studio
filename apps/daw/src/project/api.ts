@@ -2,15 +2,20 @@ import type {
   AnalysisJobStatus,
   Asset,
   ChangeProposal,
+  CompositionPlan,
+  GenerationEngineInfo,
+  GenerationJobStatus,
   HealthInfo,
   LibraryItem,
   MidiNote,
   ProducerInstructResponse,
   Project,
   ProjectSummary,
+  ProviderSummary,
   ReferenceComparisonResult,
   ReferenceItem,
   SelectionContext,
+  Take,
   WaveformData,
 } from "./types";
 
@@ -336,5 +341,108 @@ export const dawApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+  },
+
+  // --- Phase 03: Providers, Composition Plans, Generation Jobs & Takes ---
+
+  getProviders(): Promise<ProviderSummary> {
+    return apiFetch("/api/providers");
+  },
+
+  selectProvider(providerId: string, model?: string): Promise<ProviderSummary> {
+    return apiFetch("/api/providers/select", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ providerId, model }),
+    });
+  },
+
+  getGenerationEngines(): Promise<{ engines: GenerationEngineInfo[] }> {
+    return apiFetch("/api/generation/engines");
+  },
+
+  createCompositionPlan(
+    projectId: string,
+    body: {
+      instruction: string;
+      mode?: string;
+      targetInstrument?: string;
+      referenceIds?: string[];
+      selectedInfluences?: string[];
+      selection?: SelectionContext;
+      providerId?: string;
+    }
+  ): Promise<{ plan: CompositionPlan; projectRevision: number }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/composition/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  startGenerationJob(
+    projectId: string,
+    body: {
+      planId?: string;
+      instruction?: string;
+      mode?: string;
+      targetInstrument?: string;
+      referenceIds?: string[];
+      selectedInfluences?: string[];
+      selection?: SelectionContext;
+      engine?: string;
+      seed?: number;
+      sync?: boolean;
+    }
+  ): Promise<{ job: GenerationJobStatus; take?: Take }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/generation/jobs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  getGenerationJob(jobId: string): Promise<GenerationJobStatus> {
+    return apiFetch(`/api/generation/jobs/${encodeURIComponent(jobId)}`);
+  },
+
+  cancelGenerationJob(jobId: string): Promise<GenerationJobStatus> {
+    return apiFetch(`/api/generation/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST" });
+  },
+
+  listTakes(projectId: string): Promise<{ takes: Take[] }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/takes`);
+  },
+
+  takeAudioUrl(projectId: string, takeId: string): string {
+    return `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/audio`;
+  },
+
+  applyTake(
+    projectId: string,
+    takeId: string,
+    body: {
+      applyMode: "new_tracks" | "selected_range" | "new_project" | "keep_take";
+      targetTrackId?: string | null;
+      startBeats?: number;
+      addSectionMarkers?: boolean;
+      expectedRevision?: number;
+    }
+  ): Promise<{ applied: boolean; take: Take; project: Project; revision?: number; createdNewProject?: boolean }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/apply`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  rejectTake(projectId: string, takeId: string): Promise<{ take: Take; projectRevision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/reject`,
+      { method: "POST" }
+    );
   },
 };

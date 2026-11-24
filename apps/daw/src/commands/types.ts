@@ -10,7 +10,14 @@ export type ProjectCommand =
   | { type: "asset.register"; payload: { asset: Asset } }
   | {
       type: "track.add";
-      payload: { id?: string; name?: string; type: Track["type"]; color?: string; stemLabel?: string };
+      payload: {
+        id?: string;
+        name?: string;
+        type: Track["type"];
+        color?: string;
+        stemLabel?: string;
+        instrumentRef?: string | null;
+      };
     }
   | { type: "track.remove"; payload: { trackId: string } }
   | { type: "track.rename"; payload: { trackId: string; name: string } }
@@ -20,6 +27,7 @@ export type ProjectCommand =
   | { type: "track.setPan"; payload: { trackId: string; pan: number } }
   | { type: "track.setMute"; payload: { trackId: string; mute: boolean } }
   | { type: "track.setSolo"; payload: { trackId: string; solo: boolean } }
+  | { type: "track.setInstrument"; payload: { trackId: string; instrumentRef: string | null } }
   | { type: "clip.add"; payload: { trackId: string; clip: Clip } }
   | {
       type: "clip.move";

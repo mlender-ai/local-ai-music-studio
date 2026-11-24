@@ -74,6 +74,7 @@ def _ensure_project_folders(pdir: Path) -> None:
         "cache/waveforms",
         "cache/analysis",
         "cache/extracted",
+        "takes",
         "versions",
         "exports",
     ):
@@ -109,12 +110,16 @@ def _sanitize_filename(name: str) -> str:
 
 
 def migrate_project_dict(data: dict[str, Any]) -> dict[str, Any]:
-    """Migrate older schema v1.0.0 project dictionaries cleanly into v1.1.0+."""
+    """Migrate older schema v1.0.0 / v1.1.0 project dictionaries cleanly into v1.2.0+."""
     out = dict(data)
     if "revision" not in out or not isinstance(out["revision"], int) or out["revision"] < 1:
         out["revision"] = 1
     if "references" not in out or not isinstance(out["references"], list):
         out["references"] = []
+    if "compositionPlans" not in out or not isinstance(out["compositionPlans"], list):
+        out["compositionPlans"] = []
+    if "takes" not in out or not isinstance(out["takes"], list):
+        out["takes"] = []
     out["schemaVersion"] = SCHEMA_VERSION
     return out
 

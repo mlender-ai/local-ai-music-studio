@@ -386,15 +386,25 @@ export class RealtimeAudioEngine {
     }
   }
 
-  auditionMidiNote(pitch: number, velocity = 100, durationSec = 0.28): void {
+  auditionMidiNote(pitch: number, velocity = 100, durationSec = 0.28, instrumentRef?: string | null): void {
     const ctx = this.ensureContext();
     if (this.masterGain) {
-      scheduleSynthVoice(ctx, this.masterGain, pitch, velocity, ctx.currentTime + 0.005, durationSec, 0.9, false);
+      scheduleSynthVoice(
+        ctx,
+        this.masterGain,
+        pitch,
+        velocity,
+        ctx.currentTime + 0.005,
+        durationSec,
+        0.9,
+        false,
+        instrumentRef
+      );
     }
   }
 
-  // Standalone Reference Audition (never mixed into project export)
-  async playReferencePreview(url: string, startSec = 0): Promise<void> {
+  // Standalone Reference / Take Level-Matched Audition (never mixed into project export)
+  async playReferencePreview(url: string, startSec = 0, gainDb = 0): Promise<void> {
     this.pause();
     this.stopReferencePreview();
     const ctx = this.ensureContext();
@@ -403,7 +413,7 @@ export class RealtimeAudioEngine {
     let buf = this.refBufferCache.get(url);
     if (!buf) {
       const resp = await fetch(url);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status} loading reference audio`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} loading preview audio`);
       buf = await ctx.decodeAudioData(await resp.arrayBuffer());
       this.refBufferCache.set(url, buf);
     }
@@ -411,7 +421,10 @@ export class RealtimeAudioEngine {
     const offset = Math.max(0, Math.min(buf.duration - 0.05, startSec));
     const src = ctx.createBufferSource();
     src.buffer = buf;
-    src.connect(this.masterGain!);
+    const previewGain = ctx.createGain();
+    previewGain.gain.value = dbToLinear(Math.max(-18, Math.min(12, gainDb)));
+    src.connect(previewGain);
+    previewGain.connect(this.masterGain!);
     src.start(ctx.currentTime + 0.01, offset);
     this.refSource = src;
     this.refPlayingKey = url;
@@ -419,6 +432,7 @@ export class RealtimeAudioEngine {
     this.refStartOffsetSec = offset;
     this.refDurationSec = buf.duration;
     src.onended = () => {
+      previewGain.disconnect();
       if (this.refSource === src) {
         this.refSource = null;
         this.refPlayingKey = null;
@@ -672,7 +686,8 @@ export class RealtimeAudioEngine {
               when,
               ev.durationSec,
               ev.clipGainLinear,
-              ev.chased
+              ev.chased,
+              track.instrumentRef
             );
             for (const osc of oscs) {
               this.activeSources.add(osc);

@@ -1,44 +1,44 @@
 # STATUS.md — Current Development Status
 
 **Last Updated:** 2026-11-24  
-**Active Phases:** Phase 01.1 (Stabilization) + Phase 01.2 (Korean Localization) + Phase 02 (Reference Intelligence · Agent Bridge · Reference Comparison) — **Ready for Review**  
+**Active Phase:** **Phase 03 · AI Composition Engine** — **Complete & Ready for Review**  
 **Integration Branch:** `develop/ai-native-daw` (unmerged pending user verification)  
 **Stacked Task Branches:**
 1. `feat/daw-workspace-phase-01` (PR #15 → `develop/ai-native-daw`)
-2. `fix/daw-phase-01-1-stabilization` (depends on PR #15)
-3. `feat/daw-korean-localization` (depends on Phase 01.1)
-4. `feat/daw-reference-intelligence` (depends on Phase 01.2)
-5. `feat/daw-agent-bridge` (depends on Phase 02-A/C)
+2. `fix/daw-phase-01-1-stabilization` (PR #16 → `feat/daw-workspace-phase-01`)
+3. `feat/daw-korean-localization` (PR #17 → `fix/daw-phase-01-1-stabilization`)
+4. `feat/daw-reference-intelligence` (PR #18 → `feat/daw-korean-localization`)
+5. `feat/daw-agent-bridge` (PR #19 → `feat/daw-reference-intelligence`)
+6. `feat/daw-ai-composition-phase-03` (PR → `feat/daw-agent-bridge`)
 
-## Completed
+## Completed in Phase 03
 
-- [x] **Phase 01.1 — Workspace Stabilization:**
-  - Monotonic `revision` (`schemaVersion: 1.1.0`) with automatic `1.0.0 → 1.1.0` migration, file-locked atomic saves, and HTTP `409 REVISION_CONFLICT` optimistic locking.
-  - Non-clobbering save-in-flight logic, structural fingerprint matching so Undo back to last-saved state restores `저장됨`, unsaved-changes confirmation guard, and `localStorage` restoration of last project / track / playhead / zoom / panels.
-  - Shared `apps/daw/src/audio/scheduler.ts` uniting Realtime Preview and Offline Stereo WAV Export, full **MIDI Chase** for mid-note starts/seeks/loops, rapid Play/Stop click token protection, per-asset decode status + Retry/Relink recovery + Export block on broken audible assets, and smart source-hash build check in `scripts/start_daw.sh`.
-- [x] **Phase 01.2 — Korean Localization:**
-  - Korean default UI (`apps/daw/src/i18n/locales/ko.json` & `en.json`) with instant persistent `KO / EN` switcher in Transport Bar, preserving standard studio terms (`BPM`, `MIDI`, `EQ`, `FX`, `Gain`, `Pan`, `Loop`, `Snap`, `Mute / Solo`, `WAV`, `LUFS`, `VST3`, `AU`, `AI Producer`).
-  - Full Korean IME composition safety (`isComposing` / `keyCode 229`) across global shortcuts and all inline inputs.
-  - Verified clean single-line layout at both `1440×900` and `1280×800` (`내보내기` right edge `1272px <= 1280px`).
-- [x] **Phase 02-A & 02-C — Reference Intelligence & Comparison:**
-  - Audio & video reference import (`WAV/MP3/FLAC/OGG/AIFF/M4A/MP4/MOV` via `soundfile` / `ffmpeg` / macOS `afconvert`, preserving immutable originals) + safe public URL metadata probe (`audioAvailable: false` with honest audio-required notice).
-  - Reference tracks stored in `project.references[]` and automatically excluded from final Stereo WAV Export.
-  - Real acoustic analysis (`engine/daw_workspace/analysis.py`): unconstrained spectral-flux BPM candidates + half/double-time ambiguity, onset/beat grid, swing/groove, 12-bin Chroma Key/Mode + threshold-gated chords (`uncertain` when weak), multi-feature novelty sections + time-aligned Energy Curve, 6-band Welch PSD + dynamic range + stereo width/correlation, and HPSS spectral instrument presence estimates (explicitly separated from independent recordings/stems), with SHA-256 disk caching and single-worker cancellable background jobs.
-  - Structured `ReferenceBlueprint` with user-toggleable musical influences + normalized 4-phase **Reference vs Project/Track Comparison** (no fake single similarity score).
-- [x] **Phase 02-B — AI Agent Bridge:**
-  - Shared session registry (`outputs/daw/session.json`) syncing active browser tab Selection Context, Project ID, Revision, and active Reference Blueprint to external MCP processes.
-  - Added all 28 `daw.*` MCP tools to `app/mcp_server.py` (preserving all 9 legacy `music.*` tools intact): Read, Edit, Staged Change Proposals (`daw.preview_changes` / `apply_changes` / `reject_changes`), Undo/Redo, and Reference Analysis/Comparison.
-  - Real-time SSE event stream (`GET /api/events`) pushing external agent updates and proposals to the live DAW UI without refresh, plus Korean/English supported-command router with honest refusal for Phase 03–07 features.
+- [x] **Phase 03-A — Reference Intelligence & Bridge Hardening:**
+  - Standard **ITU-R BS.1770-4** Integrated LUFS, Short-Term Loudness/LRA, and 4× polyphase oversampled True Peak (`engine/daw_workspace/loudness.py`), verified against EBU Tech 3341 calibration (`-23.0 dBFS` 1 kHz stereo sine → `-23.04 LUFS`).
+  - Octave-aware half-time / double-time BPM comparison (`resolve_octave_tempo_relation`, e.g., `127.9` vs `64.0 BPM` recognized as compatible half-time).
+  - Bass-register root weighting in harmony analysis, strict separation of `harmonicRepetitionScore` vs `melodicMotifStatus: "not_transcribed_in_dsp_mode"`, and explicit `unconfirmed` (`미확인`) instrument badges for `< 35%` HPSS confidence.
+  - All 9 MCP edit tools now safely default to `stage_only=True`; frontend SSE auto-recovers latest project revision & pending proposals after reconnect; verified real separate-process STDIO MCP client (`tests/test_mcp_subprocess.py`).
+- [x] **Phase 03-B — AI Producer Provider Adapter & Conversational UI:**
+  - Honest local/CLI/MCP/API provider detection (`engine/providers/`): Built-in Music Composition Director (ready offline), External MCP Agent Bridge (ready), Ollama (`127.0.0.1:11434` live probe), Claude CLI, Codex CLI, and env-only user-configured external API (`DAW_LLM_BASE_URL` / `DAW_LLM_API_KEY`, never sent to browser or Git).
+  - Upgraded `AIProducerPanel.tsx` into a 3-tab conversational music producer (`작곡 · 대화`, `Take`, `엔진 · 상세`), moving developer JSON / Command Payload / Revision into a collapsible section.
+- [x] **Phase 03-C — Composition Director & Reference-Guided Composition:**
+  - Structured `CompositionPlan` (`MusicalIdentity`, `SignatureMotif`, `Harmony & Groove`, `InstrumentRoles`, genre-adaptive `Arrangement`, `Variations`, `Climax`, `GenerationStrategy`) with traceable `ReferenceBinding` (`appliedFeatures` vs `unmappedFeatures`).
+  - Motif-based MIDI Composer (`engine/composition/midi_composer.py`) generating Drums, Bass, Synth Hook (Motif A → A' → B → Cadence), Keys, Guitar, and Pad with SMF `.mid` export and musical validation (`engine/composition/validation.py`).
+- [x] **Phase 03-D & 03-E — Multi-Timbre Instruments, Generation Adapters, Stems & Library:**
+  - **6 Studio Multi-Timbre Instrument Voices** mirrored identically across Python offline WAV export (`engine/instruments/synth_engine.py`) and Web Audio realtime/offline playback (`apps/daw/src/audio/instruments.ts`): `drum-kit-electronic`, `bass-fm-sub`, `synth-fm-hook`, `keys-electric-ep`, `guitar-clean-pluck`, `pad-warm-analog` (+ `basic-poly-synth`), selectable directly in MIDI Track Headers and Piano Roll.
+  - Honest native adapters for **YuE2** (`yue2_adapter.py` with `check_resting_voice` ABC vocal screening + vocal-leakage screen + 10 GiB memory guard), **ACE-Step** (`acestep_adapter.py`), **Demucs** (`stem_separator.py` preserving muted Original Mix), and **Local Multitrack Composer** (`local_composer_adapter.py`, explicitly labeled — never masquerading as YuE2).
+  - Sample & Loop Library Intelligence (`engine/composition/library.py`) with cached BPM, Key, LUFS, role, license, and octave-aware tempo compatibility against project BPM.
+- [x] **Phase 03-F & 03-G — Takes, Level-Matched Preview, Quality Reports & 54 MCP Tools:**
+  - Single-worker Apple Silicon–safe `GenerationJobManager` (`engine/generation/daw_jobs.py`) with granular stages, logs, cancellation, SSE sync, `-16 LUFS` level-matched preview audition, `Planned` vs `Detected` sections, and transactional Undoable Take Apply (`new_tracks`, `selected_range`, `new_project`, `keep_take`, `reject`).
+  - Schema migrated cleanly to `1.2.0` (`compositionPlans[]`, `takes[]`); `app/mcp_server.py` registers **54 MCP tools** (9 legacy `music.*` + 28 Phase 02 `daw.*` + 17 Phase 03 `daw.*`).
 
 ## Verification Status
 
-- **Python tests (`pytest -q`):** `40 passed` (31 legacy + 4 Phase 01/01.1 + 2 Reference Intelligence/Comparison + 2 Agent Bridge/MCP + 1 revision/relink).
-- **Frontend tests & build:** `10 passed` (Vitest) + clean `tsc -b && vite build`.
-- **Test A (V7.2 Magnetic Afterhours Real Analysis):** Measured `127.9 BPM`, `F mixolydian`, `8 sections`, `-18.48 LUFS`, `Peak -1.64 dBFS` (exact match to `delivery.json`).
-- **Test B (External Reference):** Audio/video import and URL metadata honesty verified in tests & UI; user-supplied external audio/video file analysis awaits user's own local file.
-- **Test C (Agent Editing):** Verified end-to-end both in pytest (`test_agent_bridge.py` including bar-range split+clip-gain safety & MCP undo) and live browser QA (`드럼 트랙을 잠깐 뮤트해줘` → Staged Proposal → Live Apply → Revision bump → Undo + honest Phase 05 EQ/Reverb refusal).
+- **Python tests (`pytest -q`):** `51 passed` (31 legacy + Phase 01/01.1/02 + Phase 03-A BS.1770-4/V7.2 + separate-process STDIO MCP + Phase 03 Tests A, B, C, YuE2/Demucs honesty & library).
+- **Frontend tests & build:** `11 passed` (Vitest) + clean `tsc -b && vite build`.
+- **Live Browser QA (`http://127.0.0.1:8796`):** Verified Korean conversational prompt → `CompositionPlan` → Take generation → `새 트랙 추가` → Piano Roll MIDI inspection & instrument switching → honest `엔진 · 상세` tab → clean `1440×900` & `1280×800` layouts with `0` console/HTTP errors.
 
-## Known Unverified / Deferred Items
+## Honest Host Limitations & Deferred Phases
 
-- User hands-on listening & subjective editing QA has not yet been performed (PRs remain open and unmerged).
-- Phase 03 (AI Composition), Phase 04 (AI Arrangement regeneration), Phase 05 (FX Rack / AU / VST3 / REAPER host), and Audio Time-Stretch / Warp remain deferred.
+- **Local host binaries/weights not installed on this Mac:** `.runtime/v4/yue2cpp/build/yue-synth` (YuE2 native binary), `.runtime/models/checkpoints/` (ACE-Step), `demucs`, `ollama`, `claude` CLI, `codex` CLI. All adapters detect and report `available: false` honestly and never fabricate neural audio or fake stems.
+- **Deferred:** Phase 04 (Bar-level AI arrangement regeneration), Phase 05 (FX Rack / EQ / Comp / Reverb / AU / VST3 / REAPER host), Phase 06 (AI Mixing & Mastering), Phase 07 (Vocal synthesis & lyrics).

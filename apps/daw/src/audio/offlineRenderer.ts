@@ -108,7 +108,8 @@ export async function renderProjectOfflineWav(
             when,
             ev.durationSec,
             ev.clipGainLinear,
-            ev.chased
+            ev.chased,
+            track.instrumentRef
           );
         }
       }

@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 DEFAULT_PPQ = 480
 DEFAULT_SAMPLE_RATE = 48000
 
@@ -140,6 +140,8 @@ class Project(DawModel):
     assets: list[Asset] = Field(default_factory=list)
     tracks: list[Track] = Field(default_factory=list)
     references: list[dict[str, Any]] = Field(default_factory=list)
+    compositionPlans: list[dict[str, Any]] = Field(default_factory=list)
+    takes: list[dict[str, Any]] = Field(default_factory=list)
     notes: str = ""
     createdAt: str = Field(default_factory=utc_now_iso)
     updatedAt: str = Field(default_factory=utc_now_iso)
