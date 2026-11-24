@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import json
 from pathlib import Path
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from engine import paths as engine_paths
-from engine.daw_workspace import analysis, commands, reaper, references, renderer, store
+from engine.daw_workspace import analysis, commands, mcp_tools, proposals, reaper, references, renderer, session, store
 from engine.daw_workspace.schema import CommandRequest, Project
 
 DIST_DIR = engine_paths.ROOT / "apps" / "daw" / "dist"
@@ -369,6 +371,194 @@ def compare_reference(project_id: str, ref_id: str, body: ReferenceCompareBody) 
         ref_id,
         target_kind=body.targetKind,
         target_id=body.targetId,
+    )
+
+
+# --- Phase 02-B Agent Bridge: Session Sync, Proposals, Producer Router & Live SSE ---
+
+class SessionUpdateBody(BaseModel):
+    sessionId: str = Field(min_length=3, max_length=80)
+    projectId: str | None = None
+    revision: int | None = None
+    selection: dict[str, Any] | None = None
+    activeReferenceId: str | None = None
+    locale: str = "ko"
+    claimActive: bool = True
+
+
+class ProposalCreateBody(BaseModel):
+    summary: str = Field(min_length=1, max_length=240)
+    operations: list[dict[str, Any]]
+    baseRevision: int | None = None
+    sourceAgent: str = "external-agent"
+
+
+class ProducerInstructBody(BaseModel):
+    instruction: str = Field(min_length=1, max_length=1000)
+    selection: dict[str, Any] | None = None
+    activeReferenceId: str | None = None
+    baseRevision: int | None = None
+
+
+@app.get("/api/capabilities")
+def get_capabilities() -> dict[str, Any]:
+    return mcp_tools.get_capabilities()
+
+
+@app.post("/api/session/state")
+def post_session_state(body: SessionUpdateBody) -> dict[str, Any]:
+    return session.update_session(
+        session_id=body.sessionId,
+        project_id=body.projectId,
+        revision=body.revision,
+        selection=body.selection,
+        active_reference_id=body.activeReferenceId,
+        locale=body.locale,
+        claim_active=body.claimActive,
+    )
+
+
+@app.get("/api/session/state")
+def get_session_state(sessionId: str | None = None) -> dict[str, Any]:
+    return session.get_active_session(sessionId)
+
+
+@app.get("/api/session/list")
+def get_sessions_list() -> dict[str, Any]:
+    return session.list_sessions()
+
+
+@app.get("/api/projects/{project_id}/proposals")
+def get_proposals(project_id: str, status: str | None = None) -> dict[str, Any]:
+    return {"proposals": proposals.list_proposals(project_id, status=status)}
+
+
+@app.post("/api/projects/{project_id}/proposals")
+def post_proposal(project_id: str, body: ProposalCreateBody) -> dict[str, Any]:
+    prop = proposals.create_proposal(
+        project_id,
+        summary=body.summary,
+        operations=body.operations,
+        base_revision=body.baseRevision,
+        source_agent=body.sourceAgent,
+    )
+    return {"proposal": prop}
+
+
+@app.post("/api/projects/{project_id}/proposals/{proposal_id}/apply")
+def post_apply_proposal(project_id: str, proposal_id: str) -> dict[str, Any]:
+    prop, saved = proposals.apply_proposal(project_id, proposal_id)
+    return {"proposal": prop, "project": saved.model_dump()}
+
+
+@app.post("/api/projects/{project_id}/proposals/{proposal_id}/reject")
+def post_reject_proposal(project_id: str, proposal_id: str) -> dict[str, Any]:
+    prop = proposals.reject_proposal(project_id, proposal_id)
+    return {"proposal": prop}
+
+
+@app.post("/api/projects/{project_id}/undo")
+def post_undo(project_id: str) -> dict[str, Any]:
+    saved = proposals.undo_project(project_id)
+    return {"project": saved.model_dump()}
+
+
+@app.post("/api/projects/{project_id}/redo")
+def post_redo(project_id: str) -> dict[str, Any]:
+    saved = proposals.redo_project(project_id)
+    return {"project": saved.model_dump()}
+
+
+@app.post("/api/projects/{project_id}/producer/instruct")
+def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    if body.baseRevision is not None and proj.revision != body.baseRevision:
+        raise store.RevisionConflictError(body.baseRevision, proj.revision, proj)
+    routed = proposals.interpret_producer_instruction(
+        proj,
+        body.instruction,
+        selection=body.selection,
+        active_reference_id=body.activeReferenceId,
+    )
+    if routed.get("action") == "stage_proposal":
+        prop = proposals.create_proposal(
+            project_id,
+            summary=routed["summary"],
+            operations=routed["operations"],
+            base_revision=proj.revision,
+            source_agent="local-producer-router",
+        )
+        return {
+            "supported": True,
+            "action": "proposal_created",
+            "proposal": prop,
+            "messageKo": f"변경 제안이 생성되었습니다: {prop['summary']}. 확인 후 '적용'을 눌러 반영하세요.",
+            "messageEn": f"Change proposal staged: {prop['summary']}. Click Apply to commit.",
+        }
+    return routed
+
+
+@app.get("/api/events")
+async def sse_events(request: Request, projectId: str | None = None):
+    """Server-Sent Events stream for real-time Agent Bridge & external MCP synchronization."""
+    loop = asyncio.get_running_loop()
+    q = session.event_bus.subscribe(loop)
+
+    async def stream():
+        last_seen_rev: int | None = None
+        last_seen_prop_sig: str = ""
+        if projectId:
+            try:
+                last_seen_rev = store.load_project(projectId).revision
+                last_seen_prop_sig = json.dumps(proposals.list_proposals(projectId, status="pending"), sort_keys=True)
+            except Exception:
+                pass
+        try:
+            yield f"data: {json.dumps({'type': 'connected', 'payload': {'projectId': projectId}})}\n\n"
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    msg = await asyncio.wait_for(q.get(), timeout=1.0)
+                    yield f"data: {json.dumps(msg, ensure_ascii=False)}\n\n"
+                    if msg.get("type") == "project.updated" and msg.get("payload", {}).get("projectId") == projectId:
+                        last_seen_rev = msg["payload"].get("revision")
+                except asyncio.TimeoutError:
+                    # Also detect external STDIO MCP process writes on disk!
+                    if projectId:
+                        try:
+                            cur = store.load_project(projectId)
+                            if last_seen_rev is not None and cur.revision != last_seen_rev:
+                                last_seen_rev = cur.revision
+                                evt = {
+                                    "type": "project.updated",
+                                    "payload": {
+                                        "projectId": projectId,
+                                        "revision": cur.revision,
+                                        "reason": "External agent update",
+                                        "project": cur.model_dump(),
+                                    },
+                                }
+                                yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
+                            pend = proposals.list_proposals(projectId, status="pending")
+                            sig = json.dumps(pend, sort_keys=True)
+                            if sig != last_seen_prop_sig:
+                                last_seen_prop_sig = sig
+                                evt = {
+                                    "type": "proposals.synced",
+                                    "payload": {"projectId": projectId, "proposals": pend},
+                                }
+                                yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
+                        except Exception:
+                            pass
+                    yield ": keepalive\n\n"
+        finally:
+            session.event_bus.unsubscribe(loop, q)
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 

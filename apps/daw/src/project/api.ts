@@ -1,13 +1,16 @@
 import type {
   AnalysisJobStatus,
   Asset,
+  ChangeProposal,
   HealthInfo,
   LibraryItem,
   MidiNote,
+  ProducerInstructResponse,
   Project,
   ProjectSummary,
   ReferenceComparisonResult,
   ReferenceItem,
+  SelectionContext,
   WaveformData,
 } from "./types";
 
@@ -278,5 +281,60 @@ export const dawApi = {
         body: JSON.stringify({ targetKind, targetId }),
       }
     );
+  },
+
+  syncSessionState(body: {
+    sessionId: string;
+    projectId: string | null;
+    revision: number | null;
+    selection: SelectionContext;
+    activeReferenceId: string | null;
+    locale: string;
+    claimActive?: boolean;
+  }): Promise<Record<string, unknown>> {
+    return apiFetch("/api/session/state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  listProposals(projectId: string, status = "pending"): Promise<{ proposals: ChangeProposal[] }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/proposals?status=${encodeURIComponent(status)}`
+    );
+  },
+
+  applyProposal(
+    projectId: string,
+    proposalId: string
+  ): Promise<{ proposal: ChangeProposal; project: Project }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/proposals/${encodeURIComponent(proposalId)}/apply`,
+      { method: "POST" }
+    );
+  },
+
+  rejectProposal(projectId: string, proposalId: string): Promise<{ proposal: ChangeProposal }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/proposals/${encodeURIComponent(proposalId)}/reject`,
+      { method: "POST" }
+    );
+  },
+
+  sendProducerInstruction(
+    projectId: string,
+    body: {
+      instruction: string;
+      selection: SelectionContext;
+      activeReferenceId: string | null;
+      baseRevision: number;
+    }
+  ): Promise<ProducerInstructResponse> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/producer/instruct`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   },
 };

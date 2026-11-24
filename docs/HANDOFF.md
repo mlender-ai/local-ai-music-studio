@@ -4,44 +4,44 @@
 
 - **Base Commit:** `a5085de` (`main`)
 - **Integration Branch:** `develop/ai-native-daw`
-- **Task Branch:** `feat/daw-workspace-phase-01`
-- **Phase Status:** Phase 01 Workspace Foundation complete and verified; PR opened against `develop/ai-native-daw`.
-
-## Key Added / Modified Files
-
-- **Multi-Agent Docs:** `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/PRODUCT.md`, `docs/DESIGN.md`, `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/DEVELOPMENT.md`, `docs/PROJECT_FORMAT.md`, `docs/STATUS.md`, `docs/HANDOFF.md`, `docs/phases/PHASE_01.md`, `docs/decisions/0001-phase-01-architecture.md`, `docs/screenshots/phase-01-*.png`
-- **Python DAW Backend:** `app/daw_server.py`, `engine/daw_workspace/{schema,midi,waveforms,store,commands,renderer,reaper}.py`
-- **DAW Frontend (`apps/daw/`):** `src/{styles,project,commands,audio,transport,browser,timeline,piano-roll,mixer,producer,workspace}/`, `tests/daw.test.ts`
-- **Scripts & Tests:** `scripts/seed_daw_demos.py`, `scripts/start_daw.sh`, `tests/test_daw_workspace.py`
+- **Stacked Branches (all pushed, unmerged pending user review):**
+  1. `feat/daw-workspace-phase-01` (`f13cc7e`) — PR #15 → `develop/ai-native-daw`
+  2. `fix/daw-phase-01-1-stabilization` (`12aa2b5`) — PR → `feat/daw-workspace-phase-01`
+  3. `feat/daw-korean-localization` (`99d5e14`) — PR → `fix/daw-phase-01-1-stabilization`
+  4. `feat/daw-reference-intelligence` (`fb30864`) — PR → `feat/daw-korean-localization`
+  5. `feat/daw-agent-bridge` (HEAD) — PR → `feat/daw-reference-intelligence`
 
 ## Run Commands
 
 ```bash
-# Single-command launch (seeds demos, builds UI if needed, starts http://127.0.0.1:8796)
+# Single-command launch (auto-detects frontend source changes, seeds demos, starts http://127.0.0.1:8796)
 ./scripts/start_daw.sh
 
-# Verification suites
+# Full verification suites
 .venv/bin/python -m pytest -q
 cd apps/daw && npm test && npm run build
+
+# MCP STDIO server (exposes 9 music.* + 28 daw.* tools)
+.venv/bin/music-mcp
 ```
 
-## Verification Summary
+## Test & QA Summary
 
-- **Python tests:** `35 passed` (31 legacy Local AI Music Studio regression tests + 4 DAW persistence, MIDI SMF, command, path-safety, and signal-level Audio QA tests).
-- **Frontend tests & build:** `5 passed` (Vitest) + clean `tsc -b && vite build`.
-- **Offline Stereo WAV QA:**
-  - Demo B (`demo_multitrack_session`): `48 kHz Stereo PCM24`, `30.0s`, Peak `-3.49 dBFS`, RMS `-18.64 dBFS`, `0` clipped samples.
-  - Demo A (`demo_v72_magnetic_afterhours`): `48 kHz Stereo PCM24`, `30.0s` sample window, Peak `-5.31 dBFS`, RMS `-26.25 dBFS`, `0` clipped samples.
-  - Browser `OfflineAudioContext` export tested live (`Midnight_Studio_Multitrack.wav`, `7.5s` loop, `48 kHz Stereo`, Peak `-0.2 dBFS`).
-- **Live Browser Visual & Functional QA:** Verified at `1440×900` and `1280×800` with `0` console errors and `0` failed HTTP requests across Playback, Piano Roll note add/undo, Mixer console, Demo Project A & B switching, Export, and Panel collapse/expand.
+- **Backend & Legacy Regression:** `40 passed` in `3.29s` (`tests/test_daw_workspace.py`, `tests/test_reference_intelligence.py`, `tests/test_agent_bridge.py` + all 31 legacy tests).
+- **Frontend Unit Tests & Build:** `10 passed` (Vitest: scheduler parity, MIDI chase, revision fingerprint, i18n ko/en parity, IME guard, WAV encoder) + clean `tsc -b && vite build`.
+- **Live Browser QA (`http://127.0.0.1:8796`):**
+  - `1440×900` Korean default UI, `KO ↔ EN` toggle, live `에이전트 브리지 활성` SSE badge, `0` console/HTTP errors.
+  - Real V7.2 Magnetic Afterhours acoustic analysis (`127.9 BPM`, `F mixolydian`, `-18.48 LUFS`, `-1.64 dBFS`, 8 clickable sections, 6 Welch PSD bands, HPSS estimates, Blueprint toggle, Reference vs Mix comparison).
+  - Live Korean Producer Command (`드럼 트랙을 잠깐 뮤트해줘` → Staged Proposal → Apply → immediate Mute + revision bump → Undo; `기타에 EQ랑 리버브 걸어줘` → honest Phase 05 refusal).
+  - `1280×800` responsive Korean layout verified (`내보내기` right edge `1272px <= 1280px`, single-line buttons and Clip Editor footer).
 
-## Known Issues / Minor Notes
+## Unverified / Pending User Input
 
-- At `1280×800`, the rightmost `48.0 kHz · Stereo` metadata label in the Clip Editor footer sits very close to the AI Producer panel divider (~2px trim on the final character when both sidebars are expanded); horizontal scrolling in that footer keeps all controls reachable.
-- Undoing back to the saved snapshot leaves the dirty badge as `Unsaved` until the user saves or re-opens.
+- Subjective listening QA on real playback/editing and external user-supplied reference files (Test B local file).
+- Merging of stacked PRs after user review.
 
-## Next Priorities (Phase 02 — Reference Intelligence)
+## Next Priorities (Phase 03 — AI Composition)
 
-1. Connect audio analysis backend (`engine/analysis/` or reusing `engine/rendering/rhythm.py` + spectral/harmonic estimators) for imported Reference tracks.
-2. Persist `ReferenceBlueprint` JSON inside `project.json` / `assets/references/` and visualize BPM, key, energy curve, and detected sections in the AI Producer Panel.
-3. Expose DAW read/command tools through `app/mcp_server.py` so external agents can inspect Selection Context and propose structured edits.
+1. Connect `ReferenceBlueprint` (`selectedInfluences`, BPM, key, section timeline, energy arc) to local YuE2 / ACE-Step generation adapters behind an explicit job queue respecting existing 10 GiB Apple Silicon memory guards.
+2. Auto-place generated audio/MIDI outputs onto new timeline tracks as staged proposals (`daw.preview_changes`) with non-destructive take comparison.
+3. Add optional stem separation workflow (Demucs/equivalent, explicitly marked `STEM · 추정`) gated behind memory checks.

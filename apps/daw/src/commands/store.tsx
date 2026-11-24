@@ -7,10 +7,12 @@ import type {
   AnalysisJobStatus,
   Asset,
   AssetLoadState,
+  ChangeProposal,
   Clip,
   HealthInfo,
   LibraryItem,
   MidiNote,
+  ProducerInstructResponse,
   Project,
   ProjectSummary,
   ReferenceItem,
@@ -137,6 +139,12 @@ interface DawContextValue {
   runReferenceAnalysis: (refId: string) => Promise<void>;
   cancelReferenceAnalysis: () => Promise<void>;
   toggleBlueprintInfluence: (refId: string, influenceId: string) => Promise<void>;
+  sessionId: string;
+  sseConnected: boolean;
+  pendingProposals: ChangeProposal[];
+  applyPendingProposal: (proposalId: string) => Promise<void>;
+  rejectPendingProposal: (proposalId: string) => Promise<void>;
+  submitProducerInstruction: (instruction: string) => Promise<ProducerInstructResponse | null>;
 }
 
 const DawContext = createContext<DawContextValue | null>(null);
@@ -179,6 +187,9 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [activeReferenceId, setActiveReferenceId] = useState<string | null>(null);
   const [activeAnalysisJob, setActiveAnalysisJob] = useState<AnalysisJobStatus | null>(null);
+  const [sessionId] = useState(() => makeClientId("sess"));
+  const [sseConnected, setSseConnected] = useState(false);
+  const [pendingProposals, setPendingProposals] = useState<ChangeProposal[]>([]);
 
   const projectRef = useRef<Project | null>(null);
   projectRef.current = project;
@@ -1123,6 +1134,167 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     return project.references[0];
   }, [project, activeReferenceId]);
 
+  // Sync live browser SelectionContext & active project to backend Session Registry (for external MCP agents!)
+  useEffect(() => {
+    if (!project) return;
+    const locale = window.localStorage.getItem("ai_native_daw_locale_v1") || "ko";
+    const timer = window.setTimeout(() => {
+      void dawApi
+        .syncSessionState({
+          sessionId,
+          projectId: project.id,
+          revision: savedRevision,
+          selection,
+          activeReferenceId: activeReference?.id ?? null,
+          locale,
+          claimActive: true,
+        })
+        .catch(() => {
+          // non-fatal
+        });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [sessionId, project?.id, savedRevision, selection, activeReference?.id]);
+
+  // Fetch pending proposals & maintain live SSE connection for real-time external agent sync
+  useEffect(() => {
+    if (!project?.id) return;
+    const pid = project.id;
+    let active = true;
+
+    void dawApi
+      .listProposals(pid, "pending")
+      .then((res) => {
+        if (active) setPendingProposals(res.proposals);
+      })
+      .catch(() => {});
+
+    if (typeof EventSource === "undefined") return;
+    const es = new EventSource(`/api/events?projectId=${encodeURIComponent(pid)}`);
+    es.onopen = () => {
+      if (active) setSseConnected(true);
+    };
+    es.onerror = () => {
+      if (active) setSseConnected(false);
+    };
+    es.onmessage = (evt) => {
+      if (!active) return;
+      try {
+        const msg = JSON.parse(evt.data) as { type: string; payload: Record<string, unknown> };
+        if (msg.type === "connected") {
+          setSseConnected(true);
+        } else if (msg.type === "project.updated" && msg.payload.project) {
+          const updated = msg.payload.project as Project;
+          if (updated.id === pid && updated.revision > savedRevisionRef.current) {
+            applyExternalProjectUpdate(
+              updated,
+              typeof msg.payload.reason === "string" ? msg.payload.reason : undefined
+            );
+          }
+        } else if (msg.type === "proposal.created" && msg.payload.proposal) {
+          const prop = msg.payload.proposal as ChangeProposal;
+          if (prop.projectId === pid && prop.status === "pending") {
+            setPendingProposals((prev) =>
+              prev.some((p) => p.id === prop.id) ? prev : [...prev, prop]
+            );
+          }
+        } else if (msg.type === "proposal.updated" && msg.payload.proposal) {
+          const prop = msg.payload.proposal as ChangeProposal;
+          if (prop.projectId === pid) {
+            setPendingProposals((prev) =>
+              prop.status === "pending"
+                ? prev.map((p) => (p.id === prop.id ? prop : p))
+                : prev.filter((p) => p.id !== prop.id)
+            );
+          }
+        } else if (msg.type === "proposals.synced" && Array.isArray(msg.payload.proposals)) {
+          if (msg.payload.projectId === pid) {
+            setPendingProposals(msg.payload.proposals as ChangeProposal[]);
+          }
+        }
+      } catch {
+        // ignore malformed SSE frame
+      }
+    };
+
+    return () => {
+      active = false;
+      es.close();
+      setSseConnected(false);
+    };
+  }, [project?.id, applyExternalProjectUpdate]);
+
+  const applyPendingProposal = useCallback(
+    async (proposalId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.applyProposal(current.id, proposalId);
+        setPendingProposals((prev) => prev.filter((p) => p.id !== proposalId));
+        applyExternalProjectUpdate(res.project, `적용됨: ${res.proposal.summary}`);
+      } catch (err) {
+        if (err instanceof RevisionConflictError) {
+          setRevisionConflict({
+            expectedRevision: savedRevisionRef.current,
+            serverRevision: err.serverRevision,
+            serverProject: err.serverProject,
+          });
+        }
+        showToast((err as Error).message, "error");
+      }
+    },
+    [applyExternalProjectUpdate, showToast]
+  );
+
+  const rejectPendingProposal = useCallback(
+    async (proposalId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        await dawApi.rejectProposal(current.id, proposalId);
+        setPendingProposals((prev) => prev.filter((p) => p.id !== proposalId));
+        showToast("제안이 거절되었습니다.");
+      } catch (err) {
+        showToast((err as Error).message, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const submitProducerInstruction = useCallback(
+    async (instruction: string): Promise<ProducerInstructResponse | null> => {
+      const current = projectRef.current;
+      if (!current || !instruction.trim()) return null;
+      try {
+        // Ensure latest unsaved local edits are synced before staging server proposal
+        if (projectFingerprint(current) !== savedFingerprint) {
+          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          setSavedRevision(saved.revision);
+          setSavedFingerprint(projectFingerprint(saved));
+          setProject(saved);
+        }
+        const res = await dawApi.sendProducerInstruction(current.id, {
+          instruction: instruction.trim(),
+          selection,
+          activeReferenceId: activeReference?.id ?? null,
+          baseRevision: savedRevisionRef.current,
+        });
+        if (res.action === "analyze_reference" && res.referenceId) {
+          await runReferenceAnalysis(res.referenceId);
+        } else if (res.action === "proposal_created" && res.proposal) {
+          setPendingProposals((prev) =>
+            prev.some((p) => p.id === res.proposal!.id) ? prev : [...prev, res.proposal!]
+          );
+        }
+        return res;
+      } catch (err) {
+        showToast((err as Error).message, "error");
+        return null;
+      }
+    },
+    [selection, activeReference?.id, savedFingerprint, runReferenceAnalysis, showToast]
+  );
+
   const selectedTrack = useMemo(() => {
     if (!project || !selection.selectedTrackId) return null;
     return project.tracks.find((t) => t.id === selection.selectedTrackId) ?? null;
@@ -1204,6 +1376,12 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     runReferenceAnalysis,
     cancelReferenceAnalysis,
     toggleBlueprintInfluence,
+    sessionId,
+    sseConnected,
+    pendingProposals,
+    applyPendingProposal,
+    rejectPendingProposal,
+    submitProducerInstruction,
   };
 
   return <DawContext.Provider value={value}>{children}</DawContext.Provider>;
