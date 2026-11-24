@@ -1,10 +1,13 @@
 import type {
+  AnalysisJobStatus,
   Asset,
   HealthInfo,
   LibraryItem,
   MidiNote,
   Project,
   ProjectSummary,
+  ReferenceComparisonResult,
+  ReferenceItem,
   WaveformData,
 } from "./types";
 
@@ -189,5 +192,91 @@ export const dawApi = {
       method: "POST",
       body: form,
     });
+  },
+
+  async importReferenceFile(
+    projectId: string,
+    file: File,
+    attachToRefId?: string
+  ): Promise<{ reference: ReferenceItem; projectRevision: number }> {
+    const form = new FormData();
+    form.append("file", file);
+    if (attachToRefId) form.append("attachToRefId", attachToRefId);
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/references/import`, {
+      method: "POST",
+      body: form,
+    });
+  },
+
+  addReferenceUrl(
+    projectId: string,
+    url: string
+  ): Promise<{ reference: ReferenceItem; projectRevision: number }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/references/url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+  },
+
+  deleteReference(projectId: string, refId: string): Promise<{ deleted: string; projectRevision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}`,
+      { method: "DELETE" }
+    );
+  },
+
+  referenceAudioUrl(projectId: string, refId: string): string {
+    return `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/audio`;
+  },
+
+  startReferenceAnalysis(
+    projectId: string,
+    refId: string,
+    sync = false
+  ): Promise<{ job?: AnalysisJobStatus; reference?: ReferenceItem; projectRevision?: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/analyze?sync=${sync}`,
+      { method: "POST" }
+    );
+  },
+
+  getAnalysisJob(jobId: string): Promise<AnalysisJobStatus> {
+    return apiFetch(`/api/analysis/jobs/${encodeURIComponent(jobId)}`);
+  },
+
+  cancelAnalysisJob(jobId: string): Promise<AnalysisJobStatus> {
+    return apiFetch(`/api/analysis/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST" });
+  },
+
+  updateReferenceBlueprint(
+    projectId: string,
+    refId: string,
+    body: { selectedInfluences?: string[]; sectionRenames?: Record<string, string> }
+  ): Promise<{ reference: ReferenceItem; projectRevision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/blueprint`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  compareReference(
+    projectId: string,
+    refId: string,
+    targetKind: "project_mix" | "asset",
+    targetId?: string
+  ): Promise<ReferenceComparisonResult> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/compare`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetKind, targetId }),
+      }
+    );
   },
 };

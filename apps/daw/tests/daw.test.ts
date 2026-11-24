@@ -38,6 +38,7 @@ function makeSampleProject(): Project {
     loopRegion: { enabled: false, startBeats: 0, endBeats: 16 },
     sections: [{ id: "sec_1", name: "INTRO", startBeats: 0, endBeats: 16, color: "#49505e" }],
     assets: [],
+    references: [],
     tracks: [
       {
         id: "trk_a",
