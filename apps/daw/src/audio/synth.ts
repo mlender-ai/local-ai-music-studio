@@ -1,7 +1,7 @@
 /**
  * Shared basic polyphonic synth voice used by BOTH Realtime Web Audio playback
  * and OfflineAudioContext WAV export so preview and export sound identical.
- * Phase 01 scope: clean electric-synth auditioning & verification tone.
+ * Supports `chased: true` for smooth mid-note MIDI Chase re-entry.
  */
 export function scheduleSynthVoice(
   ctx: BaseAudioContext,
@@ -10,12 +10,13 @@ export function scheduleSynthVoice(
   velocity: number,
   startTime: number,
   durationSec: number,
-  clipGainLinear = 1.0
+  clipGainLinear = 1.0,
+  chased = false
 ): OscillatorNode[] {
   const freq = 440 * Math.pow(2, (pitch - 69) / 12);
   const safeStart = Math.max(ctx.currentTime, startTime);
-  const safeDur = Math.max(0.03, durationSec);
-  const release = 0.08;
+  const safeDur = Math.max(0.025, durationSec);
+  const release = 0.065;
   const stopTime = safeStart + safeDur + release;
 
   const oscMain = ctx.createOscillator();
@@ -30,16 +31,31 @@ export function scheduleSynthVoice(
   oscSub.frequency.setValueAtTime(freq, safeStart);
 
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(Math.min(6200, freq * 6), safeStart);
-  filter.frequency.exponentialRampToValueAtTime(Math.max(420, freq * 2.2), safeStart + Math.min(0.25, safeDur));
+  if (chased) {
+    // Sustained timbre when chasing mid-note (skip percussive attack sweep)
+    filter.frequency.setValueAtTime(Math.max(420, freq * 2.4), safeStart);
+  } else {
+    filter.frequency.setValueAtTime(Math.min(6200, freq * 6), safeStart);
+    filter.frequency.exponentialRampToValueAtTime(
+      Math.max(420, freq * 2.2),
+      safeStart + Math.min(0.25, safeDur)
+    );
+  }
   filter.Q.setValueAtTime(1.2, safeStart);
 
   const peakGain = (Math.max(1, Math.min(127, velocity)) / 127) * 0.22 * clipGainLinear;
   const sustainGain = peakGain * 0.58;
 
   amp.gain.setValueAtTime(0.0001, safeStart);
-  amp.gain.linearRampToValueAtTime(peakGain, safeStart + 0.008);
-  amp.gain.exponentialRampToValueAtTime(Math.max(0.0002, sustainGain), safeStart + Math.min(0.14, safeDur));
+  if (chased) {
+    amp.gain.linearRampToValueAtTime(Math.max(0.0002, sustainGain), safeStart + 0.006);
+  } else {
+    amp.gain.linearRampToValueAtTime(peakGain, safeStart + 0.008);
+    amp.gain.exponentialRampToValueAtTime(
+      Math.max(0.0002, sustainGain),
+      safeStart + Math.min(0.14, safeDur)
+    );
+  }
   amp.gain.setValueAtTime(Math.max(0.0002, sustainGain), safeStart + safeDur);
   amp.gain.linearRampToValueAtTime(0.0001, stopTime);
 

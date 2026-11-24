@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { encodeStereoWav24 } from "../src/audio/wavEncoder";
-import { isTrackAudible } from "../src/audio/audioEngine";
+import {
+  collectMidiEventsForWindow,
+  computeAudioClipSegment,
+  findBrokenAudibleAssets,
+  isTrackAudible,
+} from "../src/audio/scheduler";
 import { executeCommand } from "../src/commands/executor";
+import { projectFingerprint } from "../src/commands/store";
 import {
   beatsToSeconds,
   beatsToTicks,
@@ -17,7 +23,8 @@ import type { Project, Track } from "../src/project/types";
 function makeSampleProject(): Project {
   return {
     id: "proj_test",
-    schemaVersion: "1.0.0",
+    schemaVersion: "1.1.0",
+    revision: 1,
     name: "Test Session",
     bpm: 120,
     timeSignature: { numerator: 4, denominator: 4 },
@@ -188,5 +195,60 @@ describe("Mute/Solo logic & 24-bit Stereo WAV encoder", () => {
     expect(view.getUint32(24, true)).toBe(48000); // 48 kHz
     expect(view.getUint16(34, true)).toBe(24); // 24-bit
     expect(buf.byteLength).toBe(44 + 4 * 2 * 3);
+  });
+});
+
+describe("Phase 01.1 Stabilization: Shared Scheduler, MIDI Chase & Revision Fingerprint", () => {
+  it("chases sustained MIDI notes when playback starts mid-note and clips at loop end", () => {
+    const proj = makeSampleProject();
+    const midiClip = proj.tracks[1].clips[0];
+    // Clip starts at beat 4 (2.0s at 120 BPM). Note n1 starts at clip beat 0 (2.0s), duration 2 beats (1.0s -> ends 3.0s).
+    // Seek mid-note to 2.4s (with loop end at 2.8s): should chase remaining 0.4s!
+    const events = collectMidiEventsForWindow(midiClip, 120, 2.4, 2.6, 2.8, true, 0);
+    expect(events).toHaveLength(1);
+    expect(events[0].noteId).toBe("n1");
+    expect(events[0].chased).toBe(true);
+    expect(events[0].songStartSec).toBeCloseTo(2.4, 5);
+    expect(events[0].durationSec).toBeCloseTo(0.4, 5); // clipped at boundaryLimitSec=2.8s!
+
+    // Without allowChase (subsequent lookahead tick), same sustained note must NOT re-trigger
+    const secondTick = collectMidiEventsForWindow(midiClip, 120, 2.6, 2.8, 2.8, false, 0);
+    expect(secondTick).toHaveLength(0);
+  });
+
+  it("computes identical audio clip segment bounds for realtime and offline paths", () => {
+    const proj = makeSampleProject();
+    const audioClip = proj.tracks[0].clips[0];
+    // Clip starts at 0s, duration 4s (8 beats @ 120 BPM), buffer 4s. Start window at 1.5s, loop end 3.0s.
+    const seg = computeAudioClipSegment(audioClip, 120, 4.0, 1.5, 1.7, 3.0);
+    expect(seg).not.toBeNull();
+    expect(seg!.songStartSec).toBeCloseTo(1.5, 5);
+    expect(seg!.sourceStartSec).toBeCloseTo(1.5, 5);
+    expect(seg!.playDurSec).toBeCloseTo(1.5, 5);
+  });
+
+  it("detects broken audible audio assets and ignores muted broken tracks", () => {
+    const proj = makeSampleProject();
+    const broken = findBrokenAudibleAssets(
+      proj,
+      { ast_1: { status: "error", error: "404 missing" } },
+      () => false
+    );
+    expect(broken).toHaveLength(1);
+    expect(broken[0].assetId).toBe("ast_1");
+
+    const mutedProj = executeCommand(proj, {
+      type: "track.setMute",
+      payload: { trackId: "trk_a", mute: true },
+    });
+    expect(
+      findBrokenAudibleAssets(mutedProj, { ast_1: { status: "error", error: "404" } }, () => false)
+    ).toHaveLength(0);
+  });
+
+  it("produces identical fingerprint after undo back to saved state regardless of updatedAt/revision", () => {
+    const p1 = makeSampleProject();
+    const p2 = { ...makeSampleProject(), revision: 5, updatedAt: "2026-12-01T00:00:00Z" };
+    expect(projectFingerprint(p1)).toBe(projectFingerprint(p2));
   });
 });

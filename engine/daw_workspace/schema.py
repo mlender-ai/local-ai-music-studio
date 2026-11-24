@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 DEFAULT_PPQ = 480
 DEFAULT_SAMPLE_RATE = 48000
 
@@ -125,6 +125,7 @@ class Asset(DawModel):
 class Project(DawModel):
     id: str = Field(default_factory=lambda: make_id("proj"))
     schemaVersion: str = SCHEMA_VERSION
+    revision: int = Field(default=1, ge=1)
     name: str = Field(default="Untitled 01", min_length=1, max_length=120)
     bpm: float = Field(default=128.0, ge=30.0, le=300.0)
     timeSignature: TimeSignature = Field(default_factory=TimeSignature)
@@ -138,6 +139,7 @@ class Project(DawModel):
     sections: list[SectionMarker] = Field(default_factory=list)
     assets: list[Asset] = Field(default_factory=list)
     tracks: list[Track] = Field(default_factory=list)
+    references: list[dict[str, Any]] = Field(default_factory=list)
     notes: str = ""
     createdAt: str = Field(default_factory=utc_now_iso)
     updatedAt: str = Field(default_factory=utc_now_iso)
@@ -146,6 +148,7 @@ class Project(DawModel):
 class ProjectSummary(DawModel):
     id: str
     name: str
+    revision: int = 1
     bpm: float
     timeSignature: TimeSignature
     trackCount: int
@@ -159,3 +162,4 @@ class ProjectSummary(DawModel):
 class CommandRequest(DawModel):
     type: str = Field(min_length=1, max_length=80)
     payload: dict[str, Any] = Field(default_factory=dict)
+    expectedRevision: int | None = Field(default=None, ge=1)

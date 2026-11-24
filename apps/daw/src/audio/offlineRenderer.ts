@@ -1,6 +1,12 @@
 import { beatsToSeconds, dbToLinear } from "../project/time";
 import type { Project } from "../project/types";
-import { isTrackAudible, RealtimeAudioEngine } from "./audioEngine";
+import { RealtimeAudioEngine } from "./audioEngine";
+import {
+  collectMidiEventsForWindow,
+  computeAudioClipSegment,
+  findBrokenAudibleAssets,
+  isTrackAudible,
+} from "./scheduler";
 import { scheduleSynthVoice } from "./synth";
 import { audioBufferToWavBlob } from "./wavEncoder";
 
@@ -16,8 +22,9 @@ export interface OfflineExportResult {
 
 /**
  * Offline Stereo WAV Renderer using Web Audio OfflineAudioContext.
- * Mirrors RealtimeAudioEngine scheduling, clip trim/loop, track gain/pan,
- * mute/solo, MIDI synthesis, and master gain identically.
+ * Shares the EXACT `computeAudioClipSegment` and `collectMidiEventsForWindow`
+ * scheduling rules as RealtimeAudioEngine, and refuses silent omission of
+ * missing/broken audio assets.
  */
 export async function renderProjectOfflineWav(
   project: Project,
@@ -26,12 +33,26 @@ export async function renderProjectOfflineWav(
 ): Promise<OfflineExportResult> {
   await engine.preloadProjectAudio(project);
 
+  // Refuse to silently omit broken/missing audible audio assets
+  const broken = findBrokenAudibleAssets(
+    project,
+    engine.getAssetStates(project.id),
+    (assetId) => Boolean(engine.getCachedBuffer(project.id, assetId))
+  );
+  if (broken.length > 0) {
+    const first = broken[0];
+    throw new Error(
+      `Cannot export: audio asset for "${first.trackName} / ${first.clipName}" failed to load (${first.reason}). Relink or retry loading first.`
+    );
+  }
+
   const sr = project.sampleRate || 48000;
-  const secPerBeat = 60 / project.bpm;
   const startBeats = options?.useLoopRange && project.loopRegion.enabled ? project.loopRegion.startBeats : 0;
   const endBeats =
     options?.useLoopRange && project.loopRegion.enabled ? project.loopRegion.endBeats : project.lengthBeats;
-  const durationSec = Math.max(0.25, beatsToSeconds(endBeats - startBeats, project.bpm));
+  const startSec = beatsToSeconds(startBeats, project.bpm);
+  const endSec = beatsToSeconds(endBeats, project.bpm);
+  const durationSec = Math.max(0.25, endSec - startSec);
   const frameCount = Math.ceil(durationSec * sr);
 
   const offline = new OfflineAudioContext(2, frameCount, sr);
@@ -49,75 +70,46 @@ export async function renderProjectOfflineWav(
     panner.connect(masterGain);
 
     for (const clip of track.clips) {
-      const clipStartSec = (clip.timelineStartBeats - startBeats) * secPerBeat;
-      const clipDurSec = clip.durationBeats * secPerBeat;
-      const clipEndSec = clipStartSec + clipDurSec;
-      if (clipEndSec <= 0 || clipStartSec >= durationSec) continue;
-
-      const clipGainLin = dbToLinear(clip.gainDb);
-      if (clipGainLin <= 0) continue;
-
       if (clip.type === "audio" && clip.assetId) {
         const buf = engine.getCachedBuffer(project.id, clip.assetId);
         if (!buf) continue;
-        const loopWindowSec = Math.max(
-          0.05,
-          Math.min(buf.duration - clip.sourceOffsetSec, clip.loopLengthSec ?? buf.duration - clip.sourceOffsetSec)
-        );
-        const startInRender = Math.max(0, clipStartSec);
-        const intoClipSec = startInRender - clipStartSec;
-        const playDurSec = Math.min(durationSec, clipEndSec) - startInRender;
-        if (playDurSec <= 0.005) continue;
+        const seg = computeAudioClipSegment(clip, project.bpm, buf.duration, startSec, endSec, endSec);
+        if (!seg) continue;
 
+        const when = Math.max(0, seg.songStartSec - startSec);
         const src = offline.createBufferSource();
         src.buffer = buf;
+
         const cg = offline.createGain();
-        cg.gain.setValueAtTime(0.0001, startInRender);
-        cg.gain.linearRampToValueAtTime(clipGainLin, startInRender + 0.003);
-        if (playDurSec > 0.008) {
-          cg.gain.setValueAtTime(clipGainLin, startInRender + playDurSec - 0.004);
-          cg.gain.linearRampToValueAtTime(0.0001, startInRender + playDurSec);
+        cg.gain.setValueAtTime(0.0001, when);
+        cg.gain.linearRampToValueAtTime(seg.clipGainLinear, when + 0.003);
+        if (seg.playDurSec > 0.008) {
+          cg.gain.setValueAtTime(seg.clipGainLinear, when + seg.playDurSec - 0.004);
+          cg.gain.linearRampToValueAtTime(0.0001, when + seg.playDurSec);
         }
         src.connect(cg);
         cg.connect(trackGain);
 
-        if (clip.loop) {
+        if (seg.loop) {
           src.loop = true;
-          src.loopStart = clip.sourceOffsetSec;
-          src.loopEnd = Math.min(buf.duration, clip.sourceOffsetSec + loopWindowSec);
-          src.start(startInRender, clip.sourceOffsetSec + (intoClipSec % loopWindowSec), playDurSec);
-        } else {
-          const offset = clip.sourceOffsetSec + intoClipSec;
-          const avail = buf.duration - offset;
-          if (avail > 0.005) {
-            src.start(startInRender, offset, Math.min(playDurSec, avail));
-          }
+          src.loopStart = seg.loopStartSec;
+          src.loopEnd = seg.loopEndSec;
         }
+        src.start(when, seg.sourceStartSec, seg.playDurSec);
       } else if (clip.type === "midi" && clip.notes.length > 0) {
-        const maxNoteEnd = clip.notes.reduce((m, n) => Math.max(m, n.startBeat + n.durationBeats), 4);
-        const loopLenBeats = clip.loopLengthBeats ?? Math.max(4, Math.ceil(maxNoteEnd / 4) * 4);
-        const reps = clip.loop ? Math.ceil(clip.durationBeats / loopLenBeats) : 1;
-
-        for (let rep = 0; rep < reps; rep++) {
-          const repOffset = rep * loopLenBeats;
-          for (const note of clip.notes) {
-            const relStart = repOffset + note.startBeat;
-            if (relStart >= clip.durationBeats) continue;
-            const clippedDur = Math.min(note.durationBeats, clip.durationBeats - relStart);
-            if (clippedDur <= 0) continue;
-            const noteStartSec = clipStartSec + relStart * secPerBeat;
-            const noteDurSec = clippedDur * secPerBeat;
-            if (noteStartSec + noteDurSec <= 0 || noteStartSec >= durationSec) continue;
-            scheduleSynthVoice(
-              offline,
-              trackGain,
-              note.pitch,
-              note.velocity,
-              Math.max(0, noteStartSec),
-              noteDurSec,
-              clipGainLin
-            );
-          }
+        const events = collectMidiEventsForWindow(clip, project.bpm, startSec, endSec, endSec, true, 0);
+        for (const ev of events) {
+          const when = Math.max(0, ev.songStartSec - startSec);
+          scheduleSynthVoice(
+            offline,
+            trackGain,
+            ev.pitch,
+            ev.velocity,
+            when,
+            ev.durationSec,
+            ev.clipGainLinear,
+            ev.chased
+          );
         }
       }
     }

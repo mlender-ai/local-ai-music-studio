@@ -75,6 +75,7 @@ export interface Asset {
 export interface Project {
   id: string;
   schemaVersion: string;
+  revision: number;
   name: string;
   bpm: number;
   timeSignature: TimeSignature;
@@ -86,6 +87,7 @@ export interface Project {
   sections: SectionMarker[];
   assets: Asset[];
   tracks: Track[];
+  references?: Record<string, unknown>[];
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -94,6 +96,7 @@ export interface Project {
 export interface ProjectSummary {
   id: string;
   name: string;
+  revision: number;
   bpm: number;
   timeSignature: TimeSignature;
   trackCount: number;
@@ -102,6 +105,11 @@ export interface ProjectSummary {
   updatedAt: string;
   createdAt: string;
   hasAutosave: boolean;
+}
+
+export interface AssetLoadState {
+  status: "loading" | "ready" | "error";
+  error?: string;
 }
 
 export interface WaveformData {

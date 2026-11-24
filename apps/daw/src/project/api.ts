@@ -8,16 +8,36 @@ import type {
   WaveformData,
 } from "./types";
 
+export class RevisionConflictError extends Error {
+  serverRevision: number;
+  serverProject: Project;
+
+  constructor(message: string, serverRevision: number, serverProject: Project) {
+    super(message);
+    this.name = "RevisionConflictError";
+    this.serverRevision = serverRevision;
+    this.serverProject = serverProject;
+  }
+}
+
 async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
+    let payload: Record<string, unknown> | null = null;
     try {
-      const err = await res.json();
-      if (err?.error) msg = err.error;
-      else if (err?.detail) msg = String(err.detail);
+      payload = (await res.json()) as Record<string, unknown>;
+      if (typeof payload?.error === "string") msg = payload.error;
+      else if (payload?.detail) msg = String(payload.detail);
     } catch {
       // ignore non-json error body
+    }
+    if (res.status === 409 && payload?.code === "REVISION_CONFLICT" && payload.serverProject) {
+      throw new RevisionConflictError(
+        msg,
+        Number(payload.serverRevision ?? 0),
+        payload.serverProject as Project
+      );
     }
     throw new Error(msg);
   }
@@ -51,16 +71,21 @@ export const dawApi = {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}`);
   },
 
-  saveProject(project: Project): Promise<Project> {
-    return apiFetch(`/api/projects/${encodeURIComponent(project.id)}`, {
+  saveProject(project: Project, expectedRevision?: number): Promise<Project> {
+    const q = expectedRevision !== undefined ? `?expectedRevision=${expectedRevision}` : "";
+    return apiFetch(`/api/projects/${encodeURIComponent(project.id)}${q}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(project),
     });
   },
 
-  autosaveProject(project: Project): Promise<{ saved: boolean; updatedAt: string }> {
-    return apiFetch(`/api/projects/${encodeURIComponent(project.id)}/autosave`, {
+  autosaveProject(
+    project: Project,
+    expectedRevision?: number
+  ): Promise<{ saved: boolean; revision: number; updatedAt: string }> {
+    const q = expectedRevision !== undefined ? `?expectedRevision=${expectedRevision}` : "";
+    return apiFetch(`/api/projects/${encodeURIComponent(project.id)}/autosave${q}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(project),
@@ -93,7 +118,11 @@ export const dawApi = {
     projectId: string,
     file: File,
     kind?: "audio" | "midi" | "reference"
-  ): Promise<{ asset: Asset; midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number } }> {
+  ): Promise<{
+    asset: Asset;
+    projectRevision?: number;
+    midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number };
+  }> {
     const form = new FormData();
     form.append("file", file);
     if (kind) form.append("kind", kind);
@@ -101,6 +130,22 @@ export const dawApi = {
       method: "POST",
       body: form,
     });
+  },
+
+  async relinkAsset(
+    projectId: string,
+    assetId: string,
+    file: File
+  ): Promise<{ asset: Asset; projectRevision: number }> {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/assets/${encodeURIComponent(assetId)}/relink`,
+      {
+        method: "POST",
+        body: form,
+      }
+    );
   },
 
   assetFileUrl(projectId: string, assetId: string): string {
@@ -121,7 +166,11 @@ export const dawApi = {
     projectId: string,
     libraryId: string,
     kind?: "audio" | "reference"
-  ): Promise<{ asset: Asset; midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number } }> {
+  ): Promise<{
+    asset: Asset;
+    projectRevision?: number;
+    midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number };
+  }> {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/assets/import-library`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
