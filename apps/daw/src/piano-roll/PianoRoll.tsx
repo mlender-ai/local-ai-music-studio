@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { audioEngine } from "../audio/audioEngine";
+import { STUDIO_INSTRUMENTS } from "../audio/instruments";
 import { makeClientId } from "../commands/executor";
 import { useDaw } from "../commands/store";
 import { useI18n } from "../i18n";
 import { isBlackKey, midiPitchToName, snapBeats } from "../project/time";
 import type { MidiNote } from "../project/types";
 
-const MIN_PITCH = 48; // C3
-const MAX_PITCH = 84; // C6
+const MIN_PITCH = 30; // F#1 (covers Drums 36-50 & Bass 31-52!)
+const MAX_PITCH = 88; // E6
 const KEY_WIDTH = 48;
 const ROW_H = 14;
 const PX_PER_BEAT = 56;
@@ -38,15 +39,18 @@ export function PianoRoll() {
   const lastAuditionedPitchRef = useRef<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Pick selected MIDI clip, or fall back to first MIDI clip in project
-  const midiClip = useMemo(() => {
-    if (selectedClip?.type === "midi") return selectedClip;
-    if (!project) return null;
-    for (const t of project.tracks) {
-      const c = t.clips.find((cl) => cl.type === "midi");
-      if (c) return c;
+  // Pick selected MIDI clip + owning track (for multi-timbre instrument audition & selector!)
+  const { midiClip, ownerTrack } = useMemo(() => {
+    if (selectedClip?.type === "midi" && project) {
+      const trk = project.tracks.find((tr) => tr.clips.some((cl) => cl.id === selectedClip.id)) ?? null;
+      return { midiClip: selectedClip, ownerTrack: trk };
     }
-    return null;
+    if (!project) return { midiClip: null, ownerTrack: null };
+    for (const tr of project.tracks) {
+      const c = tr.clips.find((cl) => cl.type === "midi");
+      if (c) return { midiClip: c, ownerTrack: tr };
+    }
+    return { midiClip: null, ownerTrack: null };
   }, [project, selectedClip]);
 
   // Auto-center scroll vertically around the clip's notes whenever opened or clip changes
@@ -81,7 +85,7 @@ export function PianoRoll() {
         );
         if (lastAuditionedPitchRef.current !== nextPitch) {
           lastAuditionedPitchRef.current = nextPitch;
-          audioEngine.auditionMidiNote(nextPitch, 96, 0.16);
+          audioEngine.auditionMidiNote(nextPitch, 96, 0.16, ownerTrack?.instrumentRef);
         }
         dispatch(
           {
@@ -160,7 +164,7 @@ export function PianoRoll() {
     };
     dispatch({ type: "midi.addNote", payload: { clipId: midiClip.id, note } });
     setSelectedNoteId(note.id);
-    audioEngine.auditionMidiNote(pitch, 100, 0.24);
+    audioEngine.auditionMidiNote(pitch, 100, 0.24, ownerTrack?.instrumentRef);
   };
 
   const relPlayheadBeats = playheadBeats - midiClip.timelineStartBeats;
@@ -185,8 +189,27 @@ export function PianoRoll() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <strong style={{ color: "var(--text-primary)" }}>{midiClip.name}</strong>
           <span style={{ color: "var(--text-muted)" }} className="mono">
-            {t("pianoRoll.notesInfo", { count: midiClip.notes.length })}
+            {midiClip.notes.length} notes
           </span>
+          {ownerTrack && (
+            <select
+              value={ownerTrack.instrumentRef ?? "basic-poly-synth"}
+              onChange={(e) =>
+                dispatch({
+                  type: "track.setInstrument",
+                  payload: { trackId: ownerTrack.id, instrumentRef: e.target.value },
+                })
+              }
+              data-testid="piano-roll-instrument-select"
+              style={{ height: 20, fontSize: 10 }}
+            >
+              {STUDIO_INSTRUMENTS.map((inst) => (
+                <option key={inst.id} value={inst.id}>
+                  {inst.name}
+                </option>
+              ))}
+            </select>
+          )}
           <label style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--text-secondary)" }}>
             {t("timeline.snap")}
             <select
@@ -250,7 +273,7 @@ export function PianoRoll() {
             return (
               <div
                 key={pitch}
-                onMouseDown={() => audioEngine.auditionMidiNote(pitch, 100, 0.25)}
+                onMouseDown={() => audioEngine.auditionMidiNote(pitch, 100, 0.25, ownerTrack?.instrumentRef)}
                 title={`Audition ${midiPitchToName(pitch)}`}
                 style={{
                   height: ROW_H,

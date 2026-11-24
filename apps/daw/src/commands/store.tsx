@@ -9,14 +9,19 @@ import type {
   AssetLoadState,
   ChangeProposal,
   Clip,
+  CompositionPlan,
+  GenerationEngineInfo,
+  GenerationJobStatus,
   HealthInfo,
   LibraryItem,
   MidiNote,
   ProducerInstructResponse,
   Project,
   ProjectSummary,
+  ProviderSummary,
   ReferenceItem,
   SelectionContext,
+  Take,
   Track,
   TrackMeterLevel,
   WaveformData,
@@ -145,6 +150,26 @@ interface DawContextValue {
   applyPendingProposal: (proposalId: string) => Promise<void>;
   rejectPendingProposal: (proposalId: string) => Promise<void>;
   submitProducerInstruction: (instruction: string) => Promise<ProducerInstructResponse | null>;
+  // Phase 03 AI Composition Engine
+  providerSummary: ProviderSummary | null;
+  generationEngines: GenerationEngineInfo[];
+  activePlan: CompositionPlan | null;
+  setActivePlan: (plan: CompositionPlan | null) => void;
+  activeGenerationJob: GenerationJobStatus | null;
+  takes: Take[];
+  selectAiProvider: (providerId: string) => Promise<void>;
+  requestCompositionPlan: (
+    instruction: string,
+    opts?: { mode?: string; targetInstrument?: string; useReference?: boolean }
+  ) => Promise<CompositionPlan | null>;
+  startGenerationFromPlan: (plan: CompositionPlan, engine?: string) => Promise<void>;
+  cancelActiveGeneration: () => Promise<void>;
+  applyGeneratedTake: (
+    takeId: string,
+    applyMode: "new_tracks" | "selected_range" | "new_project" | "keep_take",
+    targetTrackId?: string | null
+  ) => Promise<void>;
+  rejectGeneratedTake: (takeId: string) => Promise<void>;
 }
 
 const DawContext = createContext<DawContextValue | null>(null);
@@ -190,6 +215,10 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const [sessionId] = useState(() => makeClientId("sess"));
   const [sseConnected, setSseConnected] = useState(false);
   const [pendingProposals, setPendingProposals] = useState<ChangeProposal[]>([]);
+  const [providerSummary, setProviderSummary] = useState<ProviderSummary | null>(null);
+  const [generationEngines, setGenerationEngines] = useState<GenerationEngineInfo[]>([]);
+  const [activePlan, setActivePlan] = useState<CompositionPlan | null>(null);
+  const [activeGenerationJob, setActiveGenerationJob] = useState<GenerationJobStatus | null>(null);
 
   const projectRef = useRef<Project | null>(null);
   projectRef.current = project;
@@ -307,6 +336,8 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       setRevisionConflict(null);
       setLastSavedAt(loaded.updatedAt);
       setActiveReferenceId(loaded.references?.[0]?.id ?? null);
+      const loadedPlans = loaded.compositionPlans ?? [];
+      setActivePlan(loadedPlans.length > 0 ? loadedPlans[loadedPlans.length - 1] : null);
 
       const restoredTrack =
         restoreSessionState && prefs.lastTrackId
@@ -349,8 +380,16 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     let active = true;
     (async () => {
       try {
-        const h = await dawApi.health();
-        if (active) setHealth(h);
+        const [h, provs, engs] = await Promise.all([
+          dawApi.health(),
+          dawApi.getProviders().catch(() => null),
+          dawApi.getGenerationEngines().catch(() => null),
+        ]);
+        if (active) {
+          setHealth(h);
+          if (provs) setProviderSummary(provs);
+          if (engs) setGenerationEngines(engs.engines);
+        }
       } catch {
         // backend unavailable warning handled below
       }
@@ -1171,11 +1210,34 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
 
     if (typeof EventSource === "undefined") return;
     const es = new EventSource(`/api/events?projectId=${encodeURIComponent(pid)}`);
+    let hadDisconnect = false;
     es.onopen = () => {
-      if (active) setSseConnected(true);
+      if (!active) return;
+      setSseConnected(true);
+      if (hadDisconnect) {
+        hadDisconnect = false;
+        // Phase 03-A: recover latest project revision & pending proposals after SSE drop
+        void dawApi
+          .openProject(pid)
+          .then((latest) => {
+            if (active && latest.revision > savedRevisionRef.current) {
+              applyExternalProjectUpdate(latest, "연결 복구 후 최신 상태 동기화됨");
+            }
+          })
+          .catch(() => {});
+        void dawApi
+          .listProposals(pid, "pending")
+          .then((res) => {
+            if (active) setPendingProposals(res.proposals);
+          })
+          .catch(() => {});
+      }
     };
     es.onerror = () => {
-      if (active) setSseConnected(false);
+      if (active) {
+        hadDisconnect = true;
+        setSseConnected(false);
+      }
     };
     es.onmessage = (evt) => {
       if (!active) return;
@@ -1210,6 +1272,28 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         } else if (msg.type === "proposals.synced" && Array.isArray(msg.payload.proposals)) {
           if (msg.payload.projectId === pid) {
             setPendingProposals(msg.payload.proposals as ChangeProposal[]);
+          }
+        } else if (msg.type === "generation.job.updated" && msg.payload.job) {
+          const job = msg.payload.job as GenerationJobStatus;
+          if (job.projectId === pid) {
+            setActiveGenerationJob(job);
+          }
+        } else if (msg.type === "take.created" && msg.payload.take) {
+          const take = msg.payload.take as Take;
+          if (take.projectId === pid) {
+            void dawApi
+              .openProject(pid)
+              .then((latest) => {
+                if (!active) return;
+                setProject((prev) => {
+                  if (!prev || prev.id !== latest.id) return prev;
+                  const next = { ...prev, revision: latest.revision, takes: latest.takes, compositionPlans: latest.compositionPlans };
+                  setSavedRevision(latest.revision);
+                  setSavedFingerprint(projectFingerprint(next));
+                  return next;
+                });
+              })
+              .catch(() => {});
           }
         }
       } catch {
@@ -1285,6 +1369,16 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
           setPendingProposals((prev) =>
             prev.some((p) => p.id === res.proposal!.id) ? prev : [...prev, res.proposal!]
           );
+        } else if (res.action === "composition_plan_created" && res.plan) {
+          setActivePlan(res.plan);
+          if (res.projectRevision) setSavedRevision(res.projectRevision);
+          setProject((prev) => {
+            if (!prev) return prev;
+            const plans = [...(prev.compositionPlans ?? []).filter((p) => p.id !== res.plan!.id), res.plan!];
+            const next = { ...prev, revision: res.projectRevision ?? prev.revision, compositionPlans: plans };
+            setSavedFingerprint(projectFingerprint(next));
+            return next;
+          });
         }
         return res;
       } catch (err) {
@@ -1294,6 +1388,183 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     },
     [selection, activeReference?.id, savedFingerprint, runReferenceAnalysis, showToast]
   );
+
+  // --- Phase 03 AI Composition Engine Store Actions ---
+
+  const selectAiProvider = useCallback(
+    async (providerId: string) => {
+      try {
+        const updated = await dawApi.selectProvider(providerId);
+        setProviderSummary(updated);
+        showToast(`AI Producer 프로바이더 변경됨: ${providerId}`);
+      } catch (err) {
+        showToast((err as Error).message, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const requestCompositionPlan = useCallback(
+    async (
+      instruction: string,
+      opts?: { mode?: string; targetInstrument?: string; useReference?: boolean }
+    ): Promise<CompositionPlan | null> => {
+      const current = projectRef.current;
+      if (!current || !instruction.trim()) return null;
+      try {
+        if (projectFingerprint(current) !== savedFingerprint) {
+          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          setSavedRevision(saved.revision);
+          setSavedFingerprint(projectFingerprint(saved));
+          setProject(saved);
+        }
+        const useRef = opts?.useReference !== false && Boolean(activeReference?.analysis);
+        const res = await dawApi.createCompositionPlan(current.id, {
+          instruction: instruction.trim(),
+          mode: opts?.mode,
+          targetInstrument: opts?.targetInstrument,
+          referenceIds: useRef && activeReference ? [activeReference.id] : [],
+          selectedInfluences: useRef && activeReference ? activeReference.selectedInfluences : undefined,
+          selection,
+        });
+        setActivePlan(res.plan);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const plans = [...(prev.compositionPlans ?? []).filter((p) => p.id !== res.plan.id), res.plan];
+          const next = { ...prev, revision: res.projectRevision, compositionPlans: plans };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        return res.plan;
+      } catch (err) {
+        showToast(`작곡 계획 생성 실패: ${(err as Error).message}`, "error");
+        return null;
+      }
+    },
+    [activeReference, savedFingerprint, selection, showToast]
+  );
+
+  const startGenerationFromPlan = useCallback(
+    async (plan: CompositionPlan, engine = "auto") => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.startGenerationJob(current.id, {
+          planId: plan.id,
+          engine,
+          sync: false,
+        });
+        setActiveGenerationJob(res.job);
+        const jobId = res.job.jobId;
+        const poll = async () => {
+          try {
+            const st = await dawApi.getGenerationJob(jobId);
+            setActiveGenerationJob(st);
+            if (st.status === "ready_for_preview") {
+              const latest = await dawApi.openProject(current.id);
+              setProject((prev) => {
+                if (!prev || prev.id !== latest.id) return prev;
+                const next = {
+                  ...prev,
+                  revision: latest.revision,
+                  takes: latest.takes,
+                  compositionPlans: latest.compositionPlans,
+                };
+                setSavedRevision(latest.revision);
+                setSavedFingerprint(projectFingerprint(next));
+                return next;
+              });
+              showToast(`Take 생성 완료: "${plan.musicalIdentity.title || plan.mode}" — 미리듣기 후 적용하세요.`);
+            } else if (st.status === "failed" || st.status === "cancelled") {
+              showToast(st.error || "생성이 취소되었습니다.", st.status === "failed" ? "error" : "info");
+            } else {
+              window.setTimeout(() => void poll(), 300);
+            }
+          } catch {
+            setActiveGenerationJob(null);
+          }
+        };
+        window.setTimeout(() => void poll(), 200);
+      } catch (err) {
+        showToast(`생성 시작 실패: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const cancelActiveGeneration = useCallback(async () => {
+    if (!activeGenerationJob) return;
+    try {
+      const st = await dawApi.cancelGenerationJob(activeGenerationJob.jobId);
+      setActiveGenerationJob(st);
+    } catch {
+      // ignore
+    }
+  }, [activeGenerationJob]);
+
+  const applyGeneratedTake = useCallback(
+    async (
+      takeId: string,
+      applyMode: "new_tracks" | "selected_range" | "new_project" | "keep_take",
+      targetTrackId?: string | null
+    ) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        if (projectFingerprint(current) !== savedFingerprint) {
+          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          setSavedRevision(saved.revision);
+          setSavedFingerprint(projectFingerprint(saved));
+          setProject(saved);
+        }
+        const res = await dawApi.applyTake(current.id, takeId, {
+          applyMode,
+          targetTrackId: targetTrackId ?? selection.selectedTrackId,
+          startBeats: selection.timeRangeBeats?.startBeats,
+          addSectionMarkers: applyMode !== "selected_range",
+          expectedRevision: savedRevisionRef.current,
+        });
+        if (res.createdNewProject && res.project) {
+          await hydrateProject(res.project, false);
+          await refreshLists();
+          showToast(`새 프로젝트로 생성 결과 적용됨: "${res.project.name}"`);
+        } else if (res.project) {
+          applyExternalProjectUpdate(res.project, `Take 적용됨: ${res.take.title}`);
+        }
+      } catch (err) {
+        showToast(`Take 적용 실패: ${(err as Error).message}`, "error");
+      }
+    },
+    [applyExternalProjectUpdate, hydrateProject, refreshLists, savedFingerprint, selection, showToast]
+  );
+
+  const rejectGeneratedTake = useCallback(
+    async (takeId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.rejectTake(current.id, takeId);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next = {
+            ...prev,
+            revision: res.projectRevision,
+            takes: (prev.takes ?? []).map((tk) => (tk.id === takeId ? res.take : tk)),
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        showToast("Take가 거절 처리되었습니다.");
+      } catch (err) {
+        showToast(`Take 거절 실패: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const takes = useMemo(() => [...(project?.takes ?? [])].reverse(), [project?.takes]);
 
   const selectedTrack = useMemo(() => {
     if (!project || !selection.selectedTrackId) return null;
@@ -1382,6 +1653,18 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     applyPendingProposal,
     rejectPendingProposal,
     submitProducerInstruction,
+    providerSummary,
+    generationEngines,
+    activePlan,
+    setActivePlan,
+    activeGenerationJob,
+    takes,
+    selectAiProvider,
+    requestCompositionPlan,
+    startGenerationFromPlan,
+    cancelActiveGeneration,
+    applyGeneratedTake,
+    rejectGeneratedTake,
   };
 
   return <DawContext.Provider value={value}>{children}</DawContext.Provider>;

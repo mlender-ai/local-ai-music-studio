@@ -1,0 +1,566 @@
+"""Motif-based, genre-adaptive MIDI Composer & SMF writer (Phase 03-C/E).
+
+Generates genuinely musical Drums, Bass, Synth Hook, Keys, Guitar, and Pad MIDI parts
+with Motif A -> A' variation -> B contrast -> Cadence resolution (never monotonous copy-paste loops).
+"""
+
+from __future__ import annotations
+
+import random
+import re
+import struct
+from typing import Any
+
+from engine.daw_workspace.schema import make_id
+
+from .schemas import CompositionPlan
+
+NOTE_TO_PC: dict[str, int] = {
+    "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3,
+    "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8,
+    "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11,
+}
+
+SCALE_INTERVALS: dict[str, list[int]] = {
+    "natural_minor": [0, 2, 3, 5, 7, 8, 10],
+    "minor": [0, 2, 3, 5, 7, 8, 10],
+    "dorian": [0, 2, 3, 5, 7, 9, 10],
+    "major": [0, 2, 4, 5, 7, 9, 11],
+    "mixolydian": [0, 2, 4, 5, 7, 9, 10],
+}
+
+
+def parse_key_root_and_scale(key_str: str, scale_hint: str = "natural_minor") -> tuple[int, list[int]]:
+    parts = key_str.strip().split()
+    root_name = parts[0] if parts else "F"
+    pc = NOTE_TO_PC.get(root_name, 5)
+    mode_word = parts[1].lower() if len(parts) > 1 else ""
+    if "maj" in mode_word:
+        return pc, SCALE_INTERVALS["major"]
+    if "dor" in mode_word:
+        return pc, SCALE_INTERVALS["dorian"]
+    return pc, SCALE_INTERVALS.get(scale_hint, SCALE_INTERVALS["natural_minor"])
+
+
+def parse_chord(chord_symbol: str, fallback_root_pc: int = 5) -> tuple[int, list[int]]:
+    """Return (root_pc, intervals_in_semitones) for chord symbols like Fm7, Dbmaj7, G13, Cadd9."""
+    m = re.match(r"^([A-G][#b]?)(.*)$", chord_symbol.strip())
+    if not m:
+        return fallback_root_pc, [0, 3, 7, 10]
+    root_pc = NOTE_TO_PC.get(m.group(1), fallback_root_pc)
+    qual = m.group(2).lower()
+    if "maj9" in qual:
+        return root_pc, [0, 4, 7, 11, 14]
+    if "maj7" in qual:
+        return root_pc, [0, 4, 7, 11]
+    if "m9" in qual or "min9" in qual:
+        return root_pc, [0, 3, 7, 10, 14]
+    if "m7" in qual or "min7" in qual:
+        return root_pc, [0, 3, 7, 10]
+    if qual.startswith("m") and not qual.startswith("maj"):
+        return root_pc, [0, 3, 7]
+    if "dim" in qual:
+        return root_pc, [0, 3, 6]
+    if "sus4" in qual:
+        return root_pc, [0, 5, 7]
+    if "sus2" in qual:
+        return root_pc, [0, 2, 7]
+    if "13" in qual:
+        return root_pc, [0, 4, 7, 10, 14]
+    if "7" in qual:
+        return root_pc, [0, 4, 7, 10]
+    if "6" in qual:
+        return root_pc, [0, 4, 7, 9]
+    if "add9" in qual:
+        return root_pc, [0, 4, 7, 14]
+    return root_pc, [0, 4, 7]
+
+
+def _clamp_midi(pitch: int, lo: int, hi: int) -> int:
+    while pitch < lo:
+        pitch += 12
+    while pitch > hi:
+        pitch -= 12
+    return max(lo, min(hi, pitch))
+
+
+def _apply_swing(beat_in_bar: float, swing_ratio: float) -> float:
+    """Apply subtle musical swing ONLY to offbeat 16th/8th grid positions."""
+    if swing_ratio <= 0.505:
+        return beat_in_bar
+    offset = (swing_ratio - 0.5) * 0.42
+    frac = beat_in_bar - int(beat_in_bar)
+    if abs(frac - 0.5) < 0.02:
+        return round(beat_in_bar + offset * 0.6, 4)
+    if abs(frac - 0.75) < 0.02:
+        return round(beat_in_bar + offset * 0.35, 4)
+    return beat_in_bar
+
+
+def _note(pitch: int, start_beat: float, dur_beats: float, velocity: int) -> dict[str, Any]:
+    return {
+        "id": make_id("note"),
+        "pitch": max(0, min(127, int(pitch))),
+        "velocity": max(1, min(127, int(velocity))),
+        "startBeat": round(max(0.0, float(start_beat)), 4),
+        "durationBeats": round(max(0.0625, float(dur_beats)), 4),
+    }
+
+
+def _bar_context(plan: CompositionPlan, bar_idx: int) -> tuple[dict[str, Any], float, bool, bool]:
+    """Return (section_dict, energy, is_section_start, is_section_end) for 0-based bar_idx."""
+    bar_num = bar_idx + 1
+    for sec in plan.arrangement:
+        if sec.startBar <= bar_num <= sec.endBar:
+            return (
+                sec.model_dump(),
+                float(sec.energy),
+                bar_num == sec.startBar,
+                bar_num == sec.endBar,
+            )
+    if plan.arrangement:
+        last = plan.arrangement[-1]
+        return last.model_dump(), float(last.energy), bar_idx == 0, False
+    return {"name": "GROOVE", "activeRoles": ["drums", "bass", "keys", "synth_hook"]}, 0.8, bar_idx == 0, False
+
+
+def _compose_drums(
+    plan: CompositionPlan,
+    total_bars: int,
+    bpb: float,
+    genre: str,
+    swing: float,
+    rng: random.Random,
+    force_active: bool,
+) -> list[dict[str, Any]]:
+    notes: list[dict[str, Any]] = []
+    for bar in range(total_bars):
+        sec, energy, is_start, is_end = _bar_context(plan, bar)
+        if not force_active and "drums" not in sec.get("activeRoles", []):
+            continue
+        base = bar * bpb
+        vel_scale = 0.78 + 0.25 * energy
+
+        if is_start and energy >= 0.75:
+            notes.append(_note(49, base, 1.5, int(92 * vel_scale)))  # Crash on high-energy downbeat
+
+        if genre == "house":
+            # Classic 4-on-the-floor kick
+            for beat in range(int(bpb)):
+                notes.append(_note(36, base + beat, 0.4, int((114 if beat == 0 else 108) * vel_scale)))
+            # Clap + layered snare on beats 1 and 3
+            if energy >= 0.45:
+                for beat in (1.0, 3.0):
+                    if beat < bpb:
+                        notes.append(_note(39, base + beat, 0.35, int(100 * vel_scale)))
+                        notes.append(_note(38, base + beat, 0.25, int(74 * vel_scale)))
+            # Offbeat open hat + swung 16th closed hat shaker pocket
+            for beat in range(int(bpb)):
+                if energy >= 0.55:
+                    notes.append(_note(46, base + _apply_swing(beat + 0.5, swing), 0.32, int(86 * vel_scale)))
+                notes.append(_note(42, base + beat, 0.18, int(52 * vel_scale)))
+                if energy >= 0.70:
+                    notes.append(_note(42, base + _apply_swing(beat + 0.25, swing), 0.14, int(46 * vel_scale)))
+                    notes.append(_note(42, base + _apply_swing(beat + 0.75, swing), 0.14, int(58 * vel_scale)))
+            # Turnaround fill on every 4th bar or section end
+            if is_end or (bar + 1) % 4 == 0:
+                notes.append(_note(36, base + 3.5, 0.25, int(98 * vel_scale)))
+                notes.append(_note(38, base + 3.75, 0.2, int(88 * vel_scale)))
+                if is_end:
+                    notes.append(_note(48, base + 3.25, 0.22, int(84 * vel_scale)))
+                    notes.append(_note(45, base + 3.5, 0.22, int(90 * vel_scale)))
+
+        elif genre in ("lofi", "hiphop"):
+            # Boom-bap / chill pocket
+            kick_beats = [0.0, 1.75, 2.5] if bar % 2 == 0 else [0.0, 1.5, 2.5, 3.25]
+            for kb in kick_beats:
+                if kb < bpb:
+                    notes.append(_note(36, base + _apply_swing(kb, swing), 0.4, int(108 * vel_scale)))
+            for sb in (1.0, 3.0):
+                if sb < bpb:
+                    notes.append(_note(38, base + sb, 0.35, int(98 * vel_scale)))
+            if bar % 2 == 1:
+                notes.append(_note(38, base + _apply_swing(3.75, swing), 0.2, int(62 * vel_scale)))
+            for step in range(int(bpb * 2)):
+                pos = _apply_swing(step * 0.5, swing)
+                vel = int((76 if step % 2 == 0 else 58) * vel_scale + rng.randint(-5, 5))
+                notes.append(_note(42, base + pos, 0.2, vel))
+            if is_end:
+                notes.append(_note(46, base + 3.5, 0.45, int(82 * vel_scale)))
+
+        elif genre == "synthwave":
+            for kb in (0.0, 2.0, 2.5):
+                if kb < bpb:
+                    notes.append(_note(36, base + kb, 0.4, int(112 * vel_scale)))
+            for sb in (1.0, 3.0):
+                if sb < bpb:
+                    notes.append(_note(38, base + sb, 0.4, int(106 * vel_scale)))
+            for step in range(int(bpb * 2)):
+                notes.append(_note(42, base + step * 0.5, 0.2, int((74 if step % 2 == 0 else 60) * vel_scale)))
+            if is_end:
+                for idx, p in enumerate((50, 48, 45, 43)):
+                    notes.append(_note(p, base + 3.0 + idx * 0.25, 0.22, int(95 * vel_scale)))
+
+        elif genre == "ambient":
+            # Minimal organic pulse
+            if energy >= 0.5:
+                notes.append(_note(36, base, 0.5, int(74 * vel_scale)))
+                notes.append(_note(42, base + 2.0, 0.25, int(44 * vel_scale)))
+        else:
+            # Modern Pop
+            kick_beats = [0.0, 1.5, 2.5] if bar % 2 == 0 else [0.0, 0.75, 2.0, 2.5]
+            for kb in kick_beats:
+                notes.append(_note(36, base + kb, 0.4, int(110 * vel_scale)))
+            for sb in (1.0, 3.0):
+                notes.append(_note(38, base + sb, 0.35, int(100 * vel_scale)))
+                notes.append(_note(39, base + sb, 0.3, int(75 * vel_scale)))
+            for step in range(int(bpb * 2)):
+                notes.append(_note(42, base + step * 0.5, 0.18, int((76 if step % 2 == 0 else 58) * vel_scale)))
+            if is_end:
+                notes.append(_note(46, base + 3.5, 0.4, int(86 * vel_scale)))
+
+    return notes
+
+
+def _compose_bass(
+    plan: CompositionPlan,
+    total_bars: int,
+    bpb: float,
+    genre: str,
+    chords: list[str],
+    root_pc: int,
+    swing: float,
+    force_active: bool,
+) -> list[dict[str, Any]]:
+    notes: list[dict[str, Any]] = []
+    for bar in range(total_bars):
+        sec, energy, _, is_end = _bar_context(plan, bar)
+        if not force_active and "bass" not in sec.get("activeRoles", []):
+            continue
+        base = bar * bpb
+        chord_sym = chords[bar % len(chords)]
+        next_sym = chords[(bar + 1) % len(chords)]
+        c_root, c_ints = parse_chord(chord_sym, root_pc)
+        n_root, _ = parse_chord(next_sym, root_pc)
+
+        bass_root = _clamp_midi(36 + c_root, 31, 44)
+        fifth = _clamp_midi(bass_root + 7, 34, 51)
+        octave = _clamp_midi(bass_root + 12, 43, 55)
+        third = _clamp_midi(bass_root + c_ints[1], 33, 49)
+        next_bass = _clamp_midi(36 + n_root, 31, 44)
+        # Passing lead-in note 1 or 2 semitones from next bar's root
+        approach = next_bass - 1 if next_bass > bass_root else next_bass + 2
+        vel_base = int(96 + 18 * energy)
+
+        if genre == "house":
+            # Syncopated House groove with Motif A (bars 1,3) and A' octave bounce (bars 2,4)
+            if bar % 2 == 0:
+                pattern = [
+                    (0.0, 0.65, bass_root, vel_base),
+                    (0.75, 0.55, bass_root, vel_base - 8),
+                    (1.5, 0.42, octave, vel_base - 6),
+                    (2.0, 0.65, bass_root, vel_base),
+                    (2.75, 0.55, fifth, vel_base - 10),
+                    (3.5, 0.42, third if not is_end else approach, vel_base - 4),
+                ]
+            else:
+                pattern = [
+                    (0.0, 0.65, bass_root, vel_base),
+                    (0.75, 0.45, fifth, vel_base - 10),
+                    (1.5, 0.42, bass_root, vel_base - 6),
+                    (2.0, 0.55, octave, vel_base - 4),
+                    (2.75, 0.45, fifth, vel_base - 8),
+                    (3.5, 0.22, third, vel_base - 8),
+                    (3.75, 0.22, approach, vel_base - 2),
+                ]
+        elif genre == "synthwave":
+            # Driving 8th-note synth bass
+            pattern = []
+            for step in range(int(bpb * 2)):
+                p = octave if (step % 4 == 2 and energy >= 0.7) else bass_root
+                if step == 7:
+                    p = approach
+                pattern.append((step * 0.5, 0.42, p, vel_base if step % 2 == 0 else vel_base - 12))
+        elif genre in ("lofi", "hiphop"):
+            pattern = [
+                (0.0, 1.6, bass_root, vel_base - 4),
+                (2.5, 0.75, fifth if bar % 2 == 0 else third, vel_base - 12),
+                (3.5, 0.45, approach if bar % 2 == 1 else bass_root, vel_base - 10),
+            ]
+        elif genre == "ambient":
+            pattern = [(0.0, bpb - 0.1, bass_root, int(74 + 14 * energy))]
+        else:
+            pattern = [
+                (0.0, 1.2, bass_root, vel_base),
+                (1.5, 0.45, bass_root, vel_base - 10),
+                (2.0, 0.9, fifth, vel_base - 6),
+                (3.0, 0.5, octave if bar % 2 == 1 else third, vel_base - 8),
+                (3.5, 0.45, approach, vel_base - 6),
+            ]
+
+        for pos, dur, p, vel in pattern:
+            if pos < bpb:
+                notes.append(_note(p, base + _apply_swing(pos, swing), min(dur, bpb - pos), vel))
+    return notes
+
+
+def _compose_synth_hook(
+    plan: CompositionPlan,
+    total_bars: int,
+    bpb: float,
+    genre: str,
+    chords: list[str],
+    root_pc: int,
+    scale_ints: list[int],
+    swing: float,
+    rng: random.Random,
+    force_active: bool,
+) -> list[dict[str, Any]]:
+    """Compose a memorable Motif A -> A' -> B -> Cadence Synth Hook locked to chords & scale."""
+    notes: list[dict[str, Any]] = []
+    scale_pool = [root_pc + iv + 12 * octv for octv in (5, 6) for iv in scale_ints]
+    scale_pool = [p for p in scale_pool if 60 <= p <= 84]
+
+    def nearest_scale(target_pitch: int) -> int:
+        return min(scale_pool, key=lambda p: abs(p - target_pitch))
+
+    # Build motif pitch-offset signature from plan's scaleDegrees
+    raw_degrees = plan.signatureMotif.get("scaleDegrees") or [1, 3, 5, 4, 3, 2, 1, 7]
+    deg_offsets = [int(d) - 1 for d in raw_degrees]
+
+    # Genre-specific rhythmic cells for Motif A, A', B, Cadence (preventing flat monotony!)
+    if genre == "house":
+        cells = {
+            "A": [(0.0, 0.45), (0.75, 0.42), (1.5, 0.42), (2.25, 0.45), (3.0, 0.55)],
+            "A_prime": [(0.0, 0.45), (0.75, 0.35), (1.25, 0.45), (2.0, 0.42), (2.75, 0.45), (3.5, 0.4)],
+            "B": [(0.0, 0.65), (0.75, 0.45), (1.5, 0.65), (2.5, 0.45), (3.25, 0.6)],
+            "cadence": [(0.0, 0.45), (0.75, 0.45), (1.5, 0.85), (2.5, 1.25)],
+        }
+    elif genre in ("lofi", "hiphop"):
+        cells = {
+            "A": [(0.5, 0.65), (1.5, 0.45), (2.25, 0.65), (3.25, 0.55)],
+            "A_prime": [(0.0, 0.55), (1.0, 0.45), (1.75, 0.65), (2.75, 0.75)],
+            "B": [(0.5, 0.75), (1.5, 0.75), (2.5, 0.65), (3.5, 0.45)],
+            "cadence": [(0.5, 0.75), (1.75, 0.85), (2.75, 1.0)],
+        }
+    else:
+        cells = {
+            "A": [(0.0, 0.45), (0.5, 0.45), (1.5, 0.65), (2.5, 0.45), (3.0, 0.65)],
+            "A_prime": [(0.0, 0.45), (0.75, 0.45), (1.5, 0.45), (2.25, 0.45), (3.0, 0.75)],
+            "B": [(0.0, 0.7), (1.0, 0.45), (1.5, 0.7), (2.5, 0.45), (3.0, 0.85)],
+            "cadence": [(0.0, 0.65), (1.0, 0.65), (2.0, 1.6)],
+        }
+
+    for bar in range(total_bars):
+        sec, energy, _, _ = _bar_context(plan, bar)
+        if not force_active and "synth_hook" not in sec.get("activeRoles", []):
+            continue
+        base = bar * bpb
+        chord_sym = chords[bar % len(chords)]
+        c_root, c_ints = parse_chord(chord_sym, root_pc)
+        chord_tones = [_clamp_midi(60 + c_root + iv, 62, 79) for iv in c_ints[:4]]
+
+        phrase_pos = bar % 4
+        if phrase_pos == 0:
+            cell_key = "A"
+            octave_lift = 0
+        elif phrase_pos == 1:
+            cell_key = "A_prime"
+            octave_lift = 0
+        elif phrase_pos == 2:
+            cell_key = "B"
+            octave_lift = 5 if energy >= 0.85 else 2  # melodic lift for contrast!
+        else:
+            cell_key = "cadence"
+            octave_lift = 0
+
+        cell = cells[cell_key]
+        prev_end = -1.0
+        for idx, (pos, dur) in enumerate(cell):
+            if pos >= bpb:
+                continue
+            # Anchor strong beats on chord tones, passing beats on scale degrees
+            if idx == 0 or idx == len(cell) - 1:
+                anchor = chord_tones[0 if idx == len(cell) - 1 and phrase_pos == 3 else (idx + phrase_pos) % len(chord_tones)]
+                pitch = nearest_scale(anchor + (12 if energy >= 0.95 and phrase_pos == 2 and idx == 0 else 0))
+            else:
+                deg = deg_offsets[(idx + bar) % len(deg_offsets)]
+                scale_idx = max(0, min(len(scale_pool) - 1, (deg % len(scale_ints)) + (2 if octave_lift else 1)))
+                pitch = nearest_scale(scale_pool[scale_idx] + octave_lift)
+
+            swung_pos = _apply_swing(pos, swing)
+            if swung_pos < prev_end + 0.02:
+                swung_pos = round(prev_end + 0.02, 4)
+            if swung_pos >= bpb:
+                continue
+            final_dur = min(dur, bpb - swung_pos - 0.02)
+            if final_dur < 0.1:
+                continue
+            vel = int((98 if idx in (0, 2) else 84) * (0.82 + 0.2 * energy) + rng.randint(-4, 4))
+            notes.append(_note(pitch, base + swung_pos, final_dur, vel))
+            prev_end = swung_pos + final_dur
+
+    return notes
+
+
+def _compose_keys_or_pad(
+    plan: CompositionPlan,
+    role: str,
+    total_bars: int,
+    bpb: float,
+    genre: str,
+    chords: list[str],
+    root_pc: int,
+    swing: float,
+    force_active: bool,
+) -> list[dict[str, Any]]:
+    notes: list[dict[str, Any]] = []
+    for bar in range(total_bars):
+        sec, energy, _, _ = _bar_context(plan, bar)
+        if not force_active and role not in sec.get("activeRoles", []):
+            continue
+        base = bar * bpb
+        chord_sym = chords[bar % len(chords)]
+        c_root, c_ints = parse_chord(chord_sym, root_pc)
+
+        # Voice-lead chords cleanly into C3–C5 (MIDI 50–72)
+        voicing = sorted({_clamp_midi(48 + c_root + iv, 52, 71) for iv in c_ints[:4]})
+
+        if role == "pad":
+            vel = int(58 + 22 * energy)
+            for p in voicing:
+                notes.append(_note(p, base, bpb - 0.08, vel))
+        elif role == "guitar":
+            # Rhythmic clean guitar plucks / arpeggios in MIDI 55–76
+            guitar_voicing = sorted({_clamp_midi(p + 5, 55, 76) for p in voicing})
+            if genre == "house":
+                hits = [(0.5, 0.3), (1.5, 0.25), (2.25, 0.3), (3.5, 0.35)]
+            elif genre in ("lofi", "pop"):
+                hits = [(0.0, 0.45), (0.75, 0.35), (1.5, 0.45), (2.5, 0.45), (3.25, 0.45)]
+            else:
+                hits = [(0.0, 0.65), (1.0, 0.65), (2.0, 0.65), (3.0, 0.65)]
+            for idx, (pos, dur) in enumerate(hits):
+                sw = _apply_swing(pos, swing)
+                if sw >= bpb:
+                    continue
+                if idx % 2 == 0:
+                    # 2-note dyad pluck
+                    for p in guitar_voicing[-2:]:
+                        notes.append(_note(p, base + sw, min(dur, bpb - sw), int(78 + 14 * energy)))
+                else:
+                    p = guitar_voicing[(idx + bar) % len(guitar_voicing)]
+                    notes.append(_note(p, base + sw, min(dur, bpb - sw), int(72 + 14 * energy)))
+        else:
+            # Electric Piano / Keys comping
+            if genre == "house":
+                stabs = [(0.0, 0.42), (0.75, 0.38), (1.5, 0.45), (2.5, 0.42), (3.25, 0.45)]
+                if bar % 2 == 1:
+                    stabs = [(0.0, 0.42), (0.75, 0.38), (1.75, 0.42), (2.5, 0.55), (3.5, 0.38)]
+            elif genre == "lofi":
+                stabs = [(0.0, 1.75), (2.0, 1.65)]
+            elif genre == "synthwave":
+                stabs = [(0.0, 0.85), (1.0, 0.85), (2.0, 0.85), (3.0, 0.85)]
+            else:
+                stabs = [(0.0, 1.4), (1.5, 0.9), (2.5, 1.3)]
+            for idx, (pos, dur) in enumerate(stabs):
+                sw = _apply_swing(pos, swing)
+                if sw >= bpb:
+                    continue
+                vel = int((76 if idx == 0 else 66) + 14 * energy)
+                for n_i, p in enumerate(voicing):
+                    # Subtle micro-roll for warm electric piano feel
+                    roll = 0.015 * n_i if genre == "lofi" else 0.0
+                    notes.append(_note(p, base + sw + roll, min(dur, bpb - sw - roll), vel))
+    return notes
+
+
+def compose_midi_part(
+    plan: CompositionPlan,
+    role: str,
+    seed: int = 42,
+    bpb: float = 4.0,
+    force_active: bool = False,
+) -> list[dict[str, Any]]:
+    """Generate a single musical MIDI role for the given CompositionPlan."""
+    rng = random.Random(seed + sum(ord(c) for c in role))
+    ident = plan.musicalIdentity
+    hg = plan.harmonyAndGroove
+    total_bars = int(ident.get("barCount") or 4)
+    genre = str(ident.get("genre") or "house")
+    key_str = str(hg.get("key") or ident.get("key") or "F minor")
+    scale_name = str(hg.get("scale") or ident.get("scale") or "natural_minor")
+    chords = list(hg.get("chordProgression") or ["Fm7", "Dbmaj7", "Abmaj7", "Eb6"])
+    swing = float(hg.get("swingRatio") or 0.52)
+    root_pc, scale_ints = parse_key_root_and_scale(key_str, scale_name)
+
+    if role == "drums":
+        return _compose_drums(plan, total_bars, bpb, genre, swing, rng, force_active=force_active)
+    if role == "bass":
+        return _compose_bass(plan, total_bars, bpb, genre, chords, root_pc, swing, force_active=force_active)
+    if role == "synth_hook":
+        return _compose_synth_hook(plan, total_bars, bpb, genre, chords, root_pc, scale_ints, swing, rng, force_active=force_active)
+    return _compose_keys_or_pad(plan, role, total_bars, bpb, genre, chords, root_pc, swing, force_active=force_active)
+
+
+def compose_multitrack_parts(
+    plan: CompositionPlan,
+    seed: int = 42,
+    bpb: float = 4.0,
+) -> dict[str, list[dict[str, Any]]]:
+    """Compose all instrument roles declared in a CompositionPlan."""
+    is_single = len(plan.instrumentRoles) == 1
+    out: dict[str, list[dict[str, Any]]] = {}
+    for idx, role_info in enumerate(plan.instrumentRoles):
+        rk = str(role_info["role"])
+        out[rk] = compose_midi_part(plan, rk, seed=seed + idx * 17, bpb=bpb, force_active=is_single)
+    return out
+
+
+def _encode_vlq(val: int) -> bytes:
+    val = max(0, int(val))
+    buf = [val & 0x7F]
+    val >>= 7
+    while val:
+        buf.append((val & 0x7F) | 0x80)
+        val >>= 7
+    return bytes(reversed(buf))
+
+
+def notes_to_midi_bytes(
+    notes: list[dict[str, Any]],
+    bpm: float = 128.0,
+    ppq: int = 480,
+    track_name: str = "AI Track",
+    channel: int = 0,
+) -> bytes:
+    """Serialize DAW MIDI notes to a standard SMF Type-0 `.mid` file."""
+    events: list[tuple[int, int, bytes]] = []
+    # Meta: track name
+    name_bytes = track_name.encode("utf-8", errors="ignore")[:60]
+    events.append((0, 0, b"\xff\x03" + _encode_vlq(len(name_bytes)) + name_bytes))
+    # Meta: set tempo
+    us_per_quarter = max(100000, int(round(60_000_000.0 / max(30.0, float(bpm)))))
+    events.append((0, 1, b"\xff\x51\x03" + us_per_quarter.to_bytes(3, "big")))
+
+    ch = max(0, min(15, int(channel)))
+    for n in notes:
+        s_tick = max(0, int(round(float(n["startBeat"]) * ppq)))
+        d_tick = max(1, int(round(float(n["durationBeats"]) * ppq)))
+        pitch = max(0, min(127, int(n["pitch"])))
+        vel = max(1, min(127, int(n.get("velocity", 100))))
+        events.append((s_tick, 3, bytes([0x90 | ch, pitch, vel])))
+        events.append((s_tick + d_tick, 2, bytes([0x80 | ch, pitch, 0])))
+
+    events.sort(key=lambda item: (item[0], item[1]))
+    track_data = bytearray()
+    last_tick = 0
+    for tick, _, payload in events:
+        delta = max(0, tick - last_tick)
+        track_data.extend(_encode_vlq(delta))
+        track_data.extend(payload)
+        last_tick = tick
+    track_data.extend(b"\x00\xff\x2f\x00")
+
+    header = b"MThd" + struct.pack(">IHHH", 6, 0, 1, ppq)
+    track_chunk = b"MTrk" + struct.pack(">I", len(track_data)) + bytes(track_data)
+    return header + track_chunk

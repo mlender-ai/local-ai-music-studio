@@ -180,56 +180,56 @@ def daw_get_capabilities() -> dict:
 
 
 @server.tool(name="daw.add_track", annotations=WRITE)
-def daw_add_track(name: str, track_type: str = "audio", project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Add an audio, stem, or midi track to the DAW project."""
+def daw_add_track(name: str, track_type: str = "audio", project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Add an audio, stem, or midi track (defaults to safe staged proposal; pass stage_only=False only when authorized)."""
     return daw_mcp.add_track(name, track_type, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.move_clip", annotations=WRITE)
-def daw_move_clip(clip_id: str, timeline_start_beats: float, target_track_id: str | None = None, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Move a clip to a new beat position (and optional compatible track)."""
+def daw_move_clip(clip_id: str, timeline_start_beats: float, target_track_id: str | None = None, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Move a clip to a new beat position (defaults to safe staged proposal)."""
     return daw_mcp.move_clip(clip_id, timeline_start_beats, target_track_id, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.split_clip", annotations=WRITE)
-def daw_split_clip(clip_id: str, split_beat: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Split an audio or MIDI clip non-destructively at a timeline beat position."""
+def daw_split_clip(clip_id: str, split_beat: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Split an audio or MIDI clip non-destructively (defaults to safe staged proposal)."""
     return daw_mcp.split_clip(clip_id, split_beat, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.duplicate_clip", annotations=WRITE)
-def daw_duplicate_clip(clip_id: str, timeline_start_beats: float | None = None, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Duplicate a clip immediately after itself or at a specified beat."""
+def daw_duplicate_clip(clip_id: str, timeline_start_beats: float | None = None, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Duplicate a clip (defaults to safe staged proposal)."""
     return daw_mcp.duplicate_clip(clip_id, timeline_start_beats, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.set_track_gain", annotations=WRITE)
-def daw_set_track_gain(track_id: str, gain_db: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Set a track's mixer gain in dB (-60 to +6 dB)."""
+def daw_set_track_gain(track_id: str, gain_db: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Set a track's mixer gain in dB (defaults to safe staged proposal)."""
     return daw_mcp.set_track_gain(track_id, gain_db, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.set_track_pan", annotations=WRITE)
-def daw_set_track_pan(track_id: str, pan: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Set a track's stereo pan (-1.0 hard left to +1.0 hard right)."""
+def daw_set_track_pan(track_id: str, pan: float, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Set a track's stereo pan (defaults to safe staged proposal)."""
     return daw_mcp.set_track_pan(track_id, pan, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.set_track_mute", annotations=WRITE)
-def daw_set_track_mute(track_id: str, mute: bool, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Mute or unmute a DAW track."""
+def daw_set_track_mute(track_id: str, mute: bool, project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Mute or unmute a DAW track (defaults to safe staged proposal)."""
     return daw_mcp.set_track_mute(track_id, mute, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.edit_midi_notes", annotations=WRITE)
-def daw_edit_midi_notes(clip_id: str, operations: list[dict], project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Apply validated midi.addNote / moveNote / resizeNote / setVelocity / deleteNote operations."""
+def daw_edit_midi_notes(clip_id: str, operations: list[dict], project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Edit MIDI notes (defaults to safe staged proposal)."""
     return daw_mcp.edit_midi_notes(clip_id, operations, project_id, expected_revision, stage_only)
 
 
 @server.tool(name="daw.add_section", annotations=WRITE)
-def daw_add_section(name: str, start_beats: float, end_beats: float, color: str = "#4a5968", project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = False) -> dict:
-    """Add a named section marker to the arrangement timeline."""
+def daw_add_section(name: str, start_beats: float, end_beats: float, color: str = "#4a5968", project_id: str | None = None, expected_revision: int | None = None, stage_only: bool = True) -> dict:
+    """Add a named section marker (defaults to safe staged proposal)."""
     return daw_mcp.add_section(name, start_beats, end_beats, color, project_id, expected_revision, stage_only)
 
 
@@ -279,6 +279,165 @@ def daw_get_analysis_status(job_id: str) -> dict:
 def daw_compare_audio(reference_id: str, target_kind: str = "project_mix", target_id: str | None = None, project_id: str | None = None) -> dict:
     """Compare a Reference against the current project mix or an audio asset using normalized acoustic metrics."""
     return daw_mcp.compare_audio(reference_id, target_kind, target_id, project_id)
+
+
+# --- AI-Native DAW Phase 03 Composition Engine MCP Tools ---
+
+@server.tool(name="daw.create_composition_plan", annotations=WRITE)
+def daw_create_composition_plan(
+    instruction: str,
+    mode: str | None = None,
+    target_instrument: str | None = None,
+    reference_ids: list[str] | None = None,
+    selected_influences: list[str] | None = None,
+    project_id: str | None = None,
+    provider_id: str | None = None,
+) -> dict:
+    """Design a structured CompositionPlan (Identity, Motif, Harmony, Roles, Sections, Reference Binding) before generating audio/MIDI."""
+    return daw_mcp.create_composition_plan(
+        instruction, mode, target_instrument, reference_ids, selected_influences, project_id, provider_id
+    )
+
+
+@server.tool(name="daw.get_composition_plan", annotations=READ)
+def daw_get_composition_plan(plan_id: str | None = None, project_id: str | None = None) -> dict:
+    """Read a stored CompositionPlan (defaults to the latest plan in the active project)."""
+    return daw_mcp.get_composition_plan(plan_id, project_id)
+
+
+@server.tool(name="daw.generate_music", annotations=WRITE)
+def daw_generate_music(
+    instruction: str | None = None,
+    plan_id: str | None = None,
+    reference_ids: list[str] | None = None,
+    selected_influences: list[str] | None = None,
+    engine_choice: str = "auto",
+    seed: int | None = None,
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Mode A: Generate a full multi-section arrangement Take with BS.1770-4 loudness, quality report & level-matched preview."""
+    return daw_mcp.generate_music(
+        instruction, plan_id, reference_ids, selected_influences, engine_choice, seed, sync, project_id
+    )
+
+
+@server.tool(name="daw.generate_instrument", annotations=WRITE)
+def daw_generate_instrument(
+    instruction: str,
+    target_instrument: str = "synth_hook",
+    reference_ids: list[str] | None = None,
+    seed: int | None = None,
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Mode B: Generate an editable instrument session (MIDI + rendered studio stem WAV)."""
+    return daw_mcp.generate_instrument(instruction, target_instrument, reference_ids, seed, sync, project_id)
+
+
+@server.tool(name="daw.generate_loop", annotations=WRITE)
+def daw_generate_loop(
+    instruction: str,
+    target_instrument: str = "drums",
+    reference_ids: list[str] | None = None,
+    seed: int | None = None,
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Mode C: Generate a tempo-locked musical loop (drums/bass/keys/guitar/synth_hook) with variation."""
+    return daw_mcp.generate_loop(instruction, target_instrument, reference_ids, seed, sync, project_id)
+
+
+@server.tool(name="daw.generate_midi", annotations=WRITE)
+def daw_generate_midi(
+    instruction: str,
+    target_instrument: str = "synth_hook",
+    reference_ids: list[str] | None = None,
+    seed: int | None = None,
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Mode C: Generate editable motif-based MIDI notes locked to project key/chords without touching other tracks."""
+    return daw_mcp.generate_midi(instruction, target_instrument, reference_ids, seed, sync, project_id)
+
+
+@server.tool(name="daw.separate_stems", annotations=WRITE)
+def daw_separate_stems(asset_id: str, model_name: str = "htdemucs", sync: bool = False, project_id: str | None = None) -> dict:
+    """Separate an audio asset into Drums/Bass/Other/Vocals via Demucs (honestly reports unavailable if Demucs is not installed)."""
+    return daw_mcp.separate_stems(asset_id, model_name, sync, project_id)
+
+
+@server.tool(name="daw.list_generation_jobs", annotations=READ)
+def daw_list_generation_jobs(project_id: str | None = None) -> dict:
+    """List background music generation jobs and their stages/logs."""
+    return daw_mcp.list_generation_jobs(project_id)
+
+
+@server.tool(name="daw.get_generation_status", annotations=READ)
+def daw_get_generation_status(job_id: str) -> dict:
+    """Poll real-time stage, progress, and logs for a background generation job."""
+    return daw_mcp.get_generation_status(job_id)
+
+
+@server.tool(name="daw.cancel_generation", annotations=WRITE)
+def daw_cancel_generation(job_id: str) -> dict:
+    """Cancel a queued or running background generation job."""
+    return daw_mcp.cancel_generation(job_id)
+
+
+@server.tool(name="daw.get_generation_result", annotations=READ)
+def daw_get_generation_result(take_id: str, project_id: str | None = None) -> dict:
+    """Fetch full Take metadata, artifacts, QualityReport, Planned vs Detected sections & provenance."""
+    return daw_mcp.get_generation_result(take_id, project_id)
+
+
+@server.tool(name="daw.preview_generation", annotations=READ)
+def daw_preview_generation(take_id: str, project_id: str | None = None) -> dict:
+    """Return level-matched (-16 LUFS) preview audio metadata and QualityReport for a Take."""
+    return daw_mcp.preview_generation(take_id, project_id)
+
+
+@server.tool(name="daw.stage_generation_import", annotations=WRITE)
+def daw_stage_generation_import(
+    take_id: str,
+    apply_mode: str = "new_tracks",
+    target_track_id: str | None = None,
+    start_beats: float | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+) -> dict:
+    """Transactionally apply a Take into the DAW timeline (`new_tracks`, `selected_range`, `new_project`, `keep_take`) with 1-click Undo."""
+    return daw_mcp.stage_generation_import(take_id, apply_mode, target_track_id, start_beats, project_id, expected_revision)
+
+
+@server.tool(name="daw.list_takes", annotations=READ)
+def daw_list_takes(project_id: str | None = None) -> dict:
+    """List all generated Takes stored in a project."""
+    return daw_mcp.list_takes(project_id)
+
+
+@server.tool(name="daw.select_take", annotations=WRITE)
+def daw_select_take(
+    take_id: str,
+    action: str = "apply",
+    apply_mode: str = "new_tracks",
+    target_track_id: str | None = None,
+    project_id: str | None = None,
+) -> dict:
+    """Apply, keep, or reject a generated Take (`action`: apply | keep | reject)."""
+    return daw_mcp.select_take(take_id, action, apply_mode, target_track_id, project_id)
+
+
+@server.tool(name="daw.list_providers", annotations=READ)
+def daw_list_providers() -> dict:
+    """Inspect honestly detected local/CLI/MCP/API AI Producer providers and active selection."""
+    return daw_mcp.list_providers()
+
+
+@server.tool(name="daw.list_instruments", annotations=READ)
+def daw_list_instruments() -> dict:
+    """List built-in multi-timbre studio instruments and local music generation engines."""
+    return daw_mcp.list_instruments()
 
 
 def main():

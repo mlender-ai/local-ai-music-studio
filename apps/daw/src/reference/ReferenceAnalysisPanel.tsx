@@ -389,10 +389,12 @@ export function ReferenceAnalysisPanel() {
               <div className="producer-card" style={{ padding: "6px 8px" }}>
                 <span className="producer-label">{t("ref.bpm")}</span>
                 <strong className="mono" style={{ fontSize: 13 }} data-testid="ref-bpm-value">
-                  {analysis.rhythm.estimatedBpm ?? "?"} BPM
+                  {analysis.rhythm.adoptedTempoBpm ?? analysis.rhythm.estimatedBpm ?? "?"} BPM
                 </strong>
                 <span style={{ fontSize: 9, color: "var(--text-muted)" }}>
-                  {analysis.rhythm.halfDoubleAmbiguous
+                  {analysis.rhythm.halfDoubleRelation
+                    ? `${analysis.rhythm.halfDoubleRelation} (pulse ${analysis.rhythm.measuredPulseBpm ?? "?"})`
+                    : analysis.rhythm.halfDoubleAmbiguous
                     ? t("ref.ambiguousHalfDouble")
                     : `${analysis.rhythm.meterEstimate} · ${analysis.rhythm.grooveFeel ?? "straight"}`}
                 </span>
@@ -403,16 +405,16 @@ export function ReferenceAnalysisPanel() {
                   {analysis.harmony.estimatedKey}
                 </strong>
                 <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)" }}>
-                  conf {(analysis.harmony.confidence * 100).toFixed(0)}%
+                  conf {(analysis.harmony.confidence * 100).toFixed(0)}% · harm {(analysis.harmony.harmonicRepetitionScore ?? analysis.harmony.motifRepetitionScore).toFixed(2)}
                 </span>
               </div>
               <div className="producer-card" style={{ padding: "6px 8px" }}>
                 <span className="producer-label">{t("ref.loudness")}</span>
-                <strong className="mono" style={{ fontSize: 12 }}>
-                  {analysis.sound.measured.approxLufs} LUFS
+                <strong className="mono" style={{ fontSize: 12 }} data-testid="ref-lufs-value">
+                  {analysis.sound.measured.integratedLufs ?? analysis.sound.measured.approxLufs} LUFS
                 </strong>
                 <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)" }}>
-                  Peak {analysis.sound.measured.samplePeakDbfs} dBFS · DR {analysis.sound.measured.dynamicRangeDb} dB
+                  TP {analysis.sound.measured.truePeakDbtp ?? analysis.sound.measured.samplePeakDbfs} dBTP · LRA {analysis.sound.measured.loudnessRangeLu ?? analysis.sound.measured.dynamicRangeDb} LU
                 </span>
               </div>
               <div className="producer-card" style={{ padding: "6px 8px" }}>
@@ -505,18 +507,38 @@ export function ReferenceAnalysisPanel() {
             <div className="producer-card" style={{ padding: "6px 8px" }}>
               <div className="producer-label">{t("ref.instruments")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                {analysis.instrumentation.elements.map((el) => (
+                {analysis.instrumentation.elements.map((el) => {
+                  const isUnconfirmed = el.status === "unconfirmed" || el.confidence < 0.35;
+                  return (
                   <span
                     key={el.name}
                     className="tag-badge"
+                    title={el.method || undefined}
                     style={{
-                      color: el.level === "prominent" ? "var(--text-primary)" : "var(--text-muted)",
-                      borderColor: el.level === "prominent" ? "#5f8772" : undefined,
+                      color:
+                        isUnconfirmed
+                          ? "var(--text-muted)"
+                          : el.level === "prominent"
+                          ? "var(--text-primary)"
+                          : "var(--text-secondary)",
+                      borderColor:
+                        isUnconfirmed
+                          ? "var(--border-subtle)"
+                          : el.level === "prominent"
+                          ? "#5f8772"
+                          : undefined,
+                      opacity: isUnconfirmed ? 0.65 : 1,
                     }}
                   >
-                    {el.name} · {Math.round(el.confidence * 100)}%
+                    {el.name} ·{" "}
+                    {isUnconfirmed
+                      ? locale === "ko"
+                        ? "미확인"
+                        : "unconfirmed"
+                      : `${Math.round(el.confidence * 100)}%`}
                   </span>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

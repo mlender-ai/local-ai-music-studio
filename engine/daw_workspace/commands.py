@@ -80,7 +80,7 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
             type=trk_type,
             color=color,
             stemLabel=payload.get("stemLabel"),
-            instrumentRef="basic-poly-synth" if trk_type == "midi" else None,
+            instrumentRef=payload.get("instrumentRef") or ("basic-poly-synth" if trk_type == "midi" else None),
         )
         p.tracks.append(trk)
 
@@ -126,6 +126,11 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
     elif cmd_type == "track.setSolo":
         trk = _find_track(p, str(payload["trackId"]))
         trk.solo = bool(payload["solo"])
+
+    elif cmd_type == "track.setInstrument":
+        trk = _find_track(p, str(payload["trackId"]))
+        inst = payload.get("instrumentRef")
+        trk.instrumentRef = str(inst).strip() if inst else None
 
     elif cmd_type == "clip.add":
         trk = _find_track(p, str(payload["trackId"]))

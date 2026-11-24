@@ -282,11 +282,10 @@ def interpret_producer_instruction(
     sel_clip_ids = sel.get("selectedClipIds") or []
     bpb = project.timeSignature.beats_per_bar
 
-    # Reject clearly unsupported Phase 03–07 capabilities honestly!
+    # Reject clearly unsupported Phase 05–07 capabilities honestly!
     unsupported_patterns = [
         (["eq", "이큐", "컴프레서", "compressor", "리버브", "reverb", "딜레이", "delay", "디스토션", "vst", "au"], "Phase 05 (Sound Design / FX Rack)"),
-        (["작곡", "만들어줘", "생성해줘", "변주", "솔로 추가", "compose", "generate", "regenerate"], "Phase 03–04 (AI Composition & Arrangement)"),
-        (["보컬", "가사", "vocal", "lyrics"], "Phase 07 (Full Music Production)"),
+        (["보컬 생성", "가사 노래", "노래 불러", "vocal singing", "sing lyrics"], "Phase 07 (Full Vocal Production)"),
         (["마스터링", "mastering", "사이드체인", "sidechain"], "Phase 06 (Mixing & Mastering)"),
     ]
     # Allow "구간 만들어줘" / "브리지 만들어줘" as section creation!
@@ -296,9 +295,24 @@ def interpret_producer_instruction(
             return {
                 "supported": False,
                 "action": "unsupported",
-                "messageKo": f"요청하신 기능은 현재 지원되지 않습니다 ({phase_label} 예정). 현재는 레퍼런스 분석, 트랙 Mute/Solo/볼륨/패닝, 클립 복제·분할·이동, 구간 마커 추가 명령을 실행할 수 있습니다.",
-                "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: reference analysis, track mute/solo/gain/pan, clip duplicate/split/move, and section markers.",
+                "messageKo": f"요청하신 기능은 현재 지원되지 않습니다 ({phase_label} 예정). 현재는 AI 작곡(풀 트랙·악기 세션·루프/MIDI), 레퍼런스 분석, 트랙 제어, 클립 편집, 구간 마커를 실행할 수 있습니다.",
+                "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition (full music, instrument sessions, loops/MIDI), reference analysis, track/clip/MIDI edits, and section markers.",
             }
+
+    # 0. Phase 03 AI Composition / Hook / Loop / Instrument Session creation
+    is_composition_req = (
+        any(k in low for k in ("작곡", "만들어줘", "만들어 줘", "생성해줘", "생성해 줘", "compose", "generate", "create a", "make a", "write a"))
+        and not is_section_req
+        and not any(k in low for k in ("복제", "duplicate", "뮤트", "mute", "볼륨", "volume", "게인", "gain"))
+    ) or any(k in low for k in ("신스 훅", "신스훅", "synth hook", "베이스라인", "드럼 패턴", "미디 루프", "midi loop", "하우스 트랙", "로파이", "신스웨이브"))
+    if is_composition_req:
+        return {
+            "supported": True,
+            "action": "composition_plan",
+            "instruction": text,
+            "messageKo": "음악적 작곡 계획(Composition Plan)을 설계합니다.",
+            "messageEn": "Designing a structured Musical Composition Plan.",
+        }
 
     # 1. Reference Analysis request
     if any(k in low for k in ("레퍼런스", "reference")) and any(k in low for k in ("분석", "analyze", "특징")):

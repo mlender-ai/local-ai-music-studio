@@ -196,13 +196,16 @@ def test_c_full_agent_editing_workflow_and_undo_reopen(isolated_bridge_env):
     assert refusal.json()["supported"] is False
     assert "Phase 05" in refusal.json()["messageKo"]
 
-    # 7. MCP MIDI note edit & read roundtrip
+    # 7. MCP MIDI note edit defaults to safe staged proposal (Phase 03-A) -> apply -> read roundtrip
     midi_edit = mcp_tools.edit_midi_notes(
         "clp_m1",
         [{"type": "midi.addNote", "payload": {"note": {"id": "n2", "pitch": 67, "velocity": 105, "startBeat": 2.0, "durationBeats": 1.0}}}],
         project_id=saved.id,
         expected_revision=after_undo.revision,
     )
-    assert midi_edit["applied"] is True
+    assert midi_edit["staged"] is True
+    assert midi_edit["proposal"]["status"] == "pending"
+    applied_midi = mcp_tools.apply_changes(midi_edit["proposal"]["id"], saved.id)
+    assert applied_midi["proposal"]["status"] == "applied"
     notes_read = mcp_tools.get_midi_notes("clp_m1", saved.id)
     assert len(notes_read["notes"]) == 2

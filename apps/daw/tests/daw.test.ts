@@ -268,4 +268,13 @@ describe("Phase 01.2 Korean Localization & IME safety", () => {
     expect(isImeComposing({ isComposing: true, keyCode: 229 } as KeyboardEvent)).toBe(true);
     expect(isImeComposing({ isComposing: false, keyCode: 32 } as KeyboardEvent)).toBe(false);
   });
+
+  it("supports track.setInstrument command for Phase 03 multi-timbre MIDI tracks", () => {
+    const proj = makeSampleProject();
+    const updated = executeCommand(proj, {
+      type: "track.setInstrument",
+      payload: { trackId: "trk_m", instrumentRef: "synth-fm-hook" },
+    });
+    expect(updated.tracks[1].instrumentRef).toBe("synth-fm-hook");
+  });
 });

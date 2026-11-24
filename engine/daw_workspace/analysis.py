@@ -1,8 +1,12 @@
-"""Real acoustic music analysis pipeline for Phase 02-A Reference Intelligence.
+"""Real acoustic music analysis pipeline (Phase 03-A upgraded, v3.0.0).
 
-Computes genuine signal-level measurements & conservative musical estimates from
-decoded PCM audio using numpy, scipy, and soundfile — zero fabricated results.
-Separates measured acoustic metrics from estimated musical attributes.
+Upgrades over v2.0.0:
+- Standard ITU-R BS.1770-4 Integrated LUFS, Short-Term Loudness, and 4x True Peak (dBTP)
+- Explicit BPM half-time / double-time disambiguation separating measured pulse,
+  candidates, half/double relation, project BPM, adopted tempo, and confidence
+- Bass-register root weighting for improved Major/Minor Key estimation
+- Strict separation of key estimate, harmonic repetition (chroma), melodic motif
+  (untranscribed in DSP mode), rhythmic motif regularity, and unconfirmed instruments
 """
 
 from __future__ import annotations
@@ -11,7 +15,6 @@ import json
 import math
 import os
 import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Callable
@@ -20,21 +23,38 @@ import numpy as np
 import soundfile as sf
 from scipy import ndimage, signal
 
+from .loudness import measure_loudness
 from .schema import make_id, utc_now_iso
 
-ANALYSIS_VERSION = "2.0.0"
+ANALYSIS_VERSION = "3.0.0"
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
-# Krumhansl-Schmuckler tonal profiles
+# Temperley / Krumhansl-Schmuckler tonal profiles (strong major/minor discrimination)
 MAJOR_PROFILE = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
 MINOR_PROFILE = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
-DORIAN_PROFILE = np.array([6.20, 2.10, 3.80, 5.10, 2.30, 3.80, 2.20, 4.90, 2.50, 4.20, 3.50, 2.40])
-MIXOLYDIAN_PROFILE = np.array([6.20, 2.10, 3.60, 2.30, 4.60, 3.90, 2.20, 5.10, 2.30, 3.60, 4.20, 2.40])
+DORIAN_PROFILE = np.array([6.10, 2.00, 3.80, 5.05, 2.20, 3.80, 2.10, 4.90, 2.40, 4.25, 3.50, 2.30])
+MIXOLYDIAN_PROFILE = np.array([6.10, 2.00, 3.50, 2.20, 4.55, 3.90, 2.10, 5.05, 2.20, 3.55, 4.15, 2.30])
+
+
+def resolve_octave_tempo_relation(bpm_a: float | None, bpm_b: float | None) -> dict[str, Any]:
+    """Check whether two BPM values are directly matched or octave-related (half/double time)."""
+    if not bpm_a or not bpm_b or bpm_a <= 0 or bpm_b <= 0:
+        return {"compatible": None, "relation": "unknown", "effectiveDeltaBpm": None, "normalizedTargetBpm": bpm_b}
+    direct_delta = round(bpm_b - bpm_a, 1)
+    ratio = bpm_b / bpm_a
+    if abs(ratio - 1.0) <= 0.03:
+        return {"compatible": True, "relation": "direct_match", "effectiveDeltaBpm": direct_delta, "normalizedTargetBpm": bpm_b}
+    if abs(ratio - 0.5) <= 0.035:
+        norm = round(bpm_b * 2.0, 1)
+        return {"compatible": True, "relation": "half_time", "effectiveDeltaBpm": round(norm - bpm_a, 1), "normalizedTargetBpm": norm}
+    if abs(ratio - 2.0) <= 0.035:
+        norm = round(bpm_b * 0.5, 1)
+        return {"compatible": True, "relation": "double_time", "effectiveDeltaBpm": round(norm - bpm_a, 1), "normalizedTargetBpm": norm}
+    return {"compatible": False, "relation": "different_tempo", "effectiveDeltaBpm": direct_delta, "normalizedTargetBpm": bpm_b}
 
 
 def _load_audio_bounded(path: Path, max_duration_sec: float = 360.0) -> tuple[np.ndarray, int]:
-    """Read audio as float32 stereo (up to 6 minutes bounded for Apple Silicon RAM safety)."""
     info = sf.info(str(path))
     if info.frames <= 0 or info.samplerate <= 0:
         raise ValueError("Audio file contains no readable PCM frames")
@@ -57,22 +77,29 @@ def _downsample_mono(stereo: np.ndarray, sr: int, target_sr: int = 12000) -> tup
     return signal.resample_poly(mono, target_sr // g, sr // g), target_sr
 
 
-def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
-    """Unconstrained spectral-flux BPM candidates, onset grid, meter, density, and swing."""
-    # STFT hop = 120 samples -> 100 Hz onset frame rate
-    freqs, times, zxx = signal.stft(mono_12k, fs=sr_12k, nperseg=512, noverlap=392, boundary=None)
+def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int, project_bpm: float | None = None) -> dict[str, Any]:
+    """Unconstrained onset-flux BPM search with explicit half/double-time resolution."""
+    freqs, _, zxx = signal.stft(mono_12k, fs=sr_12k, nperseg=512, noverlap=392, boundary=None)
     mag = np.abs(zxx[(freqs >= 40) & (freqs <= 5500)])
     if mag.shape[1] < 20:
         return {
+            "measuredPulseBpm": None,
             "estimatedBpm": None,
+            "adoptedTempoBpm": project_bpm,
+            "projectBpm": project_bpm,
             "candidates": [],
             "halfDoubleAmbiguous": False,
+            "halfDoubleRelation": None,
+            "confidence": 0.0,
             "meterEstimate": "4/4",
             "onsetDensityPerSec": 0.0,
             "swingRatio": 0.5,
+            "grooveFeel": "straight",
             "regularity": 0.0,
+            "rhythmicMotifRegularity": 0.0,
             "beatGridSec": [],
             "downbeatsSec": [],
+            "onsetCount": 0,
             "accentPattern": [1.0, 0.5, 0.7, 0.5],
             "assessment": "uncertain",
         }
@@ -85,10 +112,10 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
     if energy > 1e-12:
         ac = signal.correlate(centered, centered, mode="full", method="fft")[len(centered) - 1 :]
         ac /= energy
-        lo, hi = int(flux_rate * 60 / 180), int(flux_rate * 60 / 60)
+        lo, hi = int(flux_rate * 60 / 185), int(flux_rate * 60 / 55)
         peaks, _ = signal.find_peaks(ac[lo - 1 : hi + 2])
         lags = [int(k + lo - 1) for k in peaks if lo <= k + lo - 1 <= hi]
-        for k in sorted(lags, key=lambda idx: ac[idx], reverse=True)[:5]:
+        for k in sorted(lags, key=lambda idx: ac[idx], reverse=True)[:6]:
             a, b, c = ac[k - 1 : k + 2]
             denom = a - 2 * b + c
             delta = float(np.clip(0.5 * (a - c) / denom, -0.5, 0.5)) if abs(denom) > 1e-12 else 0.0
@@ -100,16 +127,42 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
             )
 
     strong = bool(candidates and candidates[0]["strength"] >= 0.14)
-    dominant = candidates[0]["bpm"] if strong else None
-    ambiguous = bool(
-        strong
-        and dominant
-        and any(
-            abs(max(c["bpm"], dominant) / min(c["bpm"], dominant) - 2.0) < 0.045
-            and c["strength"] >= candidates[0]["strength"] * 0.65
-            for c in candidates[1:]
-        )
-    )
+    measured_pulse = candidates[0]["bpm"] if strong else None
+
+    # Annotate half-time / double-time relations among candidates
+    half_double_pair: dict[str, Any] | None = None
+    for idx, cand in enumerate(candidates):
+        if idx == 0 or not measured_pulse:
+            cand["relation"] = "primary"
+        else:
+            rel = resolve_octave_tempo_relation(measured_pulse, cand["bpm"])
+            cand["relation"] = rel["relation"]
+            if rel["relation"] in ("half_time", "double_time") and cand["strength"] >= candidates[0]["strength"] * 0.55:
+                if half_double_pair is None:
+                    half_double_pair = {
+                        "lowerBpm": min(measured_pulse, cand["bpm"]),
+                        "upperBpm": max(measured_pulse, cand["bpm"]),
+                        "relation": rel["relation"],
+                    }
+
+    ambiguous = half_double_pair is not None
+
+    # Resolve adopted musical tempo cleanly:
+    # 1) If project_bpm matches an octave candidate within 3%, adopt that octave
+    # 2) Else if measured pulse < 78 BPM and a strong 2x candidate (85..165 BPM) exists, adopt 2x musical tempo
+    adopted = measured_pulse
+    if measured_pulse and half_double_pair:
+        if project_bpm:
+            rel_lo = resolve_octave_tempo_relation(project_bpm, half_double_pair["lowerBpm"])
+            rel_hi = resolve_octave_tempo_relation(project_bpm, half_double_pair["upperBpm"])
+            if rel_hi["relation"] == "direct_match":
+                adopted = half_double_pair["upperBpm"]
+            elif rel_lo["relation"] == "direct_match":
+                adopted = half_double_pair["lowerBpm"]
+        elif measured_pulse < 78.0 and 85.0 <= half_double_pair["upperBpm"] <= 165.0:
+            adopted = half_double_pair["upperBpm"]
+
+    confidence = round(float(candidates[0]["strength"]), 3) if candidates else 0.0
 
     # Onset peak picking
     flux_norm = flux / (np.max(flux) + 1e-9)
@@ -119,10 +172,8 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
     duration_sec = len(mono_12k) / sr_12k
     density = round(len(onset_times) / max(1.0, duration_sec), 2)
 
-    # Beat grid, accent pattern, and swing estimation
-    bpm_for_grid = dominant or 120.0
+    bpm_for_grid = adopted or measured_pulse or 120.0
     beat_period = 60.0 / bpm_for_grid
-    # Find phase offset maximizing onset flux on beat grid
     period_frames = max(10, int(round(beat_period * flux_rate)))
     phase_scores = [float(np.mean(flux_norm[p::period_frames])) for p in range(period_frames)]
     best_phase_sec = int(np.argmax(phase_scores)) / flux_rate
@@ -132,32 +183,21 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
         if best_phase_sec + i * beat_period <= duration_sec
     ]
 
-    # Meter estimate: compare 3-beat vs 4-beat bar energy periodicity
-    bar_energy_4 = []
-    for idx in range(0, min(len(beat_grid), 64), 4):
-        f_idx = min(len(flux_norm) - 1, int(beat_grid[idx] * flux_rate))
-        bar_energy_4.append(float(flux_norm[f_idx]))
-    bar_energy_3 = []
-    for idx in range(0, min(len(beat_grid), 63), 3):
-        f_idx = min(len(flux_norm) - 1, int(beat_grid[idx] * flux_rate))
-        bar_energy_3.append(float(flux_norm[f_idx]))
+    bar_energy_4 = [float(flux_norm[min(len(flux_norm) - 1, int(beat_grid[i] * flux_rate))]) for i in range(0, min(len(beat_grid), 64), 4)]
+    bar_energy_3 = [float(flux_norm[min(len(flux_norm) - 1, int(beat_grid[i] * flux_rate))]) for i in range(0, min(len(beat_grid), 63), 3)]
     meter_est = "3/4" if (np.mean(bar_energy_3) if bar_energy_3 else 0) > (np.mean(bar_energy_4) if bar_energy_4 else 0) * 1.18 else "4/4"
     bpb = 3 if meter_est == "3/4" else 4
     downbeats = beat_grid[::bpb]
 
-    # Accent pattern across beats of a bar
     accent_sums = np.zeros(bpb, dtype=np.float64)
     accent_counts = np.zeros(bpb, dtype=np.float64)
     for i, bt in enumerate(beat_grid):
         f_idx = min(len(flux_norm) - 1, int(bt * flux_rate))
-        w_start = max(0, f_idx - 2)
-        w_end = min(len(flux_norm), f_idx + 3)
-        accent_sums[i % bpb] += float(np.max(flux_norm[w_start:w_end]))
+        accent_sums[i % bpb] += float(np.max(flux_norm[max(0, f_idx - 2) : min(len(flux_norm), f_idx + 3)]))
         accent_counts[i % bpb] += 1
     accents = accent_sums / np.maximum(1, accent_counts)
     accents = accents / (np.max(accents) + 1e-9)
 
-    # Swing ratio: average relative phase of off-beat onsets falling in [0.35, 0.72] of beat period
     offbeat_phases = []
     for ot in onset_times:
         rel = ((ot - best_phase_sec) % beat_period) / beat_period
@@ -166,48 +206,57 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int) -> dict[str, Any]:
     swing_ratio = round(float(np.median(offbeat_phases)), 3) if len(offbeat_phases) >= 6 else 0.50
 
     return {
-        "estimatedBpm": dominant,
+        "measuredPulseBpm": measured_pulse,
+        "estimatedBpm": adopted,  # backward-compatible field carrying musical adopted tempo
+        "adoptedTempoBpm": adopted,
+        "projectBpm": project_bpm,
         "candidates": candidates,
         "halfDoubleAmbiguous": ambiguous,
+        "halfDoubleRelation": half_double_pair,
+        "confidence": confidence,
         "meterEstimate": meter_est,
         "onsetDensityPerSec": density,
         "swingRatio": swing_ratio,
         "grooveFeel": "swung" if swing_ratio >= 0.56 else ("pushed" if swing_ratio <= 0.45 else "straight"),
-        "regularity": round(candidates[0]["strength"], 3) if candidates else 0.0,
+        "regularity": confidence,
+        "rhythmicMotifRegularity": confidence,
         "beatGridSec": beat_grid[:256],
         "downbeatsSec": downbeats[:64],
         "onsetCount": len(onset_times),
         "accentPattern": [round(float(v), 3) for v in accents],
-        "assessment": "half_double_time_ambiguous" if ambiguous else ("estimated" if strong else "uncertain"),
+        "assessment": "half_double_resolved" if (ambiguous and adopted) else ("estimated" if strong else "uncertain"),
     }
 
 
-def _compute_chroma(mono_12k: np.ndarray, sr_12k: int) -> tuple[np.ndarray, np.ndarray]:
-    """Compute 12-pitch-class Chroma matrix (12 x T) from STFT bins between C2 (65 Hz) and C7 (2093 Hz)."""
+def _compute_chroma(mono_12k: np.ndarray, sr_12k: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute full-band Chroma (65–2093 Hz) AND bass-register Chroma (40–220 Hz) for root accuracy."""
     nperseg = 4096
     noverlap = 2048
     freqs, times, zxx = signal.stft(mono_12k, fs=sr_12k, nperseg=nperseg, noverlap=noverlap, boundary=None)
     power = np.abs(zxx) ** 2
-    valid = (freqs >= 65.4) & (freqs <= 2093.0)
-    v_freqs = freqs[valid]
-    v_power = power[valid]
 
-    chroma = np.zeros((12, v_power.shape[1]), dtype=np.float64)
-    midi_bins = np.round(69.0 + 12.0 * np.log2(v_freqs / 440.0)).astype(int)
-    pitch_classes = midi_bins % 12
-    for pc in range(12):
-        mask = pitch_classes == pc
-        if np.any(mask):
-            chroma[pc] = v_power[mask].sum(axis=0)
+    def band_chroma(lo_hz: float, hi_hz: float) -> np.ndarray:
+        valid = (freqs >= lo_hz) & (freqs <= hi_hz)
+        vf = freqs[valid]
+        vp = power[valid]
+        c = np.zeros((12, vp.shape[1]), dtype=np.float64)
+        midi_bins = np.round(69.0 + 12.0 * np.log2(vf / 440.0)).astype(int)
+        pcs = midi_bins % 12
+        for pc in range(12):
+            m = pcs == pc
+            if np.any(m):
+                c[pc] = vp[m].sum(axis=0)
+        c = np.log1p(c * 100.0)
+        return c / (np.linalg.norm(c, axis=0, keepdims=True) + 1e-9)
 
-    chroma = np.log1p(chroma * 100.0)
-    norms = np.linalg.norm(chroma, axis=0, keepdims=True) + 1e-9
-    return chroma / norms, times
+    full_chroma = band_chroma(65.4, 2093.0)
+    bass_chroma = band_chroma(40.0, 220.0)
+    return full_chroma, bass_chroma, times
 
 
 def _analyze_harmony(mono_12k: np.ndarray, sr_12k: int, bpm: float | None) -> dict[str, Any]:
-    """Estimate Key/Mode, threshold-gated chord progression, harmonic shifts, and chroma motifs."""
-    chroma, times = _compute_chroma(mono_12k, sr_12k)
+    """Estimate Key/Mode with bass-root anchoring, separating harmonic repetition from melody."""
+    chroma, bass_chroma, times = _compute_chroma(mono_12k, sr_12k)
     if chroma.shape[1] < 4:
         return {
             "estimatedKey": "Uncertain",
@@ -215,36 +264,50 @@ def _analyze_harmony(mono_12k: np.ndarray, sr_12k: int, bpm: float | None) -> di
             "chromaMean": [0.0] * 12,
             "chordProgression": [],
             "harmonicChangeTimesSec": [],
+            "harmonicRepetitionScore": 0.0,
             "motifRepetitionScore": 0.0,
+            "melodicMotifStatus": "not_transcribed_in_dsp_mode",
             "confidence": 0.0,
             "note": "Audio too short for harmonic estimation.",
         }
 
     mean_chroma = chroma.mean(axis=1)
+    bass_mean = bass_chroma.mean(axis=1)
+    bass_norm = bass_mean / (np.max(bass_mean) + 1e-9)
+
     mc = mean_chroma - mean_chroma.mean()
     mc_norm = np.linalg.norm(mc) + 1e-9
 
+    # Favor Major/Minor slightly over rare modes when correlation is nearly tied,
+    # and anchor tonic likelihood with measured bass-register pitch-class prominence.
     profiles = [
-        ("major", MAJOR_PROFILE),
-        ("minor", MINOR_PROFILE),
-        ("dorian", DORIAN_PROFILE),
-        ("mixolydian", MIXOLYDIAN_PROFILE),
+        ("minor", MINOR_PROFILE, 0.04),
+        ("major", MAJOR_PROFILE, 0.04),
+        ("dorian", DORIAN_PROFILE, 0.0),
+        ("mixolydian", MIXOLYDIAN_PROFILE, 0.0),
     ]
     scored_keys: list[dict[str, Any]] = []
-    for mode_name, prof in profiles:
+    for mode_name, prof, prior in profiles:
         for root in range(12):
             shifted = np.roll(prof, root)
             sc = shifted - shifted.mean()
             corr = float((mc @ sc) / (mc_norm * (np.linalg.norm(sc) + 1e-9)))
+            bass_bonus = 0.08 * float(bass_norm[root])
+            combined = corr + prior + bass_bonus
             scored_keys.append(
-                {"key": f"{NOTE_NAMES[root]} {mode_name}", "root": NOTE_NAMES[root], "mode": mode_name, "score": round(corr, 3)}
+                {
+                    "key": f"{NOTE_NAMES[root]} {mode_name}",
+                    "root": NOTE_NAMES[root],
+                    "mode": mode_name,
+                    "score": round(combined, 3),
+                    "chromaCorrelation": round(corr, 3),
+                }
             )
     scored_keys.sort(key=lambda x: x["score"], reverse=True)
     top_key = scored_keys[0]
     gap = max(0.0, top_key["score"] - scored_keys[1]["score"]) if len(scored_keys) > 1 else 0.0
-    key_conf = round(float(np.clip(top_key["score"] * 0.7 + gap * 1.5, 0.0, 0.98)), 3)
+    key_conf = round(float(np.clip(top_key["chromaCorrelation"] * 0.72 + gap * 1.6, 0.0, 0.98)), 3)
 
-    # Build major & minor triad templates for conservative bar-window chord estimation
     chord_templates: list[tuple[str, np.ndarray]] = []
     for root in range(12):
         maj = np.zeros(12)
@@ -268,15 +331,13 @@ def _analyze_harmony(mono_12k: np.ndarray, sr_12k: int, bpm: float | None) -> di
         if not np.any(mask):
             continue
         seg = chroma[:, mask].mean(axis=1)
-        seg_norm = np.linalg.norm(seg) + 1e-9
-        seg_u = seg / seg_norm
+        seg_u = seg / (np.linalg.norm(seg) + 1e-9)
         best_label, best_sim = "uncertain", 0.0
         for cname, tmpl in chord_templates:
             sim = float(seg_u @ tmpl)
             if sim > best_sim:
                 best_sim = sim
                 best_label = cname
-        # Strict honesty gate: never fabricate chords when chroma correlation is weak
         final_label = best_label if best_sim >= 0.68 else "uncertain"
         if prev_chord is not None and final_label != prev_chord and final_label != "uncertain":
             change_times.append(round(t0, 2))
@@ -292,37 +353,34 @@ def _analyze_harmony(mono_12k: np.ndarray, sr_12k: int, bpm: float | None) -> di
             }
         )
 
-    # Motif recurrence via chroma self-similarity off-diagonal strength
+    # Chroma self-similarity = HARMONIC repetition (explicitly NOT claiming melodic transcription!)
     step = max(1, chroma.shape[1] // 96)
     c_sub = chroma[:, ::step]
     sim_mat = c_sub.T @ c_sub
     n_s = sim_mat.shape[0]
-    motif_score = 0.0
+    harmonic_rep = 0.0
     if n_s >= 8:
-        # Ignore main diagonal (+/- 2 frames)
-        off_vals = []
-        for lag in range(4, n_s // 2):
-            diag = np.diag(sim_mat, k=lag)
-            if len(diag) >= 4:
-                off_vals.append(float(np.mean(diag)))
-        motif_score = round(max(off_vals, default=0.0), 3)
+        off_vals = [float(np.mean(np.diag(sim_mat, k=lag))) for lag in range(4, n_s // 2) if len(np.diag(sim_mat, k=lag)) >= 4]
+        harmonic_rep = round(max(off_vals, default=0.0), 3)
 
     return {
-        "estimatedKey": top_key["key"] if top_key["score"] >= 0.35 else "Uncertain",
+        "estimatedKey": top_key["key"] if top_key["chromaCorrelation"] >= 0.30 else "Uncertain",
         "modeCandidates": scored_keys[:4],
         "chromaMean": [round(float(v), 4) for v in mean_chroma],
         "chordProgression": chords,
         "harmonicChangeTimesSec": change_times,
-        "motifRepetitionScore": motif_score,
+        "harmonicRepetitionScore": harmonic_rep,
+        "motifRepetitionScore": harmonic_rep,  # backward compat alias
+        "melodicMotifStatus": "not_transcribed_in_dsp_mode",
+        "instrumentPhraseStatus": "not_transcribed_in_dsp_mode",
         "confidence": key_conf,
-        "note": "Chroma 템플릿 기반 조성/코드 추정치입니다. 확신도가 낮은 구간은 uncertain으로 표기됩니다.",
+        "note": "조성/화성 반복은 베이스 루트 보정 Chroma 추정치입니다. 개별 멜로디 채보 및 악기별 프레이즈 분리는 DSP 분석 모드에서 수행하지 않습니다.",
     }
 
 
 def _analyze_arrangement(
     stereo: np.ndarray, sr: int, mono_12k: np.ndarray, sr_12k: int, bpm: float | None
 ) -> dict[str, Any]:
-    """Compute real time-aligned energy curve and novelty-detected sections."""
     duration_sec = len(stereo) / sr
     n_points = min(128, max(16, int(duration_sec * 2)))
     chunk_len = max(1, len(stereo) // n_points)
@@ -341,22 +399,18 @@ def _analyze_arrangement(
     for pt, r in zip(energy_curve, rms_vals):
         pt["normEnergy"] = round(float(r / max(max_rms, 1e-6)), 3)
 
-    # Detect structural novelty peaks using RMS + spectral flux contrast
-    chroma, c_times = _compute_chroma(mono_12k, sr_12k)
+    chroma, _, _ = _compute_chroma(mono_12k, sr_12k)
     rms_arr = np.array(rms_vals, dtype=np.float64)
     rms_smooth = ndimage.gaussian_filter1d(rms_arr, sigma=1.5)
     novelty = np.abs(np.diff(rms_smooth, prepend=rms_smooth[0]))
     if chroma.shape[1] >= 8:
         c_diff = np.linalg.norm(np.diff(chroma, axis=1, prepend=chroma[:, :1]), axis=0)
-        c_resampled = np.interp(
-            np.linspace(0, 1, len(novelty)), np.linspace(0, 1, len(c_diff)), c_diff
-        )
+        c_resampled = np.interp(np.linspace(0, 1, len(novelty)), np.linspace(0, 1, len(c_diff)), c_diff)
         novelty = novelty / (np.max(novelty) + 1e-9) + 0.65 * (c_resampled / (np.max(c_resampled) + 1e-9))
 
     min_section_pts = max(4, int(round(len(novelty) * (6.0 / max(12.0, duration_sec)))))
     peaks, _ = signal.find_peaks(novelty, distance=min_section_pts, prominence=0.22)
     boundaries_idx = [0] + sorted(int(p) for p in peaks if 3 <= p <= len(novelty) - 4) + [len(novelty)]
-    # Cap at 8 sections for clean DAW readability
     if len(boundaries_idx) > 9:
         ranked = sorted(peaks, key=lambda p: novelty[p], reverse=True)[:7]
         boundaries_idx = [0] + sorted(int(p) for p in ranked) + [len(novelty)]
@@ -377,21 +431,16 @@ def _analyze_arrangement(
     letter_idx = 0
     for idx, (t0, t1, seg_rms, rel_e) in enumerate(raw_sections):
         if idx == 0 and rel_e < max_rel * 0.78 and len(raw_sections) >= 3:
-            label = "Intro"
-            estimated_role = True
+            label, estimated_role = "Intro", True
         elif idx == len(raw_sections) - 1 and rel_e < max_rel * 0.75 and len(raw_sections) >= 3:
-            label = "Outro"
-            estimated_role = True
+            label, estimated_role = "Outro", True
         elif idx == climax_idx and rel_e >= 0.72 and len(raw_sections) >= 3:
-            label = "Climax"
-            estimated_role = True
+            label, estimated_role = "Climax", True
         elif idx > 0 and idx < len(raw_sections) - 1 and rel_e < max_rel * 0.58:
-            label = "Break"
-            estimated_role = True
+            label, estimated_role = "Break", True
         else:
-            label = f"Section {chr(65 + (letter_idx % 26))}"
+            label, estimated_role = f"Section {chr(65 + (letter_idx % 26))}", False
             letter_idx += 1
-            estimated_role = False
 
         sections.append(
             {
@@ -404,6 +453,7 @@ def _analyze_arrangement(
                 "energyDbfs": round(20.0 * math.log10(max(seg_rms, 1e-6)), 2),
                 "relativeEnergy": round(rel_e, 3),
                 "isEstimatedRole": estimated_role,
+                "source": "detected",
             }
         )
 
@@ -414,8 +464,11 @@ def _analyze_arrangement(
     }
 
 
-def _analyze_sound_and_instruments(stereo: np.ndarray, sr: int, mono_12k: np.ndarray, sr_12k: int) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Measure Welch frequency bands, dynamics, stereo field, and HPSS instrument presence."""
+def _analyze_sound_and_instruments(
+    stereo: np.ndarray, sr: int, mono_12k: np.ndarray, sr_12k: int
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Measure BS.1770-4 Loudness, 4x True Peak, Welch PSD, Stereo field, and conservative HPSS estimates."""
+    loud = measure_loudness(stereo, sr)
     mono = stereo.mean(axis=1).astype(np.float64)
     nperseg = min(8192, max(256, len(mono)))
     freqs, psd = signal.welch(mono, fs=sr, nperseg=nperseg)
@@ -436,25 +489,6 @@ def _analyze_sound_and_instruments(stereo: np.ndarray, sr: int, mono_12k: np.nda
 
     centroid_hz = round(float((freqs * psd).sum() / total_power), 1)
 
-    peak = float(np.max(np.abs(stereo))) if len(stereo) > 0 else 0.0
-    rms = float(np.sqrt(np.mean(stereo * stereo))) if len(stereo) > 0 else 0.0
-    peak_dbfs = round(20.0 * math.log10(max(peak, 1e-9)), 2)
-    rms_dbfs = round(20.0 * math.log10(max(rms, 1e-9)), 2)
-    crest_db = round(peak_dbfs - rms_dbfs, 2)
-
-    # Short-term 400ms RMS dynamic range (P95 - P10)
-    win = max(1, int(0.4 * sr))
-    n_wins = max(1, len(mono) // win)
-    st_rms = np.array(
-        [
-            20.0 * math.log10(max(float(np.sqrt(np.mean(mono[i * win : (i + 1) * win] ** 2))), 1e-6))
-            for i in range(n_wins)
-        ]
-    )
-    active_st = st_rms[st_rms > -55.0]
-    dyn_range_db = round(float(np.percentile(active_st, 95) - np.percentile(active_st, 10)), 2) if len(active_st) >= 4 else 0.0
-
-    # Stereo correlation & mid/side width
     left, right = stereo[:, 0].astype(np.float64), stereo[:, 1].astype(np.float64)
     denom = float(np.sqrt((left @ left) * (right @ right))) + 1e-12
     lr_corr = round(float(np.clip((left @ right) / denom, -1.0, 1.0)), 3)
@@ -462,12 +496,10 @@ def _analyze_sound_and_instruments(stereo: np.ndarray, sr: int, mono_12k: np.nda
     side_e = float(np.mean((0.5 * (left - right)) ** 2))
     stereo_width = round(float(np.clip(math.sqrt(side_e / (mid_e + 1e-12)), 0.0, 1.5)), 3)
 
-    # STFT spectral flux & HPSS (Harmonic-Percussive separation via median filter)
     f12, _, z12 = signal.stft(mono_12k, fs=sr_12k, nperseg=1024, noverlap=768, boundary=None)
     mag12 = np.abs(z12)
     flux_mean = round(float(np.mean(np.maximum(np.diff(mag12, axis=1), 0.0))), 4) if mag12.shape[1] > 1 else 0.0
 
-    # HPSS median filter (time-axis median -> harmonic, freq-axis median -> percussive)
     h_mag = ndimage.median_filter(mag12, size=(1, 17))
     p_mag = ndimage.median_filter(mag12, size=(17, 1))
     h_pow = float(np.sum(h_mag ** 2))
@@ -476,26 +508,31 @@ def _analyze_sound_and_instruments(stereo: np.ndarray, sr: int, mono_12k: np.nda
     percussive_ratio = round(p_pow / hp_total, 3)
     harmonic_ratio = round(h_pow / hp_total, 3)
 
-    # Estimate reverb/space character conservatively from spectral decay & stereo width
     reverb_char = (
         "ambient / spacious"
         if (stereo_width > 0.42 and percussive_ratio < 0.35)
         else ("tight / dry" if percussive_ratio > 0.45 and stereo_width < 0.28 else "balanced room")
     )
-    transient_char = "punchy" if crest_db >= 13.0 else ("controlled" if crest_db >= 9.0 else "compressed / dense")
+    transient_char = "punchy" if loud["crestFactorDb"] >= 13.0 else ("controlled" if loud["crestFactorDb"] >= 9.0 else "compressed / dense")
 
     sound = {
         "measured": {
             "sampleRate": sr,
             "channels": int(stereo.shape[1]),
+            "loudnessStandard": loud["standard"],
+            "integratedLufs": loud["integratedLufs"],
+            "shortTermMaxLufs": loud["shortTermMaxLufs"],
+            "shortTermMedianLufs": loud["shortTermMedianLufs"],
+            "loudnessRangeLu": loud["loudnessRangeLu"],
+            "approxLufs": loud["integratedLufs"],  # backward-compatible alias now backed by BS.1770-4
+            "rmsDbfs": loud["rmsDbfs"],
+            "samplePeakDbfs": loud["samplePeakDbfs"],
+            "truePeakDbtp": loud["truePeakDbtp"],
+            "crestFactorDb": loud["crestFactorDb"],
+            "dynamicRangeDb": loud["loudnessRangeLu"],
             "frequencyBandsPct": bands,
             "spectralCentroidHz": centroid_hz,
             "spectralFluxMean": flux_mean,
-            "crestFactorDb": crest_db,
-            "dynamicRangeDb": dyn_range_db,
-            "approxLufs": round(rms_dbfs - 0.691, 2),
-            "rmsDbfs": rms_dbfs,
-            "samplePeakDbfs": peak_dbfs,
             "stereoWidth": stereo_width,
             "lrCorrelation": lr_corr,
             "percussiveRatio": percussive_ratio,
@@ -504,34 +541,41 @@ def _analyze_sound_and_instruments(stereo: np.ndarray, sr: int, mono_12k: np.nda
         "estimated": {
             "reverbCharacter": reverb_char,
             "transientCharacter": transient_char,
-            "disclaimer": "마스터 음원에서 실제 EQ/컴프레서/리버브 플러그인 수치를 역산하지 않습니다. 측정된 스펙트럼·다이내믹·스테레오 지표와 보수적 추정치만 제공합니다.",
+            "disclaimer": "ITU-R BS.1770-4 Integrated/Short-Term LUFS 및 4x True Peak 실측치와 보수적 음향 추정을 분리 표기합니다. EQ/컴프레서/리버브 플러그인 파라미터는 역산하지 않습니다.",
         },
     }
 
-    # Instrument presence estimates via HPSS + band energy
     def hp_band_share(arr: np.ndarray, lo: float, hi: float) -> float:
         m = (f12 >= lo) & (f12 < hi)
         return float(np.sum(arr[m] ** 2)) / hp_total
 
-    drum_score = min(0.96, round(percussive_ratio * 1.9 + hp_band_share(p_mag, 50, 220) * 1.4, 2))
-    bass_score = min(0.96, round((bands["sub_20_60"] + bands["bass_60_200"]) / 52.0, 2))
-    mid_harm_score = min(0.95, round(hp_band_share(h_mag, 200, 1800) * 2.2, 2))
-    high_synth_score = min(0.95, round(hp_band_share(h_mag, 1800, 5500) * 3.5, 2))
-    vocal_band_score = min(0.90, round(hp_band_share(h_mag, 300, 3400) * 1.5 * (1.0 - min(0.5, stereo_width)), 2))
+    drum_score = min(0.95, round(percussive_ratio * 1.9 + hp_band_share(p_mag, 50, 220) * 1.4, 2))
+    bass_score = min(0.95, round((bands["sub_20_60"] + bands["bass_60_200"]) / 52.0, 2))
+    mid_harm_score = min(0.85, round(hp_band_share(h_mag, 200, 1800) * 2.1, 2))
+    high_synth_score = min(0.85, round(hp_band_share(h_mag, 1800, 5500) * 3.2, 2))
+    vocal_band_score = min(0.80, round(hp_band_share(h_mag, 300, 3400) * 1.4 * (1.0 - min(0.5, stereo_width)), 2))
 
-    def label_level(s: float) -> str:
-        return "prominent" if s >= 0.6 else ("present" if s >= 0.28 else "low")
+    def build_elem(name: str, score: float, method: str) -> dict[str, Any]:
+        status = "estimated" if score >= 0.35 else "unconfirmed"
+        level = "prominent" if score >= 0.62 else ("present" if score >= 0.35 else "unconfirmed")
+        return {
+            "name": name,
+            "confidence": score,
+            "level": level,
+            "status": status,
+            "method": method,
+        }
 
     instrumentation = {
         "isEstimated": True,
-        "method": "HPSS median-filter decomposition + band energy ratios (no stem separation run)",
-        "note": "HPSS 스펙트럼 추정치이며 실제 개별 녹음이나 분리 스템이 아닙니다.",
+        "method": "HPSS median-filter decomposition + band energy ratios (cannot distinguish guitar vs keys vs synth timber definitively)",
+        "note": "주파수·HPSS 기반 보수적 추정치입니다. 기타·건반·신스의 정확한 악기 구분은 미확인(unconfirmed)으로 취급하며 실제 스템이 아닙니다.",
         "elements": [
-            {"name": "Drums / Percussion", "confidence": drum_score, "level": label_level(drum_score)},
-            {"name": "Bass / Sub", "confidence": bass_score, "level": label_level(bass_score)},
-            {"name": "Guitar / Keys (Mid Harmonic)", "confidence": mid_harm_score, "level": label_level(mid_harm_score)},
-            {"name": "Synth / High Harmonic", "confidence": high_synth_score, "level": label_level(high_synth_score)},
-            {"name": "Vocal-Band Center Energy", "confidence": vocal_band_score, "level": label_level(vocal_band_score)},
+            build_elem("Percussive / Drum Energy", drum_score, "HPSS percussive ratio + 50–220 Hz transient energy"),
+            build_elem("Low / Bass Energy", bass_score, "Welch PSD 20–200 Hz band ratio"),
+            build_elem("Mid Harmonic (Guitar/Keys/Pad — ambiguous)", mid_harm_score, "HPSS harmonic 200–1800 Hz"),
+            build_elem("Upper Harmonic (Synth/Lead — ambiguous)", high_synth_score, "HPSS harmonic 1800–5500 Hz"),
+            build_elem("Center Vocal-Band Harmonic Energy", vocal_band_score, "Center-panned harmonic 300–3400 Hz"),
         ],
     }
 
@@ -545,10 +589,12 @@ def analyze_audio_file(
     cache_dir: Path,
     progress_cb: Callable[[int, str], None] | None = None,
     cancel_event: threading.Event | None = None,
+    project_bpm: float | None = None,
 ) -> dict[str, Any]:
-    """Run (or load cached) real acoustic analysis on a local audio file."""
+    """Run (or load cached) real acoustic analysis (v3.0.0) on a local audio file."""
     cache_dir.mkdir(parents=True, exist_ok=True)
-    cache_file = cache_dir / f"{sha256}_{ANALYSIS_VERSION}.json"
+    bpm_tag = f"_p{int(round(project_bpm))}" if project_bpm else ""
+    cache_file = cache_dir / f"{sha256}_{ANALYSIS_VERSION}{bpm_tag}.json"
     if cache_file.is_file():
         if progress_cb:
             progress_cb(100, "cached")
@@ -573,21 +619,21 @@ def analyze_audio_file(
 
     if progress_cb:
         progress_cb(42, "rhythm_analysis")
-    rhythm = _analyze_rhythm(mono_12k, sr_12k)
+    rhythm = _analyze_rhythm(mono_12k, sr_12k, project_bpm=project_bpm)
     check_cancel()
 
     if progress_cb:
         progress_cb(60, "harmony_analysis")
-    harmony = _analyze_harmony(mono_12k, sr_12k, rhythm.get("estimatedBpm"))
+    harmony = _analyze_harmony(mono_12k, sr_12k, rhythm.get("adoptedTempoBpm"))
     check_cancel()
 
     if progress_cb:
         progress_cb(76, "arrangement_analysis")
-    arrangement = _analyze_arrangement(stereo, sr, mono_12k, sr_12k, rhythm.get("estimatedBpm"))
+    arrangement = _analyze_arrangement(stereo, sr, mono_12k, sr_12k, rhythm.get("adoptedTempoBpm"))
     check_cancel()
 
     if progress_cb:
-        progress_cb(90, "sound_and_instrument_analysis")
+        progress_cb(90, "loudness_and_spectral_analysis")
     sound, instrumentation = _analyze_sound_and_instruments(stereo, sr, mono_12k, sr_12k)
     check_cancel()
 

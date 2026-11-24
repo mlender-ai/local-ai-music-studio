@@ -10,6 +10,8 @@ from typing import Any
 
 import numpy as np
 
+from .analysis import resolve_octave_tempo_relation
+
 
 def _quartile_energies(energy_curve: list[dict[str, Any]]) -> list[float]:
     if not energy_curve:
@@ -40,17 +42,23 @@ def compare_analyses(
         for k in ("sub_20_60", "bass_60_200", "low_mid_200_500", "mid_500_2000", "presence_2k_6k", "air_6k_20k")
     }
 
-    ref_bpm = ref_r.get("estimatedBpm")
-    tgt_bpm = tgt_r.get("estimatedBpm")
-    bpm_delta = round(float(tgt_bpm) - float(ref_bpm), 1) if (ref_bpm and tgt_bpm) else None
+    ref_bpm = ref_r.get("adoptedTempoBpm") or ref_r.get("estimatedBpm")
+    tgt_bpm = tgt_r.get("adoptedTempoBpm") or tgt_r.get("estimatedBpm")
+    tempo_rel = resolve_octave_tempo_relation(ref_bpm, tgt_bpm)
+    bpm_delta = tempo_rel["effectiveDeltaBpm"]
 
+    ref_lufs = float(ref_s.get("integratedLufs", ref_s.get("approxLufs", 0.0)))
+    tgt_lufs = float(tgt_s.get("integratedLufs", tgt_s.get("approxLufs", 0.0)))
     crest_delta = round(float(tgt_s.get("crestFactorDb", 0.0)) - float(ref_s.get("crestFactorDb", 0.0)), 2)
     dyn_delta = round(float(tgt_s.get("dynamicRangeDb", 0.0)) - float(ref_s.get("dynamicRangeDb", 0.0)), 2)
-    lufs_delta = round(float(tgt_s.get("approxLufs", 0.0)) - float(ref_s.get("approxLufs", 0.0)), 2)
+    lufs_delta = round(tgt_lufs - ref_lufs, 2)
+    true_peak_delta = round(float(tgt_s.get("truePeakDbtp", 0.0)) - float(ref_s.get("truePeakDbtp", 0.0)), 2)
     width_delta = round(float(tgt_s.get("stereoWidth", 0.0)) - float(ref_s.get("stereoWidth", 0.0)), 3)
     perc_delta = round(float(tgt_s.get("percussiveRatio", 0.0)) - float(ref_s.get("percussiveRatio", 0.0)), 3)
     motif_delta = round(
-        float(tgt_h.get("motifRepetitionScore", 0.0)) - float(ref_h.get("motifRepetitionScore", 0.0)), 3
+        float(tgt_h.get("harmonicRepetitionScore", tgt_h.get("motifRepetitionScore", 0.0)))
+        - float(ref_h.get("harmonicRepetitionScore", ref_h.get("motifRepetitionScore", 0.0))),
+        3,
     )
 
     # Normalized progression quartiles (handles tracks of different lengths fairly)
@@ -142,7 +150,15 @@ def compare_analyses(
             }
         )
 
-    if bpm_delta is not None and abs(bpm_delta) >= 2.0:
+    if tempo_rel["relation"] in ("half_time", "double_time"):
+        observations.append(
+            {
+                "category": "tempo",
+                "ko": f"템포 호환 (하프/더블타임 관계): 레퍼런스 {ref_bpm} BPM vs 대상 펄스 {tgt_bpm} BPM (정규화 {tempo_rel['normalizedTargetBpm']} BPM, 실질 차이 {bpm_delta:+.1f} BPM).",
+                "en": f"Tempo compatible (half/double-time relation): Reference {ref_bpm} BPM vs Target pulse {tgt_bpm} BPM (normalized {tempo_rel['normalizedTargetBpm']} BPM, delta {bpm_delta:+.1f} BPM).",
+            }
+        )
+    elif bpm_delta is not None and abs(bpm_delta) >= 2.5 and tempo_rel["compatible"] is False:
         observations.append(
             {
                 "category": "tempo",
@@ -165,16 +181,22 @@ def compare_analyses(
         "targetName": target_name,
         "referenceDurationSec": ref_analysis.get("durationSec"),
         "targetDurationSec": target_analysis.get("durationSec"),
+        "tempoRelation": tempo_rel,
         "measuredDeltas": {
             "bpmDelta": bpm_delta,
+            "tempoCompatible": tempo_rel["compatible"],
+            "tempoRelation": tempo_rel["relation"],
             "referenceKey": ref_h.get("estimatedKey"),
             "targetKey": tgt_h.get("estimatedKey"),
             "frequencyBandsDeltaPct": band_deltas,
             "crestFactorDeltaDb": crest_delta,
             "dynamicRangeDeltaDb": dyn_delta,
+            "integratedLufsDelta": lufs_delta,
             "approxLufsDelta": lufs_delta,
+            "truePeakDeltaDbtp": true_peak_delta,
             "stereoWidthDelta": width_delta,
             "percussiveRatioDelta": perc_delta,
+            "harmonicRepetitionDelta": motif_delta,
             "motifRepetitionDelta": motif_delta,
         },
         "normalizedProgression": progression_comparison,

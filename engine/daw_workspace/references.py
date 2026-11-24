@@ -166,11 +166,13 @@ def run_reference_analysis_sync(project_id: str, ref_id: str) -> tuple[dict[str,
     """Synchronously analyze a reference and persist both analysis and ReferenceBlueprint."""
     ref, audio_path = resolve_reference_audio_path(project_id, ref_id)
     pdir = store.project_dir(project_id)
+    proj_cur = store.load_project(project_id)
     result = analysis.analyze_audio_file(
         audio_path=audio_path,
         source_asset_id=ref_id,
         sha256=str(ref["sha256"]),
         cache_dir=pdir / "cache/analysis",
+        project_bpm=proj_cur.bpm,
     )
     bp = blueprint.build_reference_blueprint(result, existing_influences=ref.get("selectedInfluences"))
 
@@ -193,6 +195,8 @@ def start_reference_analysis_job(
     ref, audio_path = resolve_reference_audio_path(project_id, ref_id)
     pdir = store.project_dir(project_id)
 
+    proj_cur = store.load_project(project_id)
+
     def work(progress_cb, cancel_ev):
         return analysis.analyze_audio_file(
             audio_path=audio_path,
@@ -201,6 +205,7 @@ def start_reference_analysis_job(
             cache_dir=pdir / "cache/analysis",
             progress_cb=progress_cb,
             cancel_event=cancel_ev,
+            project_bpm=proj_cur.bpm,
         )
 
     def on_done(result: dict[str, Any]):
@@ -286,6 +291,7 @@ def compare_reference_with_target(
             source_asset_id=f"mix:{proj.id}:rev{proj.revision}",
             sha256=digest,
             cache_dir=pdir / "cache/analysis",
+            project_bpm=proj.bpm,
         )
     finally:
         if tmp_path.exists():

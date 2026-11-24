@@ -92,14 +92,20 @@ export interface ReferenceAnalysis {
   fromCache: boolean;
   durationSec: number;
   rhythm: {
+    measuredPulseBpm?: number | null;
     estimatedBpm: number | null;
-    candidates: Array<{ bpm: number; strength: number }>;
+    adoptedTempoBpm?: number | null;
+    projectBpm?: number | null;
+    candidates: Array<{ bpm: number; strength: number; relation?: string }>;
     halfDoubleAmbiguous: boolean;
+    halfDoubleRelation?: string | null;
+    confidence?: number;
     meterEstimate: string;
     onsetDensityPerSec: number;
     swingRatio: number;
     grooveFeel?: string;
     regularity: number;
+    rhythmicMotifRegularity?: number;
     accentPattern: number[];
     assessment: string;
   };
@@ -116,7 +122,10 @@ export interface ReferenceAnalysis {
       isEstimate: boolean;
     }>;
     harmonicChangeTimesSec: number[];
+    harmonicRepetitionScore?: number;
     motifRepetitionScore: number;
+    melodicMotifStatus?: string;
+    instrumentPhraseStatus?: string;
     confidence: number;
     note: string;
   };
@@ -129,6 +138,11 @@ export interface ReferenceAnalysis {
     measured: {
       sampleRate: number;
       channels: number;
+      loudnessStandard?: string;
+      integratedLufs?: number;
+      shortTermMaxLufs?: number;
+      shortTermMedianLufs?: number;
+      loudnessRangeLu?: number;
       frequencyBandsPct: Record<string, number>;
       spectralCentroidHz: number;
       spectralFluxMean: number;
@@ -137,6 +151,7 @@ export interface ReferenceAnalysis {
       approxLufs: number;
       rmsDbfs: number;
       samplePeakDbfs: number;
+      truePeakDbtp?: number;
       stereoWidth: number;
       lrCorrelation: number;
       percussiveRatio: number;
@@ -152,7 +167,7 @@ export interface ReferenceAnalysis {
     isEstimated: boolean;
     method: string;
     note: string;
-    elements: Array<{ name: string; confidence: number; level: string }>;
+    elements: Array<{ name: string; confidence: number; level: string; status?: string; method?: string }>;
   };
 }
 
@@ -245,9 +260,184 @@ export interface Project {
   assets: Asset[];
   tracks: Track[];
   references: ReferenceItem[];
+  compositionPlans?: CompositionPlan[];
+  takes?: Take[];
   notes: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  kind: string;
+  available: boolean;
+  connected: boolean;
+  costModel: string;
+  requiresApproval: boolean;
+  models: string[];
+  activeModel: string | null;
+  capabilities: string[];
+  statusNoteKo: string;
+  statusNoteEn: string;
+}
+
+export interface ProviderSummary {
+  activeProviderId: string;
+  activeModel?: string | null;
+  providers: ProviderInfo[];
+}
+
+export interface GenerationEngineInfo {
+  id: string;
+  name: string;
+  kind: string;
+  available: boolean;
+  modes: string[];
+  honestLabel?: string;
+  statusNoteKo: string;
+  statusNoteEn: string;
+}
+
+export interface ReferenceBinding {
+  referenceIds: string[];
+  referenceNames: string[];
+  selectedInfluences: string[];
+  appliedFeatures: Record<string, unknown>;
+  unmappedFeatures: string[];
+  traceabilityNote: string;
+}
+
+export interface PlannedSection {
+  name: string;
+  startBar: number;
+  endBar: number;
+  bars: number;
+  energy: number;
+  activeRoles: string[];
+  transitionNote: string;
+  source: "planned" | "detected" | "confirmed";
+}
+
+export interface CompositionPlan {
+  id: string;
+  projectId: string;
+  createdAt: string;
+  instruction: string;
+  mode: "full_music" | "instrument_session" | "loop_midi";
+  musicalIdentity: {
+    title?: string;
+    genre?: string;
+    mood?: string;
+    tempoBpm?: number;
+    timeSignature?: string;
+    key?: string;
+    scale?: string;
+    barCount?: number;
+    durationSec?: number;
+    instrumentalOnly?: boolean;
+  };
+  signatureMotif: {
+    concept?: string;
+    scaleDegrees?: number[];
+    variationRule?: string;
+  };
+  harmonyAndGroove: {
+    key?: string;
+    scale?: string;
+    chordProgression?: string[];
+    grooveFeel?: string;
+    swingRatio?: number;
+  };
+  instrumentRoles: Array<{
+    role: string;
+    name: string;
+    trackType: string;
+    instrumentRef?: string;
+    color?: string;
+    activeSections?: string[];
+  }>;
+  arrangement: PlannedSection[];
+  variations: string[];
+  climax: Record<string, unknown>;
+  generationStrategy: Record<string, unknown>;
+  referenceBinding: ReferenceBinding;
+  providerProvenance: Record<string, unknown>;
+  summaryKo: string;
+  summaryEn: string;
+}
+
+export interface GenerationJobStatus {
+  jobId: string;
+  projectId: string;
+  planId?: string | null;
+  takeId?: string | null;
+  mode: string;
+  engineRequested: string;
+  status: string;
+  stage: string;
+  progress: number;
+  error: string | null;
+  logs: Array<{ at: string; stage: string; message: string }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TakeArtifact {
+  role: string;
+  name: string;
+  trackType: "audio" | "stem" | "midi";
+  instrumentRef?: string | null;
+  color: string;
+  audioRelativePath?: string | null;
+  midiRelativePath?: string | null;
+  notes: MidiNote[];
+  startBeats: number;
+  durationBeats: number;
+  gainDb: number;
+  pan: number;
+}
+
+export interface Take {
+  id: string;
+  projectId: string;
+  jobId: string;
+  planId?: string | null;
+  title: string;
+  mode: "full_music" | "instrument_session" | "loop_midi" | "stem_separation";
+  status: "ready" | "applied" | "rejected" | "kept";
+  previewRelativePath?: string | null;
+  previewDurationSec: number;
+  previewIntegratedLufs?: number | null;
+  levelMatchedGainDb: number;
+  targetTrackId?: string | null;
+  preserveExistingTracks: boolean;
+  plannedSections: PlannedSection[];
+  detectedSections: ReferenceSection[];
+  artifacts: TakeArtifact[];
+  qualityReport: {
+    technical: Record<string, unknown>;
+    musical: Record<string, unknown>;
+    referenceComparison?: ReferenceComparisonResult | null;
+    vocalScreening?: Record<string, unknown> | null;
+    verdict: "pass" | "warn" | "fail";
+    warnings: string[];
+    honestyNote?: string;
+  };
+  provenance: {
+    engine: string;
+    engineLabel: string;
+    mode: string;
+    providerId: string;
+    model: string;
+    seed: number;
+    planId?: string | null;
+    referenceIds: string[];
+    instrumentalPolicy: string;
+    generatedAt: string;
+  };
+  createdAt: string;
+  appliedAt?: string | null;
 }
 
 export interface ProjectSummary {
@@ -321,6 +511,8 @@ export interface ProducerInstructResponse {
   supported: boolean;
   action: string;
   proposal?: ChangeProposal;
+  plan?: CompositionPlan;
+  projectRevision?: number;
   referenceId?: string;
   messageKo?: string;
   messageEn?: string;

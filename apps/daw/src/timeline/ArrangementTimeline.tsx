@@ -12,6 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { STUDIO_INSTRUMENTS } from "../audio/instruments";
 import { useDaw } from "../commands/store";
 import { isImeComposing, useI18n } from "../i18n";
 import {
@@ -698,11 +699,41 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span className="track-type-label">
-                        {track.type === "stem" ? "STEM · est." : track.type.toUpperCase()}
-                      </span>
-                      <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                      {track.type === "midi" ? (
+                        <select
+                          value={track.instrumentRef ?? "basic-poly-synth"}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "track.setInstrument",
+                              payload: { trackId: track.id, instrumentRef: e.target.value },
+                            })
+                          }
+                          data-testid={`track-inst-${track.id}`}
+                          style={{
+                            height: 16,
+                            fontSize: 9,
+                            padding: "0 3px",
+                            maxWidth: 112,
+                            background: "var(--bg-input)",
+                            border: "1px solid var(--border-subtle)",
+                            color: "var(--text-secondary)",
+                          }}
+                          title="MIDI Instrument Voice"
+                        >
+                          {STUDIO_INSTRUMENTS.map((inst) => (
+                            <option key={inst.id} value={inst.id}>
+                              {inst.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="track-type-label">
+                          {track.type === "stem" ? "STEM · est." : track.type.toUpperCase()}
+                        </span>
+                      )}
+                      <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)", flexShrink: 0 }}>
                         {formatDb(track.gainDb)} · {formatPan(track.pan)}
                       </span>
                     </div>

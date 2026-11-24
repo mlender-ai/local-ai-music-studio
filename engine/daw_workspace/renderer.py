@@ -11,6 +11,8 @@ import numpy as np
 import soundfile as sf
 from scipy.signal import resample_poly
 
+from engine.instruments import synth_note_for_instrument
+
 from .schema import Clip, Project, Track
 from .store import project_dir, resolve_asset_file
 
@@ -190,7 +192,10 @@ def render_project_to_array(
                             continue
                         note_start_sec = clip_start_sec + rel_start_beats * sec_per_beat
                         note_dur_sec = clipped_dur_beats * sec_per_beat
-                        voice = _synth_midi_note(note.pitch, note.velocity, note_dur_sec, sr) * clip_gain
+                        voice = (
+                            synth_note_for_instrument(trk.instrumentRef, note.pitch, note.velocity, note_dur_sec, sr)
+                            * clip_gain
+                        )
                         dst_start = int(round(note_start_sec * sr))
                         src_slice_start = max(0, -dst_start)
                         dst_write_start = max(0, dst_start)
