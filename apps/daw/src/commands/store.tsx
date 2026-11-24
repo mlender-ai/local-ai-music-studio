@@ -4,6 +4,7 @@ import { renderProjectOfflineWav } from "../audio/offlineRenderer";
 import { dawApi, RevisionConflictError } from "../project/api";
 import { secondsToBeats } from "../project/time";
 import type {
+  AnalysisJobStatus,
   Asset,
   AssetLoadState,
   Clip,
@@ -12,6 +13,7 @@ import type {
   MidiNote,
   Project,
   ProjectSummary,
+  ReferenceItem,
   SelectionContext,
   Track,
   TrackMeterLevel,
@@ -124,6 +126,17 @@ interface DawContextValue {
   exportStereoWav: (useLoopRange?: boolean) => Promise<void>;
   applyExternalProjectUpdate: (updated: Project, message?: string) => void;
   refreshLists: () => Promise<ProjectSummary[]>;
+  activeReferenceId: string | null;
+  setActiveReferenceId: (id: string | null) => void;
+  activeReference: ReferenceItem | null;
+  activeAnalysisJob: AnalysisJobStatus | null;
+  importReferenceFile: (file: File) => Promise<ReferenceItem | null>;
+  attachAudioToReference: (refId: string, file: File) => Promise<void>;
+  addReferenceUrl: (url: string) => Promise<ReferenceItem | null>;
+  deleteReference: (refId: string) => Promise<void>;
+  runReferenceAnalysis: (refId: string) => Promise<void>;
+  cancelReferenceAnalysis: () => Promise<void>;
+  toggleBlueprintInfluence: (refId: string, influenceId: string) => Promise<void>;
 }
 
 const DawContext = createContext<DawContextValue | null>(null);
@@ -164,6 +177,8 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const [gridBeats, setGridBeats] = useState(1);
   const [pixelsPerBeat, setPixelsPerBeat] = useState(initialPrefs.pixelsPerBeat ?? 15);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [activeReferenceId, setActiveReferenceId] = useState<string | null>(null);
+  const [activeAnalysisJob, setActiveAnalysisJob] = useState<AnalysisJobStatus | null>(null);
 
   const projectRef = useRef<Project | null>(null);
   projectRef.current = project;
@@ -280,6 +295,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       setSavedRevision(loaded.revision ?? 1);
       setRevisionConflict(null);
       setLastSavedAt(loaded.updatedAt);
+      setActiveReferenceId(loaded.references?.[0]?.id ?? null);
 
       const restoredTrack =
         restoreSessionState && prefs.lastTrackId
@@ -913,6 +929,200 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     [showToast]
   );
 
+  const importReferenceFile = useCallback(
+    async (file: File): Promise<ReferenceItem | null> => {
+      const current = projectRef.current;
+      if (!current) return null;
+      try {
+        const res = await dawApi.importReferenceFile(current.id, file);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            references: [...(prev.references ?? []), res.reference],
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        setActiveReferenceId(res.reference.id);
+        showToast(`레퍼런스 "${res.reference.name}" 추가됨`);
+        return res.reference;
+      } catch (err) {
+        showToast(`Reference import failed: ${(err as Error).message}`, "error");
+        return null;
+      }
+    },
+    [showToast]
+  );
+
+  const attachAudioToReference = useCallback(
+    async (refId: string, file: File) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.importReferenceFile(current.id, file, refId);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            references: (prev.references ?? []).map((r) => (r.id === refId ? res.reference : r)),
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        showToast(`오디오 연결 완료: "${res.reference.name}"`);
+      } catch (err) {
+        showToast(`Attach audio failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const addReferenceUrl = useCallback(
+    async (url: string): Promise<ReferenceItem | null> => {
+      const current = projectRef.current;
+      if (!current) return null;
+      try {
+        const res = await dawApi.addReferenceUrl(current.id, url);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            references: [...(prev.references ?? []), res.reference],
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        setActiveReferenceId(res.reference.id);
+        showToast(res.reference.noticeKo || "URL 메타데이터가 등록되었습니다.");
+        return res.reference;
+      } catch (err) {
+        showToast(`URL import failed: ${(err as Error).message}`, "error");
+        return null;
+      }
+    },
+    [showToast]
+  );
+
+  const deleteReference = useCallback(
+    async (refId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.deleteReference(current.id, refId);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const nextRefs = (prev.references ?? []).filter((r) => r.id !== refId);
+          const next: Project = { ...prev, revision: res.projectRevision, references: nextRefs };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        setActiveReferenceId((prev) => (prev === refId ? null : prev));
+        showToast("레퍼런스가 삭제되었습니다.");
+      } catch (err) {
+        showToast(`Delete reference failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const runReferenceAnalysis = useCallback(
+    async (refId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const started = await dawApi.startReferenceAnalysis(current.id, refId, false);
+        if (started.job) {
+          setActiveAnalysisJob(started.job);
+          const jobId = started.job.jobId;
+          const poll = async () => {
+            try {
+              const st = await dawApi.getAnalysisJob(jobId);
+              setActiveAnalysisJob(st);
+              if (st.status === "completed") {
+                const reloaded = await dawApi.openProject(current.id);
+                setProject((prev) => {
+                  if (!prev || prev.id !== reloaded.id) return prev;
+                  const next = { ...prev, revision: reloaded.revision, references: reloaded.references };
+                  setSavedRevision(reloaded.revision);
+                  setSavedFingerprint(projectFingerprint(next));
+                  return next;
+                });
+                showToast("레퍼런스 음향 분석 및 Blueprint 생성 완료");
+              } else if (st.status === "failed" || st.status === "cancelled") {
+                showToast(st.error || "분석이 취소되었습니다.", st.status === "failed" ? "error" : "info");
+              } else {
+                window.setTimeout(() => void poll(), 350);
+              }
+            } catch {
+              setActiveAnalysisJob(null);
+            }
+          };
+          window.setTimeout(() => void poll(), 250);
+        }
+      } catch (err) {
+        showToast(`Analysis failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const cancelReferenceAnalysis = useCallback(async () => {
+    if (!activeAnalysisJob) return;
+    try {
+      const st = await dawApi.cancelAnalysisJob(activeAnalysisJob.jobId);
+      setActiveAnalysisJob(st);
+    } catch {
+      // ignore
+    }
+  }, [activeAnalysisJob]);
+
+  const toggleBlueprintInfluence = useCallback(
+    async (refId: string, influenceId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      const ref = (current.references ?? []).find((r) => r.id === refId);
+      if (!ref) return;
+      const existing = new Set(ref.selectedInfluences ?? []);
+      if (existing.has(influenceId)) existing.delete(influenceId);
+      else existing.add(influenceId);
+      try {
+        const res = await dawApi.updateReferenceBlueprint(current.id, refId, {
+          selectedInfluences: Array.from(existing),
+        });
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            references: (prev.references ?? []).map((r) => (r.id === refId ? res.reference : r)),
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+      } catch (err) {
+        showToast(`Blueprint update failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const activeReference = useMemo(() => {
+    if (!project || !project.references?.length) return null;
+    if (activeReferenceId) {
+      return project.references.find((r) => r.id === activeReferenceId) ?? project.references[0];
+    }
+    return project.references[0];
+  }, [project, activeReferenceId]);
+
   const selectedTrack = useMemo(() => {
     if (!project || !selection.selectedTrackId) return null;
     return project.tracks.find((t) => t.id === selection.selectedTrackId) ?? null;
@@ -983,6 +1193,17 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     exportStereoWav,
     applyExternalProjectUpdate,
     refreshLists,
+    activeReferenceId,
+    setActiveReferenceId,
+    activeReference,
+    activeAnalysisJob,
+    importReferenceFile,
+    attachAudioToReference,
+    addReferenceUrl,
+    deleteReference,
+    runReferenceAnalysis,
+    cancelReferenceAnalysis,
+    toggleBlueprintInfluence,
   };
 
   return <DawContext.Provider value={value}>{children}</DawContext.Provider>;

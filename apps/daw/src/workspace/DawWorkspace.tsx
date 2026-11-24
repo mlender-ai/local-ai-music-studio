@@ -6,12 +6,13 @@ import { isImeComposing, useI18n } from "../i18n";
 import { MixerPanel } from "../mixer/MixerPanel";
 import { PianoRoll } from "../piano-roll/PianoRoll";
 import { AIProducerPanel } from "../producer/AIProducerPanel";
+import { ReferenceAnalysisPanel } from "../reference/ReferenceAnalysisPanel";
 import { ArrangementTimeline } from "../timeline/ArrangementTimeline";
 import { ClipEditor } from "../timeline/ClipEditor";
 import { TransportBar } from "../transport/TransportBar";
 import type { Clip } from "../project/types";
 
-type DockTab = "clip" | "piano" | "mixer" | "fx";
+type DockTab = "clip" | "piano" | "mixer" | "reference" | "fx";
 
 function isTypingElement(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
@@ -43,6 +44,8 @@ export function DawWorkspace() {
     resolveConflictReload,
     resolveConflictOverwrite,
     dismissConflict,
+    activeReference,
+    addReferenceUrl,
   } = useDaw();
 
   const savedPrefs = loadWorkspacePrefs();
@@ -66,6 +69,8 @@ export function DawWorkspace() {
   const [saveAsName, setSaveAsName] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [exportLoopOnly, setExportLoopOnly] = useState(false);
+  const [refUrlModalOpen, setRefUrlModalOpen] = useState(false);
+  const [refUrlDraft, setRefUrlDraft] = useState("");
 
   // Global DAW Keyboard Shortcuts (strictly disabled while typing or Korean IME composing!)
   useEffect(() => {
@@ -208,6 +213,14 @@ export function DawWorkspace() {
               width={browserWidth}
               onCollapse={() => setBrowserOpen(false)}
               onOpenNewModal={() => setNewModalOpen(true)}
+              onOpenReferenceTab={() => {
+                setDockOpen(true);
+                setDockTab("reference");
+              }}
+              onOpenRefUrlModal={() => {
+                setRefUrlDraft("");
+                setRefUrlModalOpen(true);
+              }}
             />
             <div
               className="resize-handle-v"
@@ -269,6 +282,13 @@ export function DawWorkspace() {
                       {t("dock.mixer")}
                     </button>
                     <button
+                      className={`dock-tab ${dockTab === "reference" ? "active" : ""}`}
+                      onClick={() => setDockTab("reference")}
+                      data-testid="tab-reference"
+                    >
+                      {t("dock.reference")}
+                    </button>
+                    <button
                       className={`dock-tab ${dockTab === "fx" ? "active" : ""}`}
                       onClick={() => setDockTab("fx")}
                       style={{ color: dockTab === "fx" ? "var(--text-primary)" : "var(--text-muted)" }}
@@ -285,7 +305,9 @@ export function DawWorkspace() {
                             : project?.tracks.flatMap((tr) => tr.clips).find((c) => c.type === "midi")?.name ?? "")
                         : dockTab === "mixer"
                           ? t("dock.mixerCount", { count: project?.tracks.length ?? 0 })
-                          : selectedClip?.name ?? ""}
+                          : dockTab === "reference"
+                            ? activeReference?.name ?? ""
+                            : selectedClip?.name ?? ""}
                     </span>
                     <button
                       className="icon-btn"
@@ -301,6 +323,7 @@ export function DawWorkspace() {
                   {dockTab === "clip" && <ClipEditor />}
                   {dockTab === "piano" && <PianoRoll />}
                   {dockTab === "mixer" && <MixerPanel />}
+                  {dockTab === "reference" && <ReferenceAnalysisPanel />}
                   {dockTab === "fx" && (
                     <div
                       style={{
@@ -351,7 +374,14 @@ export function DawWorkspace() {
               onPointerDown={(e) => startResize("right", e)}
               title="Drag to resize AI Producer Panel"
             />
-            <AIProducerPanel width={producerWidth} onCollapse={() => setProducerOpen(false)} />
+            <AIProducerPanel
+              width={producerWidth}
+              onCollapse={() => setProducerOpen(false)}
+              onOpenReferenceTab={() => {
+                setDockOpen(true);
+                setDockTab("reference");
+              }}
+            />
           </>
         ) : (
           <div
@@ -502,6 +532,42 @@ export function DawWorkspace() {
               <button onClick={() => void resolveConflictOverwrite()}>{t("modal.conflictOverwrite")}</button>
               <button className="btn-primary" onClick={() => void resolveConflictReload()}>
                 {t("modal.conflictReload", { server: revisionConflict.serverRevision })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* External Reference URL Modal */}
+      {refUrlModalOpen && (
+        <div className="modal-backdrop" onClick={() => setRefUrlModalOpen(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t("modal.refUrlTitle")}</div>
+            <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+              {t("modal.refUrlDesc")}
+            </div>
+            <input
+              autoFocus
+              type="url"
+              placeholder={t("modal.refUrlPlaceholder")}
+              value={refUrlDraft}
+              onChange={(e) => setRefUrlDraft(e.target.value)}
+              style={{ padding: "6px 8px" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={() => setRefUrlModalOpen(false)}>{t("modal.cancel")}</button>
+              <button
+                className="btn-primary"
+                onClick={async () => {
+                  const res = await addReferenceUrl(refUrlDraft.trim());
+                  if (res) {
+                    setRefUrlModalOpen(false);
+                    setDockOpen(true);
+                    setDockTab("reference");
+                  }
+                }}
+              >
+                {t("modal.refUrlSubmit")}
               </button>
             </div>
           </div>

@@ -1,14 +1,17 @@
 import React, { useRef, useState } from "react";
 import {
+  Activity,
   AlertTriangle,
   ChevronLeft,
   FileAudio,
   FolderOpen,
+  Globe,
   Link2,
   Music,
   Plus,
   RefreshCw,
   Search,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { useDaw } from "../commands/store";
@@ -20,17 +23,29 @@ interface ProjectBrowserProps {
   width: number;
   onCollapse: () => void;
   onOpenNewModal: () => void;
+  onOpenReferenceTab: () => void;
+  onOpenRefUrlModal: () => void;
 }
 
-export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBrowserProps) {
+export function ProjectBrowser({
+  width,
+  onCollapse,
+  onOpenNewModal,
+  onOpenReferenceTab,
+  onOpenRefUrlModal,
+}: ProjectBrowserProps) {
   const { t } = useI18n();
   const {
     project,
     recentProjects,
     libraryItems,
     assetStates,
+    activeReference,
+    setActiveReferenceId,
     openProjectById,
     importFile,
+    importReferenceFile,
+    deleteReference,
     importLibraryAsset,
     addAssetToTimeline,
     retryAssetLoad,
@@ -40,6 +55,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
   const [category, setCategory] = useState<BrowserCategory>("audio");
   const [query, setQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const refFileInputRef = useRef<HTMLInputElement | null>(null);
   const relinkInputRef = useRef<HTMLInputElement | null>(null);
   const [relinkTargetId, setRelinkTargetId] = useState<string | null>(null);
 
@@ -101,6 +117,20 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
         onChange={(e) => void handleFilePicked(e)}
       />
       <input
+        ref={refFileInputRef}
+        type="file"
+        accept=".wav,.mp3,.flac,.ogg,.aiff,.aif,.m4a,.mp4,.mov,.m4v,.webm"
+        style={{ display: "none" }}
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (f) {
+            const created = await importReferenceFile(f);
+            if (created) onOpenReferenceTab();
+          }
+          e.target.value = "";
+        }}
+      />
+      <input
         ref={relinkInputRef}
         type="file"
         accept=".wav,.mp3,.flac,.ogg,.aiff,.aif,.m4a,.mid,.midi"
@@ -147,6 +177,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
           data-testid="nav-references"
         >
           <span>{t("browser.references")}</span>
+          <span className="tag-badge">{project?.references?.length ?? 0}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "audio" ? "active" : ""}`}
@@ -221,8 +252,88 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
         </div>
       )}
 
+      {/* Dedicated References View (separate from Export tracks!) */}
+      {category === "references" && (
+        <>
+          <div className="browser-section-title">
+            <span>{t("browser.references")}</span>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button
+                style={{ fontSize: 10, padding: "2px 6px" }}
+                onClick={() => refFileInputRef.current?.click()}
+                data-testid="btn-import-ref-file"
+              >
+                {t("browser.importRefFile")}
+              </button>
+              <button
+                style={{ fontSize: 10, padding: "2px 6px" }}
+                onClick={onOpenRefUrlModal}
+                data-testid="btn-add-ref-url"
+              >
+                {t("browser.addRefUrl")}
+              </button>
+            </div>
+          </div>
+          <div style={{ padding: "2px 10px 4px", fontSize: 10, color: "var(--text-muted)" }}>
+            {t("browser.refExcludedNote")}
+          </div>
+          <div className="browser-list">
+            {(project?.references ?? []).length === 0 ? (
+              <div style={{ padding: "8px 6px", color: "var(--text-muted)", fontSize: 11 }}>
+                {t("browser.refEmpty")}
+              </div>
+            ) : (
+              (project?.references ?? [])
+                .filter((r) => !q || r.name.toLowerCase().includes(q))
+                .map((ref) => {
+                  const isSel = activeReference?.id === ref.id;
+                  return (
+                    <div
+                      key={ref.id}
+                      className={`browser-item ${isSel ? "active" : ""}`}
+                      onClick={() => {
+                        setActiveReferenceId(ref.id);
+                        onOpenReferenceTab();
+                      }}
+                      data-testid={`ref-item-${ref.id}`}
+                    >
+                      {ref.kind === "url" ? (
+                        <Globe size={12} color="var(--text-muted)" />
+                      ) : (
+                        <Activity size={12} color="#b89458" />
+                      )}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div className="browser-item-name" style={{ fontWeight: isSel ? 600 : 400 }}>
+                          {ref.name}
+                        </div>
+                        <div style={{ fontSize: 9, color: "var(--text-muted)" }}>
+                          {ref.analysisStatus === "completed"
+                            ? `${ref.analysis?.rhythm.estimatedBpm ?? "?"} BPM · ${ref.analysis?.harmony.estimatedKey ?? ""}`
+                            : ref.audioAvailable
+                              ? t("browser.refAnalyze")
+                              : t("browser.refUrlOnly")}
+                        </div>
+                      </div>
+                      <button
+                        className="icon-btn"
+                        title={t("browser.refDelete")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void deleteReference(ref.id);
+                        }}
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+        </>
+      )}
+
       {/* Project Assets + Studio Library */}
-      {(category === "audio" || category === "samples" || category === "references") && (
+      {(category === "audio" || category === "samples") && (
         <>
           <div className="browser-section-title">
             <span>{t("browser.projectAssets")}</span>

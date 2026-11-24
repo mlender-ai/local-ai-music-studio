@@ -28,7 +28,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from engine import paths as engine_paths
-from engine.daw_workspace import midi, store
+from engine.daw_workspace import midi, references, store
 from engine.daw_workspace.schema import Clip, LoopRegion, MidiNote, Project, SectionMarker, Track, make_id
 
 SR = 48000
@@ -395,7 +395,17 @@ def seed_demo_project_b(assets_data: dict[str, bytes], force: bool = False) -> P
             ],
         ),
     ]
-    return store.save_project(proj)
+    saved = store.save_project(proj)
+    # Also attach V7.2 Magnetic Afterhours as a Reference track (excluded from export) for instant Phase 02 QA
+    if "v72_house" in assets_data and not saved.references:
+        references.import_reference_file(
+            pid,
+            "V7.2_Magnetic_Afterhours_128bpm.wav",
+            assets_data["v72_house"],
+            source="yue2-v7.2-reference",
+        )
+        saved = store.load_project(pid)
+    return saved
 
 
 def seed_demo_project_a(assets_data: dict[str, bytes], force: bool = False) -> Project | None:
@@ -504,7 +514,17 @@ def seed_demo_project_a(assets_data: dict[str, bytes], force: bool = False) -> P
             ],
         ),
     ]
-    return store.save_project(proj)
+    saved = store.save_project(proj)
+    # Also attach V7.2 Magnetic Afterhours as a Reference track (excluded from export) for instant Phase 02 QA
+    if "v72_house" in assets_data and not saved.references:
+        references.import_reference_file(
+            pid,
+            "V7.2_Magnetic_Afterhours_128bpm.wav",
+            assets_data["v72_house"],
+            source="yue2-v7.2-reference",
+        )
+        saved = store.load_project(pid)
+    return saved
 
 
 def main() -> None:

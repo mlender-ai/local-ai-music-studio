@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from engine import paths as engine_paths
-from engine.daw_workspace import commands, reaper, renderer, store
+from engine.daw_workspace import analysis, commands, reaper, references, renderer, store
 from engine.daw_workspace.schema import CommandRequest, Project
 
 DIST_DIR = engine_paths.ROOT / "apps" / "daw" / "dist"
@@ -280,6 +280,96 @@ def list_studio_library() -> dict[str, Any]:
 class ImportLibraryBody(BaseModel):
     libraryId: str = Field(min_length=1)
     kind: str | None = None
+
+
+class ReferenceUrlBody(BaseModel):
+    url: str = Field(min_length=4, max_length=2000)
+
+
+class BlueprintUpdateBody(BaseModel):
+    selectedInfluences: list[str] | None = None
+    sectionRenames: dict[str, str] | None = None
+
+
+class ReferenceCompareBody(BaseModel):
+    targetKind: str = "project_mix"
+    targetId: str | None = None
+
+
+@app.post("/api/projects/{project_id}/references/import")
+async def import_reference(
+    project_id: str,
+    file: UploadFile = File(...),
+    attachToRefId: str | None = Form(default=None),
+) -> dict[str, Any]:
+    raw = await file.read()
+    if not raw:
+        raise ValueError("Uploaded reference file is empty")
+    ref, rev = references.import_reference_file(
+        project_id,
+        file.filename or "reference.wav",
+        raw,
+        attach_to_ref_id=attachToRefId,
+    )
+    return {"reference": ref, "projectRevision": rev}
+
+
+@app.post("/api/projects/{project_id}/references/url")
+def register_reference_url(project_id: str, body: ReferenceUrlBody) -> dict[str, Any]:
+    ref, rev = references.add_reference_url(project_id, body.url)
+    return {"reference": ref, "projectRevision": rev}
+
+
+@app.delete("/api/projects/{project_id}/references/{ref_id}")
+def remove_reference(project_id: str, ref_id: str) -> dict[str, Any]:
+    rev = references.delete_reference(project_id, ref_id)
+    return {"deleted": ref_id, "projectRevision": rev}
+
+
+@app.get("/api/projects/{project_id}/references/{ref_id}/audio")
+def get_reference_audio(project_id: str, ref_id: str):
+    ref, abs_path = references.resolve_reference_audio_path(project_id, ref_id)
+    return FileResponse(abs_path, media_type="audio/wav", filename=ref.get("filename") or "reference.wav")
+
+
+@app.post("/api/projects/{project_id}/references/{ref_id}/analyze")
+def analyze_reference(project_id: str, ref_id: str, sync: bool = False) -> dict[str, Any]:
+    if sync:
+        ref, rev = references.run_reference_analysis_sync(project_id, ref_id)
+        return {"reference": ref, "projectRevision": rev, "status": "completed"}
+    job = references.start_reference_analysis_job(project_id, ref_id)
+    return {"job": job}
+
+
+@app.get("/api/analysis/jobs/{job_id}")
+def get_analysis_job(job_id: str) -> dict[str, Any]:
+    return analysis.analysis_jobs.get(job_id)
+
+
+@app.post("/api/analysis/jobs/{job_id}/cancel")
+def cancel_analysis_job(job_id: str) -> dict[str, Any]:
+    return analysis.analysis_jobs.cancel(job_id)
+
+
+@app.patch("/api/projects/{project_id}/references/{ref_id}/blueprint")
+def patch_reference_blueprint(project_id: str, ref_id: str, body: BlueprintUpdateBody) -> dict[str, Any]:
+    ref, rev = references.update_reference_blueprint(
+        project_id,
+        ref_id,
+        selected_influences=body.selectedInfluences,
+        section_renames=body.sectionRenames,
+    )
+    return {"reference": ref, "projectRevision": rev}
+
+
+@app.post("/api/projects/{project_id}/references/{ref_id}/compare")
+def compare_reference(project_id: str, ref_id: str, body: ReferenceCompareBody) -> dict[str, Any]:
+    return references.compare_reference_with_target(
+        project_id,
+        ref_id,
+        target_kind=body.targetKind,
+        target_id=body.targetId,
+    )
 
 
 @app.post("/api/projects/{project_id}/assets/import-library")

@@ -7,11 +7,20 @@ import { beatsToSeconds, formatBarRange } from "../project/time";
 interface AIProducerPanelProps {
   width: number;
   onCollapse: () => void;
+  onOpenReferenceTab: () => void;
 }
 
-export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
+export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIProducerPanelProps) {
   const { t } = useI18n();
-  const { project, selection, selectedTrack, selectedClip, health, savedRevision } = useDaw();
+  const {
+    project,
+    selection,
+    selectedTrack,
+    selectedClip,
+    health,
+    savedRevision,
+    activeReference,
+  } = useDaw();
   const [draftPrompt, setDraftPrompt] = useState("");
   const [showPayload, setShowPayload] = useState(false);
 
@@ -144,6 +153,55 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
             )}
           </div>
         </div>
+
+        {/* Active Reference Summary Card */}
+        {activeReference && (
+          <div className="producer-card" data-testid="producer-ref-card">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="producer-label">{t("producer.refSummary")}</span>
+              <button
+                style={{ fontSize: 10, padding: "2px 6px" }}
+                onClick={onOpenReferenceTab}
+                data-testid="btn-open-ref-detail"
+              >
+                {t("producer.openRefDetail")}
+              </button>
+            </div>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: 12,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {activeReference.name}
+            </div>
+            {activeReference.analysis ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <div className="producer-kv">
+                  <span style={{ color: "var(--text-muted)" }}>BPM / Key</span>
+                  <span className="mono">
+                    {activeReference.analysis.rhythm.estimatedBpm ?? "?"} BPM ·{" "}
+                    {activeReference.analysis.harmony.estimatedKey}
+                  </span>
+                </div>
+                <div className="producer-kv">
+                  <span style={{ color: "var(--text-muted)" }}>{t("producer.section")}</span>
+                  <span className="mono">
+                    {activeReference.analysis.arrangement.sections.length} 구간 ·{" "}
+                    {activeReference.selectedInfluences?.length ?? 0} 특성 선택
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 10, color: "var(--text-muted)" }}>
+                {activeReference.audioAvailable ? t("browser.refAnalyze") : t("ref.urlOnlyNotice")}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Honest AI Status Card */}
         <div className="producer-card dashed">

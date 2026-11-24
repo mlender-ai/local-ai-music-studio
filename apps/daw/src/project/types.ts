@@ -72,6 +72,163 @@ export interface Asset {
   mimeType: string;
 }
 
+export interface ReferenceSection {
+  id: string;
+  label: string;
+  startSec: number;
+  endSec: number;
+  startBar: number;
+  endBar: number;
+  energyDbfs: number;
+  relativeEnergy: number;
+  isEstimatedRole: boolean;
+}
+
+export interface ReferenceAnalysis {
+  analysisVersion: string;
+  sourceAssetId: string;
+  sha256: string;
+  analyzedAt: string;
+  fromCache: boolean;
+  durationSec: number;
+  rhythm: {
+    estimatedBpm: number | null;
+    candidates: Array<{ bpm: number; strength: number }>;
+    halfDoubleAmbiguous: boolean;
+    meterEstimate: string;
+    onsetDensityPerSec: number;
+    swingRatio: number;
+    grooveFeel?: string;
+    regularity: number;
+    accentPattern: number[];
+    assessment: string;
+  };
+  harmony: {
+    estimatedKey: string;
+    modeCandidates: Array<{ key: string; root: string; mode: string; score: number }>;
+    chromaMean: number[];
+    chordProgression: Array<{
+      bar: number;
+      startSec: number;
+      endSec: number;
+      chord: string;
+      confidence: number;
+      isEstimate: boolean;
+    }>;
+    harmonicChangeTimesSec: number[];
+    motifRepetitionScore: number;
+    confidence: number;
+    note: string;
+  };
+  arrangement: {
+    durationSec: number;
+    sections: ReferenceSection[];
+    energyCurve: Array<{ timeSec: number; rmsDbfs: number; normEnergy: number }>;
+  };
+  sound: {
+    measured: {
+      sampleRate: number;
+      channels: number;
+      frequencyBandsPct: Record<string, number>;
+      spectralCentroidHz: number;
+      spectralFluxMean: number;
+      crestFactorDb: number;
+      dynamicRangeDb: number;
+      approxLufs: number;
+      rmsDbfs: number;
+      samplePeakDbfs: number;
+      stereoWidth: number;
+      lrCorrelation: number;
+      percussiveRatio: number;
+      harmonicRatio: number;
+    };
+    estimated: {
+      reverbCharacter: string;
+      transientCharacter: string;
+      disclaimer: string;
+    };
+  };
+  instrumentation: {
+    isEstimated: boolean;
+    method: string;
+    note: string;
+    elements: Array<{ name: string; confidence: number; level: string }>;
+  };
+}
+
+export interface ReferenceBlueprint {
+  sourceAssetId: string;
+  analysisVersion: string;
+  tempo: { bpm: number | null; candidates: Array<{ bpm: number; strength: number }>; halfDoubleAmbiguous: boolean };
+  meter: string;
+  harmonicCharacter: { key: string; sampleChords: string[]; harmonicShiftCount: number };
+  grooveProfile: { swingRatio: number; feel: string };
+  arrangementTimeline: ReferenceSection[];
+  confidence: { tempo: number; harmony: number; overall: number };
+  selectedInfluences: string[];
+  availableInfluences: Array<{ id: string; labelKo: string; labelEn: string; selected: boolean }>;
+  guidanceNote: string;
+}
+
+export interface ReferenceItem {
+  id: string;
+  name: string;
+  filename: string | null;
+  kind: "audio" | "video" | "url";
+  source: string;
+  url?: string | null;
+  author?: string;
+  audioAvailable: boolean;
+  sampleRate: number;
+  channels: number;
+  durationSec: number;
+  analysisStatus: "pending" | "completed" | "audio_required";
+  noticeKo?: string | null;
+  noticeEn?: string | null;
+  analysis: ReferenceAnalysis | null;
+  blueprint: ReferenceBlueprint | null;
+  selectedInfluences: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AnalysisJobStatus {
+  jobId: string;
+  projectId: string;
+  referenceId: string;
+  status: "queued" | "running" | "completed" | "failed" | "cancelling" | "cancelled";
+  progress: number;
+  stage: string;
+  error: string | null;
+}
+
+export interface ReferenceComparisonResult {
+  referenceName: string;
+  targetName: string;
+  referenceDurationSec: number;
+  targetDurationSec: number;
+  measuredDeltas: {
+    bpmDelta: number | null;
+    referenceKey: string;
+    targetKey: string;
+    frequencyBandsDeltaPct: Record<string, number>;
+    crestFactorDeltaDb: number;
+    dynamicRangeDeltaDb: number;
+    approxLufsDelta: number;
+    stereoWidthDelta: number;
+    percussiveRatioDelta: number;
+    motifRepetitionDelta: number;
+  };
+  normalizedProgression: Array<{
+    phase: string;
+    referenceNormEnergy: number;
+    targetNormEnergy: number;
+    delta: number;
+  }>;
+  observations: Array<{ category: string; ko: string; en: string }>;
+  methodologyNote: string;
+}
+
 export interface Project {
   id: string;
   schemaVersion: string;
@@ -87,7 +244,7 @@ export interface Project {
   sections: SectionMarker[];
   assets: Asset[];
   tracks: Track[];
-  references?: Record<string, unknown>[];
+  references: ReferenceItem[];
   notes: string;
   createdAt: string;
   updatedAt: string;
