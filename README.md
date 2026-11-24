@@ -1,4 +1,29 @@
-# Local AI Music Studio · Phase 1
+# AI-Native DAW (Local AI Music Studio)
+
+> **Phase 01 · Workspace Foundation** — Local-first macOS desktop DAW built on top of `local-ai-music-studio`.  
+> 개발 에이전트 공통 지침: [AGENTS.md](AGENTS.md) · 현재 상태: [docs/STATUS.md](docs/STATUS.md) · 인수인계: [docs/HANDOFF.md](docs/HANDOFF.md)
+
+## AI-Native DAW 바로 실행 (Phase 01)
+
+```bash
+# 1. Python 환경 및 프런트엔드 빌드 (최초 1회)
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python -e . pytest httpx python-multipart
+cd apps/daw && npm install && npm run build && cd ../..
+
+# 2. 데모 프로젝트 생성 및 DAW 실행 (http://127.0.0.1:8796)
+./scripts/start_daw.sh
+```
+
+브라우저에서 **http://127.0.0.1:8796** 을 열면 즉시 작업실로 진입합니다 (기존 A/B 플레이어 포트 `8795`와 충돌하지 않습니다).
+
+- **Demo Project B (`Midnight Studio · Multitrack`):** Drums, Bass, Guitar/Keys, Synth MIDI (`.mid`), Texture 5트랙 멀티트랙 편집 세션
+- **Demo Project A (`V7.2 Magnetic Afterhours · House`):** 기존 YuE2 V7.2 하우스 음원 및 F-minor MIDI 가이드
+- **문서:** [PRODUCT.md](docs/PRODUCT.md) · [DESIGN.md](docs/DESIGN.md) · [ARCHITECTURE.md](docs/ARCHITECTURE.md) · [PROJECT_FORMAT.md](docs/PROJECT_FORMAT.md) · [DEVELOPMENT.md](docs/DEVELOPMENT.md)
+
+---
+
+## 기존 Local AI Music Studio · Phase 1 (Preserved)
 
 로컬 ACE-Step 음악 생성, 독립 DSP, 한국어 프로듀서 명령, STDIO MCP와 작은 A/B 플레이어입니다. 외부 음악 생성 API를 호출하지 않습니다. 실제 검증 결과는 [QA 보고서](docs/QA_REPORT.md)에 기록합니다.
 
