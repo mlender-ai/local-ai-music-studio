@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Repeat, Scissors } from "lucide-react";
 import { useDaw } from "../commands/store";
+import { useI18n } from "../i18n";
 import {
   beatsPerBar,
   beatsToSeconds,
@@ -10,6 +11,7 @@ import {
 } from "../project/time";
 
 export function ClipEditor() {
+  const { t } = useI18n();
   const {
     project,
     selectedClip,
@@ -135,7 +137,7 @@ export function ClipEditor() {
           fontSize: 12,
         }}
       >
-        Select an Audio or Stem clip on the timeline to inspect and trim its waveform.
+        {t("clipEditor.empty")}
       </div>
     );
   }
@@ -152,8 +154,7 @@ export function ClipEditor() {
           fontSize: 12,
         }}
       >
-        Selected clip "{selectedClip.name}" is a MIDI clip. Switch to the <strong>Piano Roll</strong> tab to edit its{" "}
-        {selectedClip.notes.length} notes.
+        {t("clipEditor.midiNotice", { name: selectedClip.name, count: selectedClip.notes.length })}
       </div>
     );
   }
@@ -200,11 +201,14 @@ export function ClipEditor() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, whiteSpace: "nowrap" }}>
           <span className="mono" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            Start <strong style={{ color: "var(--text-primary)" }}>{formatBarBeatTick(selectedClip.timelineStartBeats, project.timeSignature)}</strong>
+            {t("clipEditor.start")}{" "}
+            <strong style={{ color: "var(--text-primary)" }}>
+              {formatBarBeatTick(selectedClip.timelineStartBeats, project.timeSignature)}
+            </strong>
           </span>
 
           <label style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            Length
+            {t("clipEditor.length")}
             <input
               type="number"
               className="mono"
@@ -221,12 +225,12 @@ export function ClipEditor() {
               style={{ width: 62, height: 22, padding: "0 4px" }}
             />
             <span className="mono" style={{ color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-              ({lengthBars.toFixed(1)}b · {lengthSec.toFixed(1)}s)
+              ({t("clipEditor.barsShort", { bars: lengthBars.toFixed(1), sec: lengthSec.toFixed(1) })})
             </span>
           </label>
 
           <label style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            Offset
+            {t("clipEditor.offset")}
             <input
               type="number"
               className="mono"
@@ -246,7 +250,7 @@ export function ClipEditor() {
           </label>
 
           <label style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            Gain
+            {t("clipEditor.gain")}
             <input
               type="range"
               className="mini-slider"
@@ -277,13 +281,13 @@ export function ClipEditor() {
             }
           >
             <Repeat size={11} />
-            Loop
+            {t("transport.loop")}
           </button>
 
           <button
             style={{ height: 22, padding: "0 7px", fontSize: 11, whiteSpace: "nowrap" }}
             disabled={!canSplit}
-            title="Split clip at current playhead"
+            title={t("timeline.splitTooltip")}
             onClick={() =>
               dispatch({
                 type: "clip.split",
@@ -292,18 +296,18 @@ export function ClipEditor() {
             }
           >
             <Scissors size={11} />
-            Split
+            {t("timeline.split")}
           </button>
         </div>
 
         <div
           className="mono"
           style={{ color: "var(--text-muted)", fontSize: 10, whiteSpace: "nowrap", flexShrink: 0 }}
-          title="Audio clips keep original speed when BPM changes; Time-Stretch / Warp is scheduled for a later phase."
+          title={t("clipEditor.noWarpTooltip")}
         >
           {asset && asset.sampleRate > 0
-            ? `${(asset.sampleRate / 1000).toFixed(1)} kHz · ${asset.channels === 1 ? "Mono" : "Stereo"}`
-            : "Native Speed"}
+            ? `${(asset.sampleRate / 1000).toFixed(1)} kHz · ${asset.channels === 1 ? t("clipEditor.mono") : t("clipEditor.stereo")}`
+            : "48.0 kHz"}
         </div>
       </div>
     </div>

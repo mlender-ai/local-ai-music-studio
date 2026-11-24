@@ -8,6 +8,9 @@ import {
 } from "../src/audio/scheduler";
 import { executeCommand } from "../src/commands/executor";
 import { projectFingerprint } from "../src/commands/store";
+import { isImeComposing, translate } from "../src/i18n";
+import enLocale from "../src/i18n/locales/en.json";
+import koLocale from "../src/i18n/locales/ko.json";
 import {
   beatsToSeconds,
   beatsToTicks,
@@ -250,5 +253,18 @@ describe("Phase 01.1 Stabilization: Shared Scheduler, MIDI Chase & Revision Fing
     const p1 = makeSampleProject();
     const p2 = { ...makeSampleProject(), revision: 5, updatedAt: "2026-12-01T00:00:00Z" };
     expect(projectFingerprint(p1)).toBe(projectFingerprint(p2));
+  });
+});
+
+describe("Phase 01.2 Korean Localization & IME safety", () => {
+  it("keeps complete key parity between Korean and English catalogs", () => {
+    const koKeys = Object.keys(koLocale).sort();
+    const enKeys = Object.keys(enLocale).sort();
+    expect(koKeys).toEqual(enKeys);
+    expect(translate("ko", "transport.export")).toBe("내보내기");
+    expect(translate("en", "transport.export")).toBe("Export");
+    expect(translate("ko", "timeline.tracks", { count: 5 })).toBe("트랙 (5)");
+    expect(isImeComposing({ isComposing: true, keyCode: 229 } as KeyboardEvent)).toBe(true);
+    expect(isImeComposing({ isComposing: false, keyCode: 32 } as KeyboardEvent)).toBe(false);
   });
 });

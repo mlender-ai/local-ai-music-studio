@@ -12,6 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useDaw } from "../commands/store";
+import { useI18n } from "../i18n";
 
 type BrowserCategory = "projects" | "references" | "audio" | "samples" | "instruments" | "effects";
 
@@ -22,6 +23,7 @@ interface ProjectBrowserProps {
 }
 
 export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBrowserProps) {
+  const { t } = useI18n();
   const {
     project,
     recentProjects,
@@ -74,17 +76,17 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
   return (
     <aside className="sidebar-left" style={{ width }} data-testid="project-browser">
       <div className="panel-header">
-        <span>Browser</span>
+        <span>{t("browser.title")}</span>
         <div style={{ display: "flex", gap: 4 }}>
           <button
             className="icon-btn"
-            title="Import Audio (.wav/.mp3/.flac) or MIDI (.mid)"
+            title={t("browser.importTooltip")}
             onClick={() => fileInputRef.current?.click()}
             data-testid="btn-import-asset"
           >
             <Upload size={13} />
           </button>
-          <button className="icon-btn" title="Collapse Browser" onClick={onCollapse}>
+          <button className="icon-btn" title={t("browser.collapseTooltip")} onClick={onCollapse}>
             <ChevronLeft size={14} />
           </button>
         </div>
@@ -122,7 +124,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
           />
           <input
             type="text"
-            placeholder="Search sounds..."
+            placeholder={t("browser.searchPlaceholder")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             style={{ paddingLeft: 26 }}
@@ -134,42 +136,45 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
         <button
           className={`browser-nav-item ${category === "projects" ? "active" : ""}`}
           onClick={() => setCategory("projects")}
+          data-testid="nav-projects"
         >
-          <span>Projects</span>
+          <span>{t("browser.projects")}</span>
           <span className="tag-badge">{recentProjects.length}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "references" ? "active" : ""}`}
           onClick={() => setCategory("references")}
+          data-testid="nav-references"
         >
-          <span>References</span>
+          <span>{t("browser.references")}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "audio" ? "active" : ""}`}
           onClick={() => setCategory("audio")}
+          data-testid="nav-audio-files"
         >
-          <span>Audio Files</span>
+          <span>{t("browser.audioFiles")}</span>
           <span className="tag-badge">{project?.assets.length ?? 0}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "samples" ? "active" : ""}`}
           onClick={() => setCategory("samples")}
         >
-          <span>Samples & MIDI</span>
+          <span>{t("browser.samplesMidi")}</span>
           <span className="tag-badge">{libraryItems.length}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "instruments" ? "active" : ""}`}
           onClick={() => setCategory("instruments")}
         >
-          <span>Instruments</span>
+          <span>{t("browser.instruments")}</span>
           <span className="tag-badge">P05</span>
         </button>
         <button
           className={`browser-nav-item ${category === "effects" ? "active" : ""}`}
           onClick={() => setCategory("effects")}
         >
-          <span>Effects</span>
+          <span>{t("browser.effects")}</span>
           <span className="tag-badge">P05</span>
         </button>
       </nav>
@@ -178,8 +183,8 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
       {category === "projects" && (
         <>
           <div className="browser-section-title">
-            <span>Recent Projects</span>
-            <button className="icon-btn" title="New Project" onClick={onOpenNewModal}>
+            <span>{t("browser.recentProjects")}</span>
+            <button className="icon-btn" title={t("transport.newTooltip")} onClick={onOpenNewModal}>
               <Plus size={12} />
             </button>
           </div>
@@ -189,7 +194,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                 key={p.id}
                 className={`browser-item ${project?.id === p.id ? "active" : ""}`}
                 onClick={() => void openProjectById(p.id)}
-                title={`${p.bpm} BPM · ${p.trackCount} tracks · Click to open`}
+                title={`${p.bpm} BPM · ${t("browser.tracksShort", { count: p.trackCount })}`}
               >
                 <FolderOpen size={13} />
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -197,7 +202,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                     {p.name}
                   </div>
                   <div style={{ fontSize: 10, color: "var(--text-muted)" }} className="mono">
-                    {p.bpm} BPM · {p.trackCount} trk
+                    {p.bpm} BPM · {t("browser.tracksShort", { count: p.trackCount })}
                   </div>
                 </div>
               </div>
@@ -210,18 +215,9 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
       {(category === "instruments" || category === "effects") && (
         <div style={{ padding: 12, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5 }}>
           <div style={{ color: "var(--text-secondary)", fontWeight: 600, marginBottom: 6 }}>
-            {category === "instruments" ? "Virtual Instruments" : "Audio Effects & FX Rack"}
+            {category === "instruments" ? t("browser.instrumentsTitle") : t("browser.effectsTitle")}
           </div>
-          {category === "instruments" ? (
-            <>
-              Phase 01 includes a built-in <strong>Basic Poly Synth</strong> for MIDI clip auditioning and export.
-              Full Sampler, Synthesizer, and AU/VST3 hosting arrive in Phase 05.
-            </>
-          ) : (
-            <>
-              EQ, Compressor, Delay, Reverb, and AU/VST3 FX Rack integration are scheduled for Phase 05.
-            </>
-          )}
+          {category === "instruments" ? t("browser.instrumentsDesc") : t("browser.effectsDesc")}
         </div>
       )}
 
@@ -229,18 +225,18 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
       {(category === "audio" || category === "samples" || category === "references") && (
         <>
           <div className="browser-section-title">
-            <span>Project Assets</span>
+            <span>{t("browser.projectAssets")}</span>
             <button
               style={{ fontSize: 10, padding: "2px 6px" }}
               onClick={() => fileInputRef.current?.click()}
             >
-              + Import
+              + {t("browser.import")}
             </button>
           </div>
           <div className="browser-list" style={{ maxHeight: "42%" }}>
             {projectAssets.length === 0 ? (
               <div style={{ padding: "8px 6px", color: "var(--text-muted)", fontSize: 11 }}>
-                No project assets yet. Click <strong>+ Import</strong> to add WAV, MP3, FLAC, or MIDI.
+                {t("browser.emptyAssets")}
               </div>
             ) : (
               projectAssets.map((asset) => {
@@ -254,8 +250,8 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                     onDoubleClick={() => addAssetToTimeline(asset)}
                     title={
                       isErr
-                        ? `Audio Error: ${st.error}\nRetry or relink source file.`
-                        : `${asset.provenance}\nDouble-click or click + to place on timeline`
+                        ? t("browser.audioError", { error: st.error || "decode error" })
+                        : `${asset.provenance}\n${t("browser.addToTimeline")}`
                     }
                   >
                     {isErr ? (
@@ -270,7 +266,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                       <>
                         <button
                           className="icon-btn"
-                          title="Retry loading audio"
+                          title={t("browser.retryLoad")}
                           onClick={(e) => {
                             e.stopPropagation();
                             void retryAssetLoad(asset.id);
@@ -280,7 +276,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                         </button>
                         <button
                           className="icon-btn"
-                          title="Relink missing audio file"
+                          title={t("browser.relinkFile")}
                           onClick={(e) => {
                             e.stopPropagation();
                             setRelinkTargetId(asset.id);
@@ -293,7 +289,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                     ) : (
                       <button
                         className="icon-btn"
-                        title="Add to Timeline at Playhead"
+                        title={t("browser.addToTimeline")}
                         onClick={(e) => {
                           e.stopPropagation();
                           addAssetToTimeline(asset);
@@ -309,7 +305,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
           </div>
 
           <div className="browser-section-title" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-            <span>Studio Library</span>
+            <span>{t("browser.studioLibrary")}</span>
             <span className="mono">{filteredLibrary.length}</span>
           </div>
           <div className="browser-list">
@@ -318,7 +314,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                 key={item.id}
                 className="browser-item"
                 onDoubleClick={() => void importLibraryAsset(item, true)}
-                title={`${item.category} · ${(item.sizeBytes / 1024).toFixed(0)} KB · Click + to import onto timeline`}
+                title={`${item.category} · ${(item.sizeBytes / 1024).toFixed(0)} KB · ${t("browser.importAndAdd")}`}
               >
                 {item.kind === "midi" ? (
                   <Music size={12} color="#648ea8" />
@@ -328,7 +324,7 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                 <span className="browser-item-name">{item.name}</span>
                 <button
                   className="icon-btn"
-                  title="Import into Project & Add to Timeline"
+                  title={t("browser.importAndAdd")}
                   onClick={(e) => {
                     e.stopPropagation();
                     void importLibraryAsset(item, true);

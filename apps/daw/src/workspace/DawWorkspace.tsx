@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sliders } from "lucide-react";
 import { ProjectBrowser } from "../browser/ProjectBrowser";
 import { loadWorkspacePrefs, saveWorkspacePrefs, useDaw } from "../commands/store";
+import { isImeComposing, useI18n } from "../i18n";
 import { MixerPanel } from "../mixer/MixerPanel";
 import { PianoRoll } from "../piano-roll/PianoRoll";
 import { AIProducerPanel } from "../producer/AIProducerPanel";
@@ -19,6 +20,7 @@ function isTypingElement(el: EventTarget | null): boolean {
 }
 
 export function DawWorkspace() {
+  const { t } = useI18n();
   const {
     project,
     selectedClip,
@@ -65,10 +67,10 @@ export function DawWorkspace() {
   const [exportOpen, setExportOpen] = useState(false);
   const [exportLoopOnly, setExportLoopOnly] = useState(false);
 
-  // Global DAW Keyboard Shortcuts (strictly disabled while typing in inputs!)
+  // Global DAW Keyboard Shortcuts (strictly disabled while typing or Korean IME composing!)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingElement(e.target)) return;
+      if (isImeComposing(e) || isTypingElement(e.target)) return;
       const mod = e.metaKey || e.ctrlKey;
 
       if (e.code === "Space") {
@@ -250,28 +252,28 @@ export function DawWorkspace() {
                       onClick={() => setDockTab("clip")}
                       data-testid="tab-clip-editor"
                     >
-                      Clip Editor
+                      {t("dock.clipEditor")}
                     </button>
                     <button
                       className={`dock-tab ${dockTab === "piano" ? "active" : ""}`}
                       onClick={() => setDockTab("piano")}
                       data-testid="tab-piano-roll"
                     >
-                      Piano Roll
+                      {t("dock.pianoRoll")}
                     </button>
                     <button
                       className={`dock-tab ${dockTab === "mixer" ? "active" : ""}`}
                       onClick={() => setDockTab("mixer")}
                       data-testid="tab-mixer"
                     >
-                      Mixer
+                      {t("dock.mixer")}
                     </button>
                     <button
                       className={`dock-tab ${dockTab === "fx" ? "active" : ""}`}
                       onClick={() => setDockTab("fx")}
                       style={{ color: dockTab === "fx" ? "var(--text-primary)" : "var(--text-muted)" }}
                     >
-                      FX Rack
+                      {t("dock.fxRack")}
                     </button>
                   </div>
 
@@ -280,14 +282,14 @@ export function DawWorkspace() {
                       {dockTab === "piano"
                         ? (selectedClip?.type === "midi"
                             ? selectedClip.name
-                            : project?.tracks.flatMap((t) => t.clips).find((c) => c.type === "midi")?.name ?? "")
+                            : project?.tracks.flatMap((tr) => tr.clips).find((c) => c.type === "midi")?.name ?? "")
                         : dockTab === "mixer"
-                          ? `${project?.tracks.length ?? 0} Tracks + Master`
+                          ? t("dock.mixerCount", { count: project?.tracks.length ?? 0 })
                           : selectedClip?.name ?? ""}
                     </span>
                     <button
                       className="icon-btn"
-                      title="Collapse Editor Dock"
+                      title={t("dock.collapseTooltip")}
                       onClick={() => setDockOpen(false)}
                     >
                       <ChevronDown size={14} />
@@ -313,11 +315,9 @@ export function DawWorkspace() {
                     >
                       <Sliders size={18} />
                       <div style={{ color: "var(--text-secondary)", fontWeight: 600 }}>
-                        FX Rack — Scheduled for Phase 05 (Sound Design)
+                        {t("dock.fxTitle")}
                       </div>
-                      <div style={{ fontSize: 11 }}>
-                        EQ, Compressor, Delay, Reverb, Distortion, Automation, and AU/VST3 plugin hosting are not active in Phase 01.
-                      </div>
+                      <div style={{ fontSize: 11 }}>{t("dock.fxDesc")}</div>
                     </div>
                   )}
                 </div>
@@ -335,10 +335,8 @@ export function DawWorkspace() {
                 padding: "0 10px",
               }}
             >
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                Editor Dock collapsed (Clip Editor / Piano Roll / Mixer)
-              </span>
-              <button className="icon-btn" title="Expand Editor Dock" onClick={() => setDockOpen(true)}>
+              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("dock.collapsedLabel")}</span>
+              <button className="icon-btn" title={t("dock.expandTooltip")} onClick={() => setDockOpen(true)}>
                 <ChevronUp size={14} />
               </button>
             </div>
@@ -382,9 +380,9 @@ export function DawWorkspace() {
       {newModalOpen && (
         <div className="modal-backdrop" onClick={() => setNewModalOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>New Project</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t("modal.newProjectTitle")}</div>
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>Project Name</span>
+              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{t("modal.projectName")}</span>
               <input
                 autoFocus
                 value={newName}
@@ -393,7 +391,7 @@ export function DawWorkspace() {
               />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>Tempo (BPM)</span>
+              <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>{t("modal.tempoBpm")}</span>
               <input
                 type="number"
                 min={30}
@@ -404,7 +402,7 @@ export function DawWorkspace() {
               />
             </label>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
-              <button onClick={() => setNewModalOpen(false)}>Cancel</button>
+              <button onClick={() => setNewModalOpen(false)}>{t("modal.cancel")}</button>
               <button
                 className="btn-primary"
                 onClick={async () => {
@@ -412,7 +410,7 @@ export function DawWorkspace() {
                   setNewModalOpen(false);
                 }}
               >
-                Create
+                {t("modal.create")}
               </button>
             </div>
           </div>
@@ -423,7 +421,7 @@ export function DawWorkspace() {
       {saveAsOpen && (
         <div className="modal-backdrop" onClick={() => setSaveAsOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Save Project Copy As</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t("modal.saveAsTitle")}</div>
             <input
               autoFocus
               value={saveAsName}
@@ -431,7 +429,7 @@ export function DawWorkspace() {
               style={{ padding: "6px 8px" }}
             />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-              <button onClick={() => setSaveAsOpen(false)}>Cancel</button>
+              <button onClick={() => setSaveAsOpen(false)}>{t("modal.cancel")}</button>
               <button
                 className="btn-primary"
                 onClick={async () => {
@@ -439,7 +437,7 @@ export function DawWorkspace() {
                   setSaveAsOpen(false);
                 }}
               >
-                Save Copy
+                {t("modal.saveCopy")}
               </button>
             </div>
           </div>
@@ -450,11 +448,9 @@ export function DawWorkspace() {
       {exportOpen && project && (
         <div className="modal-backdrop" onClick={() => setExportOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>Export Stereo WAV</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t("modal.exportTitle")}</div>
             <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-              Renders the edited timeline offline (48 kHz · 24-bit Stereo PCM) reflecting all clip positions, trims,
-              loops, track gain/pan, mute/solo states, MIDI synth playback, and master volume. Saves to local{" "}
-              <code className="mono">exports/</code> and downloads immediately.
+              {t("modal.exportDesc")}
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
               <input
@@ -464,14 +460,14 @@ export function DawWorkspace() {
                 onChange={(e) => setExportLoopOnly(e.target.checked)}
               />
               <span>
-                Export Loop Region only{" "}
+                {t("modal.exportLoopOnly")}{" "}
                 {project.loopRegion.enabled
                   ? `(Beats ${project.loopRegion.startBeats}–${project.loopRegion.endBeats})`
-                  : "(Enable Loop to use)"}
+                  : t("modal.exportLoopDisabled")}
               </span>
             </label>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
-              <button onClick={() => setExportOpen(false)}>Cancel</button>
+              <button onClick={() => setExportOpen(false)}>{t("modal.cancel")}</button>
               <button
                 className="btn-primary"
                 disabled={isExporting}
@@ -481,7 +477,7 @@ export function DawWorkspace() {
                 }}
                 data-testid="btn-confirm-export"
               >
-                {isExporting ? "Rendering…" : "Render & Download WAV"}
+                {isExporting ? t("transport.rendering") : t("modal.exportConfirm")}
               </button>
             </div>
           </div>
@@ -493,18 +489,19 @@ export function DawWorkspace() {
         <div className="modal-backdrop" onClick={dismissConflict}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} data-testid="conflict-modal">
             <div style={{ fontWeight: 600, fontSize: 14, color: "var(--accent-playhead)" }}>
-              Project Revision Conflict
+              {t("modal.conflictTitle")}
             </div>
             <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-              The backend project was updated (server rev {revisionConflict.serverRevision}, local base rev{" "}
-              {revisionConflict.expectedRevision}). Choose whether to load the latest server revision or overwrite with
-              your local edits.
+              {t("modal.conflictDesc", {
+                server: revisionConflict.serverRevision,
+                expected: revisionConflict.expectedRevision,
+              })}
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
-              <button onClick={dismissConflict}>Cancel</button>
-              <button onClick={() => void resolveConflictOverwrite()}>Overwrite Server</button>
+              <button onClick={dismissConflict}>{t("modal.cancel")}</button>
+              <button onClick={() => void resolveConflictOverwrite()}>{t("modal.conflictOverwrite")}</button>
               <button className="btn-primary" onClick={() => void resolveConflictReload()}>
-                Load Latest (rev {revisionConflict.serverRevision})
+                {t("modal.conflictReload", { server: revisionConflict.serverRevision })}
               </button>
             </div>
           </div>

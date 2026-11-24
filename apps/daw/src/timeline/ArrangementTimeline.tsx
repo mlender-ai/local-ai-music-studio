@@ -13,6 +13,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import { useDaw } from "../commands/store";
+import { isImeComposing, useI18n } from "../i18n";
 import {
   beatsPerBar,
   beatsToSeconds,
@@ -193,6 +194,7 @@ interface ArrangementTimelineProps {
 }
 
 export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineProps) {
+  const { t } = useI18n();
   const {
     project,
     waveforms,
@@ -474,10 +476,10 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
             className={snapEnabled ? "pill-toggle active" : ""}
             style={{ height: 22, padding: "0 7px", fontSize: 11 }}
             onClick={() => setSnapEnabled(!snapEnabled)}
-            title="Toggle Snap to Grid"
+            title={t("timeline.snapTooltip")}
           >
             <Magnet size={11} />
-            Snap
+            {t("timeline.snap")}
           </button>
           <select
             aria-label="Grid resolution"
@@ -485,9 +487,9 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
             onChange={(e) => setGridBeats(parseFloat(e.target.value))}
             style={{ height: 22, padding: "0 4px", fontSize: 11 }}
           >
-            <option value={4}>1 Bar</option>
+            <option value={4}>{t("timeline.gridBar")}</option>
             <option value={2}>1/2</option>
-            <option value={1}>1/4 Beat</option>
+            <option value={1}>{t("timeline.gridBeat")}</option>
             <option value={0.5}>1/8</option>
             <option value={0.25}>1/16</option>
           </select>
@@ -498,44 +500,44 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
             style={{ height: 22, padding: "0 7px", fontSize: 11 }}
             disabled={!selectedClip}
             onClick={handleSplitSelected}
-            title="Split Selected Clip at Playhead (Cmd+E)"
+            title={t("timeline.splitTooltip")}
             data-testid="btn-split-clip"
           >
             <Scissors size={11} />
-            Split
+            {t("timeline.split")}
           </button>
           <button
             style={{ height: 22, padding: "0 7px", fontSize: 11 }}
             disabled={!selectedClip}
             onClick={handleDuplicateSelected}
-            title="Duplicate Selected Clip (Cmd+D)"
+            title={t("timeline.duplicateTooltip")}
           >
             <Copy size={11} />
-            Duplicate
+            {t("timeline.duplicate")}
           </button>
           <button
             style={{ height: 22, padding: "0 7px", fontSize: 11 }}
             disabled={selection.selectedClipIds.length === 0}
             onClick={handleDeleteSelected}
-            title="Delete Selected Clip(s) (Delete)"
+            title={t("timeline.deleteTooltip")}
           >
             <Trash2 size={11} />
           </button>
           <button
             style={{ height: 22, padding: "0 7px", fontSize: 11 }}
             onClick={handleAddSection}
-            title="Add Section Marker at Playhead"
+            title={t("timeline.addSectionTooltip")}
           >
             <Flag size={11} />
-            + Section
+            {t("timeline.addSection")}
           </button>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: "var(--text-muted)", fontSize: 10 }}>Shift+Drag ruler to select range</span>
+          <span style={{ color: "var(--text-muted)", fontSize: 10 }}>{t("timeline.rangeHint")}</span>
           <button
             className="icon-btn"
-            title="Zoom Out"
+            title={t("timeline.zoomOut")}
             onClick={() => setPixelsPerBeat((z) => Math.max(8, Math.round(z * 0.8)))}
           >
             <ZoomOut size={13} />
@@ -552,7 +554,7 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
           />
           <button
             className="icon-btn"
-            title="Zoom In"
+            title={t("timeline.zoomIn")}
             onClick={() => setPixelsPerBeat((z) => Math.min(80, Math.round(z * 1.25)))}
           >
             <ZoomIn size={13} />
@@ -565,25 +567,25 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
         {/* Track Headers Column */}
         <div className="track-column">
           <div className="track-column-corner">
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", color: "var(--text-muted)" }}>
-              TRACKS ({project.tracks.length})
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: "var(--text-muted)" }}>
+              {t("timeline.tracks", { count: project.tracks.length })}
             </span>
             <div style={{ display: "flex", gap: 3 }}>
               <button
                 style={{ fontSize: 10, padding: "2px 5px" }}
                 onClick={() => handleAddTrack("audio")}
-                title="Add Audio Track"
+                title={t("timeline.addAudioTooltip")}
                 data-testid="btn-add-audio-track"
               >
-                +Aud
+                {t("timeline.addAudio")}
               </button>
               <button
                 style={{ fontSize: 10, padding: "2px 5px" }}
                 onClick={() => handleAddTrack("midi")}
-                title="Add MIDI Track"
+                title={t("timeline.addMidiTooltip")}
                 data-testid="btn-add-midi-track"
               >
-                +MIDI
+                {t("timeline.addMidi")}
               </button>
             </div>
           </div>
@@ -626,8 +628,8 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                             setRenamingTrackId(null);
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                            if (e.key === "Escape") setRenamingTrackId(null);
+                            if (!isImeComposing(e) && e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (!isImeComposing(e) && e.key === "Escape") setRenamingTrackId(null);
                           }}
                         />
                       ) : (
@@ -879,8 +881,8 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                             setRenamingSectionId(null);
                           }}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                            if (e.key === "Escape") setRenamingSectionId(null);
+                            if (!isImeComposing(e) && e.key === "Enter") (e.target as HTMLInputElement).blur();
+                            if (!isImeComposing(e) && e.key === "Escape") setRenamingSectionId(null);
                           }}
                         />
                       ) : (
