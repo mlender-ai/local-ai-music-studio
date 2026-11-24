@@ -1,39 +1,62 @@
-# Local AI Music Studio — Phase 1
+# ARCHITECTURE.md — AI-Native DAW & Local AI Music Studio
 
-## Boundaries
+## System Overview
 
-`CLI / local HTTP player / STDIO MCP → engine jobs & service → generation backend / independent DSP → immutable WAV versions + SQLite history`
+```text
++----------------------------------------------------------------------+
+| Browser DAW Workspace (React + TypeScript + Vite, apps/daw/)         |
+|  - Workspace Shell (Browser, Transport, Timeline, Bottom Dock, AI)   |
+|  - Shared Command Dispatcher + Undo/Redo History                     |
+|  - Web Audio Realtime Engine (AudioClock scheduler + Analyser meters)|
+|  - Shared OfflineAudioContext Stereo WAV Renderer                    |
++-------------------------------+--------------------------------------+
+                                | REST JSON + Range Audio Streams
+                                v
++----------------------------------------------------------------------+
+| Python DAW Backend (app/daw_server.py + engine/daw_workspace/)       |
+|  - Port: 127.0.0.1:8796 (does not conflict with legacy player :8795) |
+|  - Atomic Project Store (outputs/daw/projects/<id>/project.json)     |
+|  - Immutable Asset Store (audio/, midi/, references/) + SHA-256      |
+|  - Real PCM Waveform Peak Cache (cache/waveforms/<sha256>.json)      |
+|  - Standard MIDI File (.mid) Parser & Writer                         |
+|  - Server-side Shared Command Executor (for MCP / external agents)   |
+|  - Deterministic Python Offline WAV Renderer (QA & headless render)  |
++-------------------------------+--------------------------------------+
+                                | Adapters (Future Phases)
+                                v
++----------------------------------------------------------------------+
+| Existing Local AI Music Studio Assets (Preserved)                    |
+|  - engine/generation/ (ACE-Step MLX/MPS worker + memory supervisor)  |
+|  - engine/dsp/ (RBJ EQ, compressor, convolution reverb, limiter)     |
+|  - engine/store.py & engine/jobs.py (SQLite version graph & jobs)    |
+|  - app/player/server.py (:8795) & app/mcp_server.py (FastMCP STDIO)  |
+|  - REAPER Bridge Adapter Interface (engine/daw_workspace/reaper.py)  |
++----------------------------------------------------------------------+
+```
 
-- `engine/generation/backend.py`: replaceable protocol and ACE-Step adapter.
-- `worker.py`: only process importing the model. Official pinned code + pinned weights; offline inference; no external music generation endpoints. A small subclass removes the upstream mandatory check/download of the unused 1.7B LM and loads MPS conditioning/text weights in bf16. `mlx_quantized.py` converts official decoder Linear weights to MLX affine 4-bit (group 64), validates complete key coverage and atomically caches the result. The decoder runs on MLX, conditioning and tiled VAE on PyTorch MPS. PyTorch decoder storage is released; automatic full-size fallback is disabled. Vendor source stays untouched.
-- `supervisor.py`: timeout (900s), process memory-footprint ceiling (10 GiB, including macOS compressed/unified allocations), available RAM floor, macOS critical-pressure stop. These are best-effort sampled protections, not an OS hard memory quota; MPS allocation also has a 45% physical-memory cap. Only the worker created by this operation can be terminated.
-- `jobs.py`: SQLite transaction reserves one active job; detached supervisor permits quick MCP responses and status polling. File lock additionally prevents inference overlap. Client request keys deduplicate retries, and mismatched reused keys are rejected. Stale crashed jobs are detected.
-- `schema.py`: Pydantic tagged union, bounded numeric parameters, no extra fields or nonfinite numbers.
-- `agent/command_parser.py`: Korean/English templates preserve the original prompt and expose the translated plan. Deterministic rules are deliberately limited. Unsupported edits explicitly require regeneration/stems.
-- `dsp/`: RBJ low/high shelf and peaking biquads, stereo-linked peak compressor, diffuse convolution reverb, 4× oversampled tanh saturation, sample-peak limiter.
-- `rendering/audio.py`: source shape/rate/finite validation, PCM24 writes, analysis and aligned difference measurement. DSP keeps frames/sample rate/channels exactly. Reverb tails are truncated by design. Sample-peak limiting is not certified true-peak limiting.
-- `store.py`: append-only version graph and reversible current-version pointer. Restoring does not delete a newer version. Effects are baked in each child; rendering from an earlier version permits branching. Originals are never overwritten.
-- File boundary: all WAV paths resolve inside `outputs` (or configured `MUSIC_DATA_DIR`); symlink escapes, arbitrary exports and overwrites are refused. Imported WAVs are labelled user-supplied, never generated.
+## Key Architectural Decisions (Phase 01)
 
-## Model capabilities reviewed
+### 1. Realtime Preview vs. Offline Render Parity
+Both Realtime Playback and Offline Stereo WAV Export consume the exact same `Project` state and `scheduleProjectGraph()` scheduling math:
+- **Realtime Preview (`apps/daw/src/audio/audioEngine.ts`):** Uses a Web Audio `AudioContext` with lookahead scheduling, per-track `GainNode` + `StereoPannerNode` + `AnalyserNode`, master `GainNode` + `AnalyserNode`, and polyphonic Web Audio synthesizer for MIDI tracks. Playhead position is computed strictly from `audioContext.currentTime - anchorTime` to prevent UI/audio drift.
+- **Offline Render (`apps/daw/src/audio/offlineRenderer.ts` & `engine/daw_workspace/renderer.py`):** Renders the full edited timeline (clip positions, non-destructive source offsets, trims, loops, clip gain, track gain/pan, mute/solo resolution, MIDI note synthesis, master gain) into 48 kHz Stereo PCM WAV. The browser renderer saves exported WAVs back to `outputs/daw/projects/<id>/exports/` and triggers local download; the Python renderer enables headless verification and CLI/agent export.
+- **No Double Playback:** REAPER is never started concurrently with Web Audio preview; REAPER integration is isolated behind a future offline host render adapter (`reaper.py`).
 
-ACE-Step upstream commit `ca1e85fe9430179831e6bc6be790c332190a3866`; official HF release `19671f406d603126926c1b7e2adc169acbcade22`.
+### 2. Local-First Persistence & Path Safety
+- All DAW projects live under `DATA/daw/projects/<project_id>/` (`DATA` defaults to `<repo>/outputs`, configurable via `MUSIC_DATA_DIR`).
+- Every write to `project.json` writes to a sibling temporary file, flushes + `fsync`s, and atomically replaces `project.json` via `os.replace()`.
+- Original imported audio and MIDI files are immutable and referenced by relative paths (`assets/audio/...`, `assets/midi/...`) so project folders are portable.
+- Symlink escapes and path traversal outside allowed directories are rejected with HTTP 400.
 
-| Feature | Upstream | This prototype |
-|---|---|---|
-| Text-to-Music | Base/SFT/Turbo | 2B Turbo, batch 1, 15–30s |
-| Instrumental / vocals | supported via lyrics/metadata | exposed; vocal quality separately unverified |
-| Repaint, Cover/Remix | Base/SFT/Turbo | not exposed |
-| Extract, Lego, Complete | Base; not 2B Turbo/SFT | not exposed |
-| Python / REST | official APIs | Python adapter; private player HTTP API |
-| Apple Silicon | MPS, MLX DiT/VAE/LM | Verified MLX 4-bit DiT + MPS bf16 / tiled VAE |
+### 3. Shared Command System (UI + Backend + Future AI Agents)
+- All project mutations flow through typed commands (`track.add`, `clip.move`, `clip.split`, `midi.addNote`, etc.) with identical schemas in TypeScript (`apps/daw/src/commands/`) and Python (`engine/daw_workspace/commands.py`).
+- Transport commands (`transport.play`, `transport.seek`, etc.) do not enter Undo/Redo history.
+- The AI Producer Panel publishes live `SelectionContext` (`selectedTrackId`, `selectedClipIds`, `timeRangeBeats`, `sectionId`) so future Phases 02–04 and MCP agents can target exact musical regions without altering core state primitives.
 
-No full DAW, stems, MIDI editor, plugin hosting, accounts, payment, or cloud deployment.
-
-Sources: [official repository](https://github.com/ace-step/ACE-Step-1.5), [installation](https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/INSTALL.md), [Python API](https://github.com/ace-step/ACE-Step-1.5/blob/main/docs/en/INFERENCE.md), [model card](https://huggingface.co/ACE-Step/Ace-Step1.5), [RBJ cookbook](https://www.w3.org/TR/audio-eq-cookbook/).
-
-## Local client verification
-
-All frontends share `engine.service` and `engine.jobs`. Nine Python FastMCP tools use STDIO. Project-scoped Codex configuration is backed up before modification; global Codex configuration is untouched. The SDK smoke client performed a new 15-second model generation. The installed Codex app-server then called the real MCP transport, including replaying that generation's request key to verify cross-client idempotency. No model conversation or additional agent was spawned for this transport test.
-
-The player binds to 127.0.0.1:8795, validates Host and mutation Origin/header, serves range-capable WAV responses and exposes no arbitrary file read endpoint. A/B switching pauses the other audio element and aligns its playback time. Browser playback, produce, compare, restore and export were exercised on the actual generated files.
+### 4. Preserved Legacy Engine Boundaries
+The initial Local AI Music Studio prototype remains intact and tested:
+- `engine/generation/backend.py`, `worker.py`, `supervisor.py`, `mlx_quantized.py` (ACE-Step 2B Turbo, MLX 4-bit DiT + MPS bf16, 10 GiB memory guard)
+- `engine/dsp/` (RBJ EQ, compressor, reverb, saturation, limiter)
+- `engine/store.py`, `engine/jobs.py`, `engine/service.py`
+- `app/cli.py`, `app/mcp_server.py`, `app/player/server.py` (port `8795`)
+- Note: Experimental branches (`codex/ai-daw-production-engine`, `codex/v7-2-house-hook-first`, `codex/v7-3-indie-experimental-rock`, `codex/v7-3-acoustic-lift`) remain untouched as open PRs; verified music outputs (e.g. V7.2 Magnetic Afterhours) are imported as immutable assets via `scripts/seed_daw_demos.py`. See `docs/decisions/0001-phase-01-architecture.md`.
