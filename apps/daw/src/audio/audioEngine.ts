@@ -1,7 +1,14 @@
 import { dawApi } from "../project/api";
 import { beatsToSeconds, dbToLinear, secondsToBeats } from "../project/time";
-import type { Clip, Project, Track, TrackMeterLevel, WaveformData } from "../project/types";
+import type { AssetLoadState, Project, Track, TrackMeterLevel, WaveformData } from "../project/types";
+import {
+  collectMidiEventsForWindow,
+  computeAudioClipSegment,
+  isTrackAudible,
+} from "./scheduler";
 import { scheduleSynthVoice } from "./synth";
+
+export { isTrackAudible } from "./scheduler";
 
 interface TrackNodes {
   input: GainNode;
@@ -15,17 +22,13 @@ interface TrackNodes {
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD_SEC = 0.18;
 
-export function isTrackAudible(track: Track, allTracks: Track[]): boolean {
-  const anySolo = allTracks.some((t) => t.solo);
-  if (anySolo) return track.solo && !track.mute;
-  return !track.mute;
-}
-
 /**
- * Sample-accurate Web Audio multitrack playback engine.
- * - Uses AudioContext.currentTime as the single source of truth for playhead & scheduling.
- * - Supports mid-song seek, seamless loop wrap without cumulative drift, live gain/pan/mute/solo,
- *   real AnalyserNode Peak/RMS metering, and MIDI auditioning.
+ * Sample-accurate Web Audio multitrack playback engine (Phase 01.1 hardened):
+ * - Single shared scheduling math with OfflineAudioContext WAV export (`scheduler.ts`)
+ * - Full MIDI Chase when starting/seeking/looping mid-note
+ * - Monotonic playToken to prevent ghost/duplicate playback on rapid Play/Stop clicks
+ * - Per-asset decode status tracking with failed-cache eviction and retry/relink support
+ * - Standalone Reference audio preview player (strictly excluded from project export)
  */
 export class RealtimeAudioEngine {
   private ctx: AudioContext | null = null;
@@ -38,11 +41,22 @@ export class RealtimeAudioEngine {
   private trackNodes = new Map<string, TrackNodes>();
   private audioBuffers = new Map<string, AudioBuffer>(); // keyed by `${projectId}:${assetId}`
   private pendingDecodes = new Map<string, Promise<AudioBuffer>>();
+  private assetStates = new Map<string, AssetLoadState>(); // keyed by `${projectId}:${assetId}`
+  private stateListeners = new Set<() => void>();
   private activeSources = new Set<AudioScheduledSourceNode>();
+
+  // Standalone reference audition state
+  private refSource: AudioBufferSourceNode | null = null;
+  private refBufferCache = new Map<string, AudioBuffer>();
+  private refPlayingKey: string | null = null;
+  private refStartAudioTime = 0;
+  private refStartOffsetSec = 0;
+  private refDurationSec = 0;
 
   private project: Project | null = null;
   private playing = false;
   private playheadBeats = 0;
+  private playToken = 0;
 
   // Audio-clock synchronization anchors
   private anchorAudioTime = 0;
@@ -51,7 +65,28 @@ export class RealtimeAudioEngine {
   private schedulerTimer: number | null = null;
   private scheduledAudioClipKeys = new Set<string>();
   private scheduledMidiNoteKeys = new Set<string>();
+  private chasedCycleKeys = new Set<string>();
   private meterScratch = new Float32Array(256);
+
+  subscribeAssetStates(listener: () => void): () => void {
+    this.stateListeners.add(listener);
+    return () => this.stateListeners.delete(listener);
+  }
+
+  private emitAssetStates(): void {
+    for (const fn of this.stateListeners) fn();
+  }
+
+  getAssetStates(projectId: string): Record<string, AssetLoadState> {
+    const out: Record<string, AssetLoadState> = {};
+    const prefix = `${projectId}:`;
+    for (const [k, v] of this.assetStates.entries()) {
+      if (k.startsWith(prefix)) {
+        out[k.slice(prefix.length)] = v;
+      }
+    }
+    return out;
+  }
 
   ensureContext(): AudioContext {
     if (!this.ctx) {
@@ -91,17 +126,25 @@ export class RealtimeAudioEngine {
     // Release decoded buffers from previous project to conserve Apple Silicon unified memory
     if (prevProjectId && prevProjectId !== project.id) {
       this.stop();
+      this.stopReferencePreview();
       for (const key of Array.from(this.audioBuffers.keys())) {
         if (!key.startsWith(`${project.id}:`)) {
           this.audioBuffers.delete(key);
         }
       }
+      for (const key of Array.from(this.assetStates.keys())) {
+        if (!key.startsWith(`${project.id}:`)) {
+          this.assetStates.delete(key);
+        }
+      }
+      this.refBufferCache.clear();
       this.trackNodes.forEach((nodes) => {
         nodes.input.disconnect();
         nodes.gain.disconnect();
         nodes.panner.disconnect();
       });
       this.trackNodes.clear();
+      this.emitAssetStates();
     }
 
     if (this.ctx) {
@@ -170,22 +213,54 @@ export class RealtimeAudioEngine {
     }
   }
 
-  async loadAssetBuffer(projectId: string, assetId: string): Promise<AudioBuffer> {
+  invalidateAssetBuffer(projectId: string, assetId: string): void {
     const key = `${projectId}:${assetId}`;
+    this.audioBuffers.delete(key);
+    this.pendingDecodes.delete(key);
+    this.assetStates.delete(key);
+    this.emitAssetStates();
+  }
+
+  async loadAssetBuffer(projectId: string, assetId: string, forceReload = false): Promise<AudioBuffer> {
+    const key = `${projectId}:${assetId}`;
+    if (forceReload) {
+      this.audioBuffers.delete(key);
+      this.pendingDecodes.delete(key);
+    }
     const cached = this.audioBuffers.get(key);
     if (cached) return cached;
     const inflight = this.pendingDecodes.get(key);
     if (inflight) return inflight;
 
+    this.assetStates.set(key, { status: "loading" });
+    this.emitAssetStates();
+
     const promise = (async () => {
-      const ctx = this.ensureContext();
-      const resp = await fetch(dawApi.assetFileUrl(projectId, assetId));
-      if (!resp.ok) throw new Error(`Failed to fetch audio asset ${assetId}`);
-      const arr = await resp.arrayBuffer();
-      const decoded = await ctx.decodeAudioData(arr);
-      this.audioBuffers.set(key, decoded);
-      this.pendingDecodes.delete(key);
-      return decoded;
+      try {
+        const ctx = this.ensureContext();
+        const url = `${dawApi.assetFileUrl(projectId, assetId)}${forceReload ? `?t=${Date.now()}` : ""}`;
+        const resp = await fetch(url);
+        if (!resp.ok) {
+          throw new Error(
+            resp.status === 404 ? "Audio file missing on disk" : `HTTP ${resp.status} loading audio`
+          );
+        }
+        const arr = await resp.arrayBuffer();
+        const decoded = await ctx.decodeAudioData(arr);
+        this.audioBuffers.set(key, decoded);
+        this.assetStates.set(key, { status: "ready" });
+        this.pendingDecodes.delete(key);
+        this.emitAssetStates();
+        return decoded;
+      } catch (err) {
+        // Never leave failed promises cached!
+        this.pendingDecodes.delete(key);
+        this.audioBuffers.delete(key);
+        const msg = err instanceof Error ? err.message : "Audio decode failed";
+        this.assetStates.set(key, { status: "error", error: msg });
+        this.emitAssetStates();
+        throw err;
+      }
     })();
 
     this.pendingDecodes.set(key, promise);
@@ -201,7 +276,6 @@ export class RealtimeAudioEngine {
     await Promise.allSettled(audioAssets.map((a) => this.loadAssetBuffer(project.id, a.id)));
   }
 
-  /** Extract real waveform peaks directly from a decoded AudioBuffer (client fallback for MP3/M4A). */
   extractWaveformFromBuffer(buf: AudioBuffer, bins = 1024): WaveformData {
     const total = buf.length;
     const ch0 = buf.getChannelData(0);
@@ -245,8 +319,7 @@ export class RealtimeAudioEngine {
 
     if (loop.enabled && loop.endBeats > loop.startBeats && rawBeats >= loop.startBeats) {
       const loopLen = loop.endBeats - loop.startBeats;
-      const wrapped = loop.startBeats + (((rawBeats - loop.startBeats) % loopLen) + loopLen) % loopLen;
-      return wrapped;
+      return loop.startBeats + (((rawBeats - loop.startBeats) % loopLen) + loopLen) % loopLen;
     }
 
     if (rawBeats >= this.project.lengthBeats) {
@@ -257,13 +330,22 @@ export class RealtimeAudioEngine {
 
   async play(fromBeats?: number): Promise<void> {
     if (!this.project) return;
+    this.stopReferencePreview();
+    const myToken = ++this.playToken;
+    const targetProject = this.project;
+
     const ctx = this.ensureContext();
     if (ctx.state === "suspended") {
       await ctx.resume();
     }
-    await this.preloadProjectAudio(this.project);
-    this.syncMixerNodes(this.project);
+    await this.preloadProjectAudio(targetProject);
 
+    // Abort if stop/pause/another play or project switch happened while decoding
+    if (myToken !== this.playToken || this.project?.id !== targetProject.id) {
+      return;
+    }
+
+    this.syncMixerNodes(this.project);
     const startBeats =
       fromBeats !== undefined
         ? Math.max(0, fromBeats)
@@ -275,6 +357,7 @@ export class RealtimeAudioEngine {
   }
 
   pause(): void {
+    this.playToken++;
     if (!this.playing) return;
     this.playheadBeats = this.getPlayheadBeats();
     this.clearPlayback();
@@ -282,6 +365,7 @@ export class RealtimeAudioEngine {
   }
 
   stop(): void {
+    this.playToken++;
     this.clearPlayback();
     this.playing = false;
     this.playheadBeats = 0;
@@ -295,7 +379,6 @@ export class RealtimeAudioEngine {
     }
   }
 
-  /** Re-schedule active playback after clips/notes are edited mid-playback. */
   resyncActivePlayback(): void {
     if (this.playing) {
       const nowBeats = this.getPlayheadBeats();
@@ -306,8 +389,66 @@ export class RealtimeAudioEngine {
   auditionMidiNote(pitch: number, velocity = 100, durationSec = 0.28): void {
     const ctx = this.ensureContext();
     if (this.masterGain) {
-      scheduleSynthVoice(ctx, this.masterGain, pitch, velocity, ctx.currentTime + 0.005, durationSec, 0.9);
+      scheduleSynthVoice(ctx, this.masterGain, pitch, velocity, ctx.currentTime + 0.005, durationSec, 0.9, false);
     }
+  }
+
+  // Standalone Reference Audition (never mixed into project export)
+  async playReferencePreview(url: string, startSec = 0): Promise<void> {
+    this.pause();
+    this.stopReferencePreview();
+    const ctx = this.ensureContext();
+    if (ctx.state === "suspended") await ctx.resume();
+
+    let buf = this.refBufferCache.get(url);
+    if (!buf) {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} loading reference audio`);
+      buf = await ctx.decodeAudioData(await resp.arrayBuffer());
+      this.refBufferCache.set(url, buf);
+    }
+
+    const offset = Math.max(0, Math.min(buf.duration - 0.05, startSec));
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(this.masterGain!);
+    src.start(ctx.currentTime + 0.01, offset);
+    this.refSource = src;
+    this.refPlayingKey = url;
+    this.refStartAudioTime = ctx.currentTime + 0.01;
+    this.refStartOffsetSec = offset;
+    this.refDurationSec = buf.duration;
+    src.onended = () => {
+      if (this.refSource === src) {
+        this.refSource = null;
+        this.refPlayingKey = null;
+      }
+    };
+  }
+
+  stopReferencePreview(): void {
+    if (this.refSource) {
+      try {
+        this.refSource.stop();
+        this.refSource.disconnect();
+      } catch {
+        // already stopped
+      }
+      this.refSource = null;
+      this.refPlayingKey = null;
+    }
+  }
+
+  getReferencePreviewState(): { playingUrl: string | null; positionSec: number; durationSec: number } {
+    if (!this.refSource || !this.ctx) {
+      return { playingUrl: null, positionSec: 0, durationSec: this.refDurationSec };
+    }
+    const elapsed = Math.max(0, this.ctx.currentTime - this.refStartAudioTime);
+    return {
+      playingUrl: this.refPlayingKey,
+      positionSec: Math.min(this.refDurationSec, this.refStartOffsetSec + elapsed),
+      durationSec: this.refDurationSec,
+    };
   }
 
   private clearPlayback(): void {
@@ -326,6 +467,7 @@ export class RealtimeAudioEngine {
     this.activeSources.clear();
     this.scheduledAudioClipKeys.clear();
     this.scheduledMidiNoteKeys.clear();
+    this.chasedCycleKeys.clear();
   }
 
   private restartFromBeats(startBeats: number): void {
@@ -336,9 +478,9 @@ export class RealtimeAudioEngine {
 
     this.playing = true;
     this.playheadBeats = startBeats;
-    this.anchorAudioTime = ctx.currentTime + 0.03;
+    this.anchorAudioTime = ctx.currentTime + 0.025;
     this.anchorSongBeats = startBeats;
-    this.scheduledUntilSongSec = 0; // relative to anchorAudioTime
+    this.scheduledUntilSongSec = 0;
 
     this.runSchedulerTick();
     this.schedulerTimer = window.setInterval(() => this.runSchedulerTick(), LOOKAHEAD_MS);
@@ -357,7 +499,6 @@ export class RealtimeAudioEngine {
     const songLengthSec = beatsToSeconds(project.lengthBeats, project.bpm);
     const anchorSongSec = beatsToSeconds(this.anchorSongBeats, project.bpm);
 
-    // Stop cleanly when reaching project end (if loop is disabled)
     if (!loop.enabled && anchorSongSec + elapsedSinceAnchor >= songLengthSec) {
       this.playheadBeats = project.lengthBeats;
       this.clearPlayback();
@@ -365,10 +506,16 @@ export class RealtimeAudioEngine {
       return;
     }
 
-    // Break [windowStartRelSec, windowEndRelSec] into contiguous song-time slices across loop boundaries
     const slices = this.computeSongSlices(windowStartRelSec, windowEndRelSec, project);
     for (const slice of slices) {
-      this.scheduleSlice(project, slice.audioStartTime, slice.songStartSec, slice.songEndSec, slice.cycleIndex);
+      this.scheduleSlice(
+        project,
+        slice.audioStartTime,
+        slice.songStartSec,
+        slice.songEndSec,
+        slice.boundaryLimitSec,
+        slice.cycleIndex
+      );
     }
 
     this.scheduledUntilSongSec = windowEndRelSec;
@@ -378,8 +525,20 @@ export class RealtimeAudioEngine {
     relStartSec: number,
     relEndSec: number,
     project: Project
-  ): Array<{ audioStartTime: number; songStartSec: number; songEndSec: number; cycleIndex: number }> {
-    const slices: Array<{ audioStartTime: number; songStartSec: number; songEndSec: number; cycleIndex: number }> = [];
+  ): Array<{
+    audioStartTime: number;
+    songStartSec: number;
+    songEndSec: number;
+    boundaryLimitSec: number;
+    cycleIndex: number;
+  }> {
+    const slices: Array<{
+      audioStartTime: number;
+      songStartSec: number;
+      songEndSec: number;
+      boundaryLimitSec: number;
+      cycleIndex: number;
+    }> = [];
     const anchorSongSec = beatsToSeconds(this.anchorSongBeats, project.bpm);
     const loop = project.loopRegion;
     const loopStartSec = beatsToSeconds(loop.startBeats, project.bpm);
@@ -402,14 +561,13 @@ export class RealtimeAudioEngine {
           audioStartTime: this.anchorAudioTime + cursorRel,
           songStartSec,
           songEndSec: songStartSec + segDur,
+          boundaryLimitSec: loopEndSec,
           cycleIndex,
         });
         cursorRel += segDur;
       } else {
         const limitSec =
-          loop.enabled && loopLenSec > 0.05 && rawSongSec < loopStartSec
-            ? loopStartSec
-            : songLenSec;
+          loop.enabled && loopLenSec > 0.05 && rawSongSec < loopStartSec ? loopStartSec : songLenSec;
         const remaining = limitSec - rawSongSec;
         if (remaining <= 1e-6) break;
         const segDur = Math.min(relEndSec - cursorRel, remaining);
@@ -417,6 +575,7 @@ export class RealtimeAudioEngine {
           audioStartTime: this.anchorAudioTime + cursorRel,
           songStartSec: rawSongSec,
           songEndSec: rawSongSec + segDur,
+          boundaryLimitSec: limitSec,
           cycleIndex: -1,
         });
         cursorRel += segDur;
@@ -430,172 +589,96 @@ export class RealtimeAudioEngine {
     audioStartTime: number,
     songStartSec: number,
     songEndSec: number,
+    boundaryLimitSec: number,
     cycleIndex: number
   ): void {
     if (!this.ctx) return;
-    const secPerBeat = 60 / project.bpm;
+
+    // Allow MIDI Chase once per playback anchor or loop cycle entry!
+    const cycleChaseKey = `chase:${cycleIndex}`;
+    const allowChase = !this.chasedCycleKeys.has(cycleChaseKey);
+    if (allowChase) {
+      this.chasedCycleKeys.add(cycleChaseKey);
+    }
 
     for (const track of project.tracks) {
       const nodes = this.ensureTrackNode(track);
       for (const clip of track.clips) {
-        const clipStartSec = clip.timelineStartBeats * secPerBeat;
-        const clipDurSec = clip.durationBeats * secPerBeat;
-        const clipEndSec = clipStartSec + clipDurSec;
-
-        if (clipEndSec <= songStartSec || clipStartSec >= songEndSec) continue;
-
         if (clip.type === "audio" && clip.assetId) {
-          this.scheduleAudioClipInSlice(
-            project,
-            nodes,
+          const buf = this.audioBuffers.get(`${project.id}:${clip.assetId}`);
+          if (!buf) continue;
+
+          const seg = computeAudioClipSegment(
             clip,
-            clipStartSec,
-            clipEndSec,
-            audioStartTime,
+            project.bpm,
+            buf.duration,
             songStartSec,
             songEndSec,
-            cycleIndex
+            boundaryLimitSec
           );
+          if (!seg) continue;
+
+          const scheduleKey = `${clip.id}:${cycleIndex}`;
+          if (this.scheduledAudioClipKeys.has(scheduleKey)) continue;
+          this.scheduledAudioClipKeys.add(scheduleKey);
+
+          const when = audioStartTime + Math.max(0, seg.songStartSec - songStartSec);
+          const src = this.ctx.createBufferSource();
+          src.buffer = buf;
+
+          const clipGain = this.ctx.createGain();
+          clipGain.gain.setValueAtTime(0.0001, when);
+          clipGain.gain.linearRampToValueAtTime(seg.clipGainLinear, when + 0.003);
+          if (seg.playDurSec > 0.008) {
+            clipGain.gain.setValueAtTime(seg.clipGainLinear, when + seg.playDurSec - 0.004);
+            clipGain.gain.linearRampToValueAtTime(0.0001, when + seg.playDurSec);
+          }
+
+          src.connect(clipGain);
+          clipGain.connect(nodes.input);
+
+          if (seg.loop) {
+            src.loop = true;
+            src.loopStart = seg.loopStartSec;
+            src.loopEnd = seg.loopEndSec;
+          }
+          src.start(when, seg.sourceStartSec, seg.playDurSec);
+
+          this.activeSources.add(src);
+          src.onended = () => {
+            this.activeSources.delete(src);
+            src.disconnect();
+            clipGain.disconnect();
+          };
         } else if (clip.type === "midi") {
-          this.scheduleMidiClipInSlice(
-            project,
-            nodes,
+          const events = collectMidiEventsForWindow(
             clip,
-            clipStartSec,
-            audioStartTime,
+            project.bpm,
             songStartSec,
             songEndSec,
+            boundaryLimitSec,
+            allowChase,
             cycleIndex
           );
-        }
-      }
-    }
-  }
-
-  private scheduleAudioClipInSlice(
-    project: Project,
-    nodes: TrackNodes,
-    clip: Clip,
-    clipStartSec: number,
-    clipEndSec: number,
-    audioStartTime: number,
-    songStartSec: number,
-    songEndSec: number,
-    cycleIndex: number
-  ): void {
-    if (!this.ctx || !clip.assetId) return;
-    const buf = this.audioBuffers.get(`${project.id}:${clip.assetId}`);
-    if (!buf) return;
-
-    const loopWindowSec = Math.max(
-      0.05,
-      Math.min(buf.duration - clip.sourceOffsetSec, clip.loopLengthSec ?? buf.duration - clip.sourceOffsetSec)
-    );
-    if (loopWindowSec <= 0.01) return;
-
-    // Limit playback end to loop boundary if looping project
-    const projLoopEnd =
-      project.loopRegion.enabled && songStartSec < beatsToSeconds(project.loopRegion.endBeats, project.bpm)
-        ? beatsToSeconds(project.loopRegion.endBeats, project.bpm)
-        : beatsToSeconds(project.lengthBeats, project.bpm);
-    const effectiveClipEnd = Math.min(clipEndSec, projLoopEnd);
-
-    const overlapStart = Math.max(clipStartSec, songStartSec);
-    if (overlapStart >= effectiveClipEnd) return;
-
-    // Schedule each audio clip once per loop cycle (or once when non-looping)
-    const scheduleKey = `${clip.id}:${cycleIndex}`;
-    if (this.scheduledAudioClipKeys.has(scheduleKey)) return;
-    this.scheduledAudioClipKeys.add(scheduleKey);
-
-    const when = audioStartTime + (overlapStart - songStartSec);
-    const intoClipSec = overlapStart - clipStartSec;
-    const playDurSec = effectiveClipEnd - overlapStart;
-
-    const src = this.ctx.createBufferSource();
-    src.buffer = buf;
-
-    const clipGain = this.ctx.createGain();
-    const linGain = dbToLinear(clip.gainDb);
-    // Tiny 3ms de-click fade-in/out
-    clipGain.gain.setValueAtTime(0.0001, when);
-    clipGain.gain.linearRampToValueAtTime(linGain, when + 0.003);
-    if (playDurSec > 0.008) {
-      clipGain.gain.setValueAtTime(linGain, when + playDurSec - 0.004);
-      clipGain.gain.linearRampToValueAtTime(0.0001, when + playDurSec);
-    }
-
-    src.connect(clipGain);
-    clipGain.connect(nodes.input);
-
-    if (clip.loop) {
-      src.loop = true;
-      src.loopStart = clip.sourceOffsetSec;
-      src.loopEnd = Math.min(buf.duration, clip.sourceOffsetSec + loopWindowSec);
-      const offsetInLoop = clip.sourceOffsetSec + (intoClipSec % loopWindowSec);
-      src.start(when, offsetInLoop, playDurSec);
-    } else {
-      const srcOffset = clip.sourceOffsetSec + intoClipSec;
-      const remainingBuf = buf.duration - srcOffset;
-      if (remainingBuf <= 0.005) return;
-      src.start(when, srcOffset, Math.min(playDurSec, remainingBuf));
-    }
-
-    this.activeSources.add(src);
-    src.onended = () => {
-      this.activeSources.delete(src);
-      src.disconnect();
-      clipGain.disconnect();
-    };
-  }
-
-  private scheduleMidiClipInSlice(
-    project: Project,
-    nodes: TrackNodes,
-    clip: Clip,
-    clipStartSec: number,
-    audioStartTime: number,
-    songStartSec: number,
-    songEndSec: number,
-    cycleIndex: number
-  ): void {
-    if (!this.ctx || clip.notes.length === 0) return;
-    const secPerBeat = 60 / project.bpm;
-    const clipGainLin = dbToLinear(clip.gainDb);
-
-    const maxNoteEnd = clip.notes.reduce((m, n) => Math.max(m, n.startBeat + n.durationBeats), 4);
-    const loopLenBeats = clip.loopLengthBeats ?? Math.max(4, Math.ceil(maxNoteEnd / 4) * 4);
-    const reps = clip.loop ? Math.ceil(clip.durationBeats / loopLenBeats) : 1;
-
-    for (let rep = 0; rep < reps; rep++) {
-      const repOffsetBeats = rep * loopLenBeats;
-      for (const note of clip.notes) {
-        const relStartBeats = repOffsetBeats + note.startBeat;
-        if (relStartBeats >= clip.durationBeats) continue;
-        const clippedDurBeats = Math.min(note.durationBeats, clip.durationBeats - relStartBeats);
-        if (clippedDurBeats <= 0) continue;
-
-        const noteStartSec = clipStartSec + relStartBeats * secPerBeat;
-        const noteDurSec = clippedDurBeats * secPerBeat;
-        if (noteStartSec < songStartSec - 0.002 || noteStartSec >= songEndSec) continue;
-
-        const noteKey = `${clip.id}:${rep}:${note.id}:${cycleIndex}`;
-        if (this.scheduledMidiNoteKeys.has(noteKey)) continue;
-        this.scheduledMidiNoteKeys.add(noteKey);
-
-        const when = audioStartTime + Math.max(0, noteStartSec - songStartSec);
-        const oscs = scheduleSynthVoice(
-          this.ctx,
-          nodes.input,
-          note.pitch,
-          note.velocity,
-          when,
-          noteDurSec,
-          clipGainLin
-        );
-        for (const osc of oscs) {
-          this.activeSources.add(osc);
-          osc.onended = () => this.activeSources.delete(osc);
+          for (const ev of events) {
+            if (this.scheduledMidiNoteKeys.has(ev.key)) continue;
+            this.scheduledMidiNoteKeys.add(ev.key);
+            const when = audioStartTime + Math.max(0, ev.songStartSec - songStartSec);
+            const oscs = scheduleSynthVoice(
+              this.ctx,
+              nodes.input,
+              ev.pitch,
+              ev.velocity,
+              when,
+              ev.durationSec,
+              ev.clipGainLinear,
+              ev.chased
+            );
+            for (const osc of oscs) {
+              this.activeSources.add(osc);
+              osc.onended = () => this.activeSources.delete(osc);
+            }
+          }
         }
       }
     }

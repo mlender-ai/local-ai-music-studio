@@ -1,10 +1,13 @@
 import React, { useRef, useState } from "react";
 import {
+  AlertTriangle,
   ChevronLeft,
   FileAudio,
   FolderOpen,
+  Link2,
   Music,
   Plus,
+  RefreshCw,
   Search,
   Upload,
 } from "lucide-react";
@@ -23,15 +26,20 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
     project,
     recentProjects,
     libraryItems,
+    assetStates,
     openProjectById,
     importFile,
     importLibraryAsset,
     addAssetToTimeline,
+    retryAssetLoad,
+    relinkAssetFile,
   } = useDaw();
 
   const [category, setCategory] = useState<BrowserCategory>("audio");
   const [query, setQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const relinkInputRef = useRef<HTMLInputElement | null>(null);
+  const [relinkTargetId, setRelinkTargetId] = useState<string | null>(null);
 
   const q = query.trim().toLowerCase();
 
@@ -89,6 +97,20 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
         accept=".wav,.mp3,.flac,.ogg,.aiff,.aif,.m4a,.mid,.midi"
         style={{ display: "none" }}
         onChange={(e) => void handleFilePicked(e)}
+      />
+      <input
+        ref={relinkInputRef}
+        type="file"
+        accept=".wav,.mp3,.flac,.ogg,.aiff,.aif,.m4a,.mid,.midi"
+        style={{ display: "none" }}
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          if (f && relinkTargetId) {
+            await relinkAssetFile(relinkTargetId, f);
+          }
+          setRelinkTargetId(null);
+          e.target.value = "";
+        }}
       />
 
       <div className="browser-search">
@@ -221,31 +243,68 @@ export function ProjectBrowser({ width, onCollapse, onOpenNewModal }: ProjectBro
                 No project assets yet. Click <strong>+ Import</strong> to add WAV, MP3, FLAC, or MIDI.
               </div>
             ) : (
-              projectAssets.map((asset) => (
-                <div
-                  key={asset.id}
-                  className="browser-item"
-                  onDoubleClick={() => addAssetToTimeline(asset)}
-                  title={`${asset.provenance}\nDouble-click or click + to place on timeline`}
-                >
-                  {asset.kind === "midi" ? (
-                    <Music size={12} color="#648ea8" />
-                  ) : (
-                    <FileAudio size={12} color="#6a997c" />
-                  )}
-                  <span className="browser-item-name">{asset.name}</span>
-                  <button
-                    className="icon-btn"
-                    title="Add to Timeline at Playhead"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addAssetToTimeline(asset);
-                    }}
+              projectAssets.map((asset) => {
+                const st = assetStates[asset.id];
+                const isErr = st?.status === "error";
+                return (
+                  <div
+                    key={asset.id}
+                    className="browser-item"
+                    style={isErr ? { borderColor: "var(--accent-danger)" } : undefined}
+                    onDoubleClick={() => addAssetToTimeline(asset)}
+                    title={
+                      isErr
+                        ? `Audio Error: ${st.error}\nRetry or relink source file.`
+                        : `${asset.provenance}\nDouble-click or click + to place on timeline`
+                    }
                   >
-                    <Plus size={12} />
-                  </button>
-                </div>
-              ))
+                    {isErr ? (
+                      <AlertTriangle size={12} color="var(--accent-danger)" />
+                    ) : asset.kind === "midi" ? (
+                      <Music size={12} color="#648ea8" />
+                    ) : (
+                      <FileAudio size={12} color="#6a997c" />
+                    )}
+                    <span className="browser-item-name">{asset.name}</span>
+                    {isErr ? (
+                      <>
+                        <button
+                          className="icon-btn"
+                          title="Retry loading audio"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void retryAssetLoad(asset.id);
+                          }}
+                        >
+                          <RefreshCw size={11} />
+                        </button>
+                        <button
+                          className="icon-btn"
+                          title="Relink missing audio file"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRelinkTargetId(asset.id);
+                            relinkInputRef.current?.click();
+                          }}
+                        >
+                          <Link2 size={11} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="icon-btn"
+                        title="Add to Timeline at Playhead"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addAssetToTimeline(asset);
+                        }}
+                      >
+                        <Plus size={12} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
 

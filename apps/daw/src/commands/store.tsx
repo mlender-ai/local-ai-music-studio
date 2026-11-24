@@ -1,10 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { audioEngine } from "../audio/audioEngine";
 import { renderProjectOfflineWav } from "../audio/offlineRenderer";
-import { dawApi } from "../project/api";
+import { dawApi, RevisionConflictError } from "../project/api";
 import { secondsToBeats } from "../project/time";
 import type {
   Asset,
+  AssetLoadState,
   Clip,
   HealthInfo,
   LibraryItem,
@@ -20,10 +21,52 @@ import { executeCommand, makeClientId } from "./executor";
 import { NON_UNDOABLE_COMMANDS, type ProjectCommand } from "./types";
 
 const MAX_HISTORY = 100;
+const WORKSPACE_PREFS_KEY = "ai_native_daw_workspace_v1";
+
+interface WorkspacePrefs {
+  lastProjectId?: string;
+  lastTrackId?: string | null;
+  lastPlayheadBeats?: number;
+  pixelsPerBeat?: number;
+  browserOpen?: boolean;
+  producerOpen?: boolean;
+  dockOpen?: boolean;
+}
+
+export function loadWorkspacePrefs(): WorkspacePrefs {
+  try {
+    const raw = window.localStorage.getItem(WORKSPACE_PREFS_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as WorkspacePrefs;
+  } catch {
+    return {};
+  }
+}
+
+export function saveWorkspacePrefs(patch: Partial<WorkspacePrefs>): void {
+  try {
+    const prev = loadWorkspacePrefs();
+    window.localStorage.setItem(WORKSPACE_PREFS_KEY, JSON.stringify({ ...prev, ...patch }));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+/** Deterministic structural fingerprint ignoring revision & updatedAt timestamps. */
+export function projectFingerprint(project: Project): string {
+  const { revision: _rev, updatedAt: _upd, ...rest } = project;
+  return JSON.stringify(rest);
+}
 
 interface ToastState {
   message: string;
   kind: "info" | "error";
+}
+
+export interface ConflictNotice {
+  expectedRevision: number;
+  serverRevision: number;
+  serverProject: Project;
 }
 
 interface DawContextValue {
@@ -32,6 +75,7 @@ interface DawContextValue {
   libraryItems: LibraryItem[];
   health: HealthInfo | null;
   waveforms: Record<string, WaveformData>;
+  assetStates: Record<string, AssetLoadState>;
   selection: SelectionContext;
   setSelection: React.Dispatch<React.SetStateAction<SelectionContext>>;
   selectedTrack: Track | null;
@@ -40,6 +84,11 @@ interface DawContextValue {
   isSaving: boolean;
   isExporting: boolean;
   lastSavedAt: string | null;
+  savedRevision: number;
+  revisionConflict: ConflictNotice | null;
+  resolveConflictReload: () => Promise<void>;
+  resolveConflictOverwrite: () => Promise<void>;
+  dismissConflict: () => void;
   canUndo: boolean;
   canRedo: boolean;
   isPlaying: boolean;
@@ -63,14 +112,18 @@ interface DawContextValue {
   stop: () => void;
   seek: (beats: number) => void;
   resetMasterClip: () => void;
-  openProjectById: (id: string) => Promise<void>;
+  openProjectById: (id: string, options?: { force?: boolean }) => Promise<void>;
   createNewProject: (name: string, bpm?: number) => Promise<void>;
-  saveCurrentProject: () => Promise<void>;
+  saveCurrentProject: (options?: { forceOverwrite?: boolean }) => Promise<void>;
   saveAsProject: (newName: string) => Promise<void>;
   importFile: (file: File, kind?: "audio" | "midi" | "reference", addToTimeline?: boolean) => Promise<void>;
   importLibraryAsset: (item: LibraryItem, addToTimeline?: boolean) => Promise<void>;
   addAssetToTimeline: (asset: Asset, targetTrackId?: string, startBeats?: number, midiNotes?: MidiNote[]) => void;
+  retryAssetLoad: (assetId: string) => Promise<void>;
+  relinkAssetFile: (assetId: string, file: File) => Promise<void>;
   exportStereoWav: (useLoopRange?: boolean) => Promise<void>;
+  applyExternalProjectUpdate: (updated: Project, message?: string) => void;
+  refreshLists: () => Promise<ProjectSummary[]>;
 }
 
 const DawContext = createContext<DawContextValue | null>(null);
@@ -78,11 +131,14 @@ const DawContext = createContext<DawContextValue | null>(null);
 const EMPTY_METER: TrackMeterLevel = { peakL: 0, peakR: 0, rmsL: 0, rmsR: 0, clipping: false };
 
 export function DawProvider({ children }: { children: React.ReactNode }) {
+  const initialPrefs = useMemo(() => loadWorkspacePrefs(), []);
+
   const [project, setProject] = useState<Project | null>(null);
   const [recentProjects, setRecentProjects] = useState<ProjectSummary[]>([]);
   const [libraryItems, setLibraryItems] = useState<LibraryItem[]>([]);
   const [health, setHealth] = useState<HealthInfo | null>(null);
   const [waveforms, setWaveforms] = useState<Record<string, WaveformData>>({});
+  const [assetStates, setAssetStates] = useState<Record<string, AssetLoadState>>({});
   const [selection, setSelection] = useState<SelectionContext>({
     selectedTrackId: null,
     selectedClipIds: [],
@@ -92,7 +148,9 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
 
   const [past, setPast] = useState<Project[]>([]);
   const [future, setFuture] = useState<Project[]>([]);
-  const [isDirty, setIsDirty] = useState(false);
+  const [savedFingerprint, setSavedFingerprint] = useState<string>("");
+  const [savedRevision, setSavedRevision] = useState<number>(1);
+  const [revisionConflict, setRevisionConflict] = useState<ConflictNotice | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
@@ -103,21 +161,65 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const [masterMeter, setMasterMeter] = useState<TrackMeterLevel>(EMPTY_METER);
 
   const [snapEnabled, setSnapEnabled] = useState(true);
-  const [gridBeats, setGridBeats] = useState(1); // 1 beat = quarter note
-  const [pixelsPerBeat, setPixelsPerBeat] = useState(15);
+  const [gridBeats, setGridBeats] = useState(1);
+  const [pixelsPerBeat, setPixelsPerBeat] = useState(initialPrefs.pixelsPerBeat ?? 15);
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const projectRef = useRef<Project | null>(null);
   projectRef.current = project;
+  const savedRevisionRef = useRef<number>(1);
+  savedRevisionRef.current = savedRevision;
   const txSnapshotRef = useRef<Project | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   const midiNotesCacheRef = useRef<Map<string, MidiNote[]>>(new Map());
+  const saveInFlightRef = useRef(false);
+
+  const isDirty = useMemo(() => {
+    if (!project) return false;
+    return projectFingerprint(project) !== savedFingerprint;
+  }, [project, savedFingerprint]);
 
   const showToast = useCallback((message: string, kind: "info" | "error" = "info") => {
     setToast({ message, kind });
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(null), kind === "error" ? 5000 : 2800);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), kind === "error" ? 5500 : 3000);
   }, []);
+
+  // Subscribe to real audio decode statuses from audioEngine
+  useEffect(() => {
+    return audioEngine.subscribeAssetStates(() => {
+      const pid = projectRef.current?.id;
+      if (pid) {
+        setAssetStates(audioEngine.getAssetStates(pid));
+      }
+    });
+  }, []);
+
+  // Warn before closing tab if unsaved changes exist
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
+
+  // Persist workspace preferences (zoom, last track, playhead)
+  useEffect(() => {
+    saveWorkspacePrefs({ pixelsPerBeat });
+  }, [pixelsPerBeat]);
+
+  useEffect(() => {
+    if (project) {
+      saveWorkspacePrefs({
+        lastProjectId: project.id,
+        lastTrackId: selection.selectedTrackId,
+      });
+    }
+  }, [project?.id, selection.selectedTrackId]);
 
   const refreshLists = useCallback(async () => {
     try {
@@ -143,40 +245,59 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         } catch {
-          // fallback to Web Audio client decode below
+          // fallback to Web Audio decode below
         }
         try {
           const buf = await audioEngine.loadAssetBuffer(proj.id, asset.id);
           results[asset.id] = audioEngine.extractWaveformFromBuffer(buf, 1024);
         } catch {
-          // leave empty if unreadable
+          // error state is tracked in audioEngine.assetStates
         }
       })
     );
     setWaveforms(results);
+    setAssetStates(audioEngine.getAssetStates(proj.id));
   }, []);
 
   const hydrateProject = useCallback(
-    async (loaded: Project) => {
+    async (loaded: Project, restoreSessionState = false) => {
       audioEngine.stop();
       setIsPlaying(false);
-      setPlayheadBeats(0);
+      const prefs = restoreSessionState ? loadWorkspacePrefs() : {};
+      const restoredPlayhead =
+        restoreSessionState &&
+        prefs.lastProjectId === loaded.id &&
+        typeof prefs.lastPlayheadBeats === "number"
+          ? Math.max(0, Math.min(loaded.lengthBeats, prefs.lastPlayheadBeats))
+          : 0;
+
+      audioEngine.seek(restoredPlayhead);
+      setPlayheadBeats(restoredPlayhead);
       setProject(loaded);
       setPast([]);
       setFuture([]);
-      setIsDirty(false);
+      setSavedFingerprint(projectFingerprint(loaded));
+      setSavedRevision(loaded.revision ?? 1);
+      setRevisionConflict(null);
       setLastSavedAt(loaded.updatedAt);
 
-      // Pick a sensible initial selection so Clip Editor & AI Context immediately shine
+      const restoredTrack =
+        restoreSessionState && prefs.lastTrackId
+          ? loaded.tracks.find((t) => t.id === prefs.lastTrackId) ?? null
+          : null;
       const firstAudioTrack = loaded.tracks.find((t) => t.clips.length > 0) ?? loaded.tracks[0] ?? null;
       const featuredClip =
+        restoredTrack?.clips[0] ??
         loaded.tracks.find((t) => t.id === "trk_guitar")?.clips[1] ??
         firstAudioTrack?.clips[0] ??
         null;
       const featuredTrackId =
-        featuredClip
-          ? loaded.tracks.find((t) => t.clips.some((c) => c.id === featuredClip.id))?.id ?? firstAudioTrack?.id ?? null
-          : firstAudioTrack?.id ?? null;
+        restoredTrack?.id ??
+        (featuredClip
+          ? loaded.tracks.find((t) => t.clips.some((c) => c.id === featuredClip.id))?.id ??
+            firstAudioTrack?.id ??
+            null
+          : firstAudioTrack?.id ?? null);
 
       setSelection({
         selectedTrackId: featuredTrackId,
@@ -196,7 +317,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     [loadWaveformsForProject]
   );
 
-  // Initial boot: load health, projects, open Demo B (or latest project) directly into studio
+  // Initial boot: restore last worked project first, falling back to demos / new project
   useEffect(() => {
     let active = true;
     (async () => {
@@ -204,18 +325,20 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         const h = await dawApi.health();
         if (active) setHealth(h);
       } catch {
-        // backend unavailable warning handled on project fetch
+        // backend unavailable warning handled below
       }
       const list = await refreshLists();
       if (!active) return;
       if (list.length > 0) {
+        const prefs = loadWorkspacePrefs();
         const preferred =
+          (prefs.lastProjectId ? list.find((p) => p.id === prefs.lastProjectId) : undefined) ??
           list.find((p) => p.id === "demo_multitrack_session") ??
           list.find((p) => p.id === "demo_v72_magnetic_afterhours") ??
           list[0];
         try {
           const opened = await dawApi.openProject(preferred.id);
-          if (active) await hydrateProject(opened);
+          if (active) await hydrateProject(opened, true);
         } catch (err) {
           showToast(`Failed to open project: ${(err as Error).message}`, "error");
         }
@@ -223,7 +346,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         try {
           const created = await dawApi.createProject({ name: "Untitled 01", bpm: 128 });
           if (active) {
-            await hydrateProject(created);
+            await hydrateProject(created, false);
             await refreshLists();
           }
         } catch (err) {
@@ -237,7 +360,6 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     };
   }, [hydrateProject, refreshLists, showToast]);
 
-  // Sync project mutations to audio engine
   useEffect(() => {
     if (project) {
       audioEngine.syncProject(project);
@@ -262,19 +384,27 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     return () => window.cancelAnimationFrame(rafId);
   }, []);
 
-  // Periodic debounced autosave (every 4s when dirty)
+  // Periodic debounced autosave (respects expectedRevision so external agent edits are never clobbered)
   useEffect(() => {
-    if (!isDirty || !project) return;
+    if (!isDirty || !project || saveInFlightRef.current || revisionConflict) return;
     const timer = window.setTimeout(() => {
       const current = projectRef.current;
-      if (current) {
-        void dawApi.autosaveProject(current).catch(() => {
-          // non-fatal autosave warning
-        });
+      if (current && !saveInFlightRef.current) {
+        void dawApi
+          .autosaveProject(current, savedRevisionRef.current)
+          .catch((err) => {
+            if (err instanceof RevisionConflictError) {
+              setRevisionConflict({
+                expectedRevision: savedRevisionRef.current,
+                serverRevision: err.serverRevision,
+                serverProject: err.serverProject,
+              });
+            }
+          });
       }
     }, 4000);
     return () => window.clearTimeout(timer);
-  }, [isDirty, project]);
+  }, [isDirty, project, revisionConflict]);
 
   const beginTransaction = useCallback(() => {
     if (!txSnapshotRef.current && projectRef.current) {
@@ -307,9 +437,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
           setFuture([]);
         }
         setProject(next);
-        setIsDirty(true);
 
-        // If timeline structure changed during playback, re-sync scheduler cleanly
         if (
           audioEngine.isPlaying &&
           (cmd.type.startsWith("clip.") || cmd.type.startsWith("midi.") || cmd.type === "track.remove")
@@ -331,7 +459,6 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       const current = projectRef.current;
       setFuture((f) => [current, ...f.slice(0, MAX_HISTORY - 1)]);
       setProject(previous);
-      setIsDirty(true);
       if (audioEngine.isPlaying) {
         audioEngine.syncProject(previous);
         audioEngine.resyncActivePlayback();
@@ -347,7 +474,6 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       const current = projectRef.current;
       setPast((p) => [...p.slice(-(MAX_HISTORY - 1)), current]);
       setProject(next);
-      setIsDirty(true);
       if (audioEngine.isPlaying) {
         audioEngine.syncProject(next);
         audioEngine.resyncActivePlayback();
@@ -360,10 +486,12 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     if (audioEngine.isPlaying) {
       audioEngine.pause();
       setIsPlaying(false);
-      setPlayheadBeats(audioEngine.getPlayheadBeats());
+      const pos = audioEngine.getPlayheadBeats();
+      setPlayheadBeats(pos);
+      saveWorkspacePrefs({ lastPlayheadBeats: pos });
     } else {
       await audioEngine.play();
-      setIsPlaying(true);
+      setIsPlaying(audioEngine.isPlaying);
     }
   }, []);
 
@@ -371,13 +499,16 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     audioEngine.stop();
     setIsPlaying(false);
     setPlayheadBeats(0);
+    saveWorkspacePrefs({ lastPlayheadBeats: 0 });
     setTrackMeters({});
     setMasterMeter((m) => ({ ...EMPTY_METER, clipping: m.clipping }));
   }, []);
 
   const seek = useCallback((beats: number) => {
-    audioEngine.seek(beats);
-    setPlayheadBeats(Math.max(0, beats));
+    const clamped = Math.max(0, beats);
+    audioEngine.seek(clamped);
+    setPlayheadBeats(clamped);
+    saveWorkspacePrefs({ lastPlayheadBeats: clamped });
   }, []);
 
   const resetMasterClip = useCallback(() => {
@@ -385,24 +516,80 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     setMasterMeter((m) => ({ ...m, clipping: false }));
   }, []);
 
+  const saveCurrentProject = useCallback(
+    async (options?: { forceOverwrite?: boolean }) => {
+      const snapshot = projectRef.current;
+      if (!snapshot || saveInFlightRef.current) return;
+      saveInFlightRef.current = true;
+      setIsSaving(true);
+      const sentFingerprint = projectFingerprint(snapshot);
+      const expectedRev = options?.forceOverwrite ? undefined : savedRevisionRef.current;
+
+      try {
+        const saved = await dawApi.saveProject(snapshot, expectedRev);
+        setSavedRevision(saved.revision);
+        setSavedFingerprint(projectFingerprint(saved));
+        setLastSavedAt(saved.updatedAt);
+        setRevisionConflict(null);
+
+        // Critical: NEVER overwrite newer edits made by the user while save was in-flight!
+        setProject((latest) => {
+          if (!latest || latest.id !== saved.id) return latest;
+          if (projectFingerprint(latest) === sentFingerprint) {
+            return saved;
+          }
+          // User edited while saving — keep user's newer state, adopt bumped revision!
+          return { ...latest, revision: saved.revision, updatedAt: saved.updatedAt };
+        });
+
+        await refreshLists();
+        showToast(`Saved "${saved.name}" (rev ${saved.revision})`);
+      } catch (err) {
+        if (err instanceof RevisionConflictError) {
+          setRevisionConflict({
+            expectedRevision: savedRevisionRef.current,
+            serverRevision: err.serverRevision,
+            serverProject: err.serverProject,
+          });
+          showToast(
+            `Revision conflict (local rev ${savedRevisionRef.current}, server rev ${err.serverRevision})`,
+            "error"
+          );
+        } else {
+          showToast(`Save failed: ${(err as Error).message}`, "error");
+        }
+      } finally {
+        saveInFlightRef.current = false;
+        setIsSaving(false);
+      }
+    },
+    [refreshLists, showToast]
+  );
+
   const openProjectById = useCallback(
-    async (id: string) => {
+    async (id: string, options?: { force?: boolean }) => {
+      if (!options?.force && isDirty) {
+        const ok = window.confirm(
+          "저장되지 않은 변경사항이 있습니다. 저장하지 않고 다른 프로젝트를 여시겠습니까?\n(Unsaved changes will be lost. Open anyway?)"
+        );
+        if (!ok) return;
+      }
       try {
         const opened = await dawApi.openProject(id);
-        await hydrateProject(opened);
+        await hydrateProject(opened, false);
         showToast(`Opened "${opened.name}"`);
       } catch (err) {
         showToast(`Open failed: ${(err as Error).message}`, "error");
       }
     },
-    [hydrateProject, showToast]
+    [hydrateProject, isDirty, showToast]
   );
 
   const createNewProject = useCallback(
     async (name: string, bpm = 128) => {
       try {
         const created = await dawApi.createProject({ name, bpm });
-        await hydrateProject(created);
+        await hydrateProject(created, false);
         await refreshLists();
         showToast(`Created "${created.name}"`);
       } catch (err) {
@@ -412,24 +599,6 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     [hydrateProject, refreshLists, showToast]
   );
 
-  const saveCurrentProject = useCallback(async () => {
-    const current = projectRef.current;
-    if (!current) return;
-    setIsSaving(true);
-    try {
-      const saved = await dawApi.saveProject(current);
-      setProject(saved);
-      setIsDirty(false);
-      setLastSavedAt(saved.updatedAt);
-      await refreshLists();
-      showToast(`Saved "${saved.name}"`);
-    } catch (err) {
-      showToast(`Save failed: ${(err as Error).message}`, "error");
-    } finally {
-      setIsSaving(false);
-    }
-  }, [refreshLists, showToast]);
-
   const saveAsProject = useCallback(
     async (newName: string) => {
       const current = projectRef.current;
@@ -437,7 +606,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       setIsSaving(true);
       try {
         const cloned = await dawApi.saveAsProject(current.id, newName, current);
-        await hydrateProject(cloned);
+        await hydrateProject(cloned, false);
         await refreshLists();
         showToast(`Saved copy "${cloned.name}"`);
       } catch (err) {
@@ -447,6 +616,54 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [hydrateProject, refreshLists, showToast]
+  );
+
+  const resolveConflictReload = useCallback(async () => {
+    if (!revisionConflict) return;
+    await hydrateProject(revisionConflict.serverProject, false);
+    showToast(`Reloaded server revision ${revisionConflict.serverRevision}`);
+  }, [hydrateProject, revisionConflict, showToast]);
+
+  const resolveConflictOverwrite = useCallback(async () => {
+    setRevisionConflict(null);
+    await saveCurrentProject({ forceOverwrite: true });
+  }, [saveCurrentProject]);
+
+  const dismissConflict = useCallback(() => {
+    setRevisionConflict(null);
+  }, []);
+
+  const applyExternalProjectUpdate = useCallback(
+    (updated: Project, message?: string) => {
+      const current = projectRef.current;
+      if (!current || current.id !== updated.id) return;
+      if (updated.revision <= savedRevisionRef.current && !isDirty) return;
+
+      if (isDirty) {
+        setRevisionConflict({
+          expectedRevision: savedRevisionRef.current,
+          serverRevision: updated.revision,
+          serverProject: updated,
+        });
+        showToast(message || `External edit detected (rev ${updated.revision})`, "info");
+        return;
+      }
+
+      // Clean live sync from external AI agent or MCP tool without reload!
+      setPast((prev) => [...prev.slice(-(MAX_HISTORY - 1)), current]);
+      setFuture([]);
+      setProject(updated);
+      setSavedRevision(updated.revision);
+      setSavedFingerprint(projectFingerprint(updated));
+      setLastSavedAt(updated.updatedAt);
+      audioEngine.syncProject(updated);
+      if (audioEngine.isPlaying) {
+        audioEngine.resyncActivePlayback();
+      }
+      void loadWaveformsForProject(updated);
+      if (message) showToast(message);
+    },
+    [isDirty, loadWaveformsForProject, showToast]
   );
 
   const addAssetToTimeline = useCallback(
@@ -497,7 +714,10 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         setSelection({
           selectedTrackId: trackId,
           selectedClipIds: [clip.id],
-          timeRangeBeats: { startBeats: clip.timelineStartBeats, endBeats: clip.timelineStartBeats + clip.durationBeats },
+          timeRangeBeats: {
+            startBeats: clip.timelineStartBeats,
+            endBeats: clip.timelineStartBeats + clip.durationBeats,
+          },
           selectedSectionId: null,
         });
       } else {
@@ -522,7 +742,10 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         setSelection({
           selectedTrackId: trackId,
           selectedClipIds: [clip.id],
-          timeRangeBeats: { startBeats: clip.timelineStartBeats, endBeats: clip.timelineStartBeats + clip.durationBeats },
+          timeRangeBeats: {
+            startBeats: clip.timelineStartBeats,
+            endBeats: clip.timelineStartBeats + clip.durationBeats,
+          },
           selectedSectionId: null,
         });
       }
@@ -533,15 +756,21 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const handleImportedAsset = useCallback(
     async (
       proj: Project,
-      res: { asset: Asset; midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number } },
+      res: {
+        asset: Asset;
+        projectRevision?: number;
+        midi?: { notes: MidiNote[]; bpm: number | null; durationBeats: number };
+      },
       addToTimeline: boolean
     ) => {
       let asset = res.asset;
+      if (res.projectRevision) {
+        setSavedRevision(res.projectRevision);
+      }
       if (res.midi?.notes) {
         midiNotesCacheRef.current.set(asset.id, res.midi.notes);
       }
 
-      // Fetch real waveform peaks (or client-decode fallback for MP3/M4A)
       if (asset.kind !== "midi") {
         try {
           const wf = await dawApi.getWaveform(proj.id, asset.id, 1024);
@@ -561,7 +790,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
               };
             }
           } catch {
-            // keep going
+            // error recorded in assetStates
           }
         }
       }
@@ -580,10 +809,10 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       const current = projectRef.current;
       if (!current) return;
       try {
-        // Persist latest state before uploading so server project.json stays in sync
-        await dawApi.saveProject(current);
+        const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+        setSavedRevision(saved.revision);
         const res = await dawApi.importAsset(current.id, file, kind);
-        await handleImportedAsset(current, res, addToTimeline);
+        await handleImportedAsset(saved, res, addToTimeline);
       } catch (err) {
         showToast(`Import failed: ${(err as Error).message}`, "error");
       }
@@ -596,14 +825,62 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       const current = projectRef.current;
       if (!current) return;
       try {
-        await dawApi.saveProject(current);
+        const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+        setSavedRevision(saved.revision);
         const res = await dawApi.importFromLibrary(current.id, item.id);
-        await handleImportedAsset(current, res, addToTimeline);
+        await handleImportedAsset(saved, res, addToTimeline);
       } catch (err) {
         showToast(`Library import failed: ${(err as Error).message}`, "error");
       }
     },
     [handleImportedAsset, showToast]
+  );
+
+  const retryAssetLoad = useCallback(
+    async (assetId: string) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const buf = await audioEngine.loadAssetBuffer(current.id, assetId, true);
+        const wf = audioEngine.extractWaveformFromBuffer(buf, 1024);
+        setWaveforms((prev) => ({ ...prev, [assetId]: wf }));
+        showToast("Audio asset reloaded successfully");
+      } catch (err) {
+        showToast(`Reload failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const relinkAssetFile = useCallback(
+    async (assetId: string, file: File) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.relinkAsset(current.id, assetId, file);
+        setSavedRevision(res.projectRevision);
+        audioEngine.invalidateAssetBuffer(current.id, assetId);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            assets: prev.assets.map((a) => (a.id === assetId ? res.asset : a)),
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        if (res.asset.kind !== "midi") {
+          const buf = await audioEngine.loadAssetBuffer(current.id, assetId, true);
+          const wf = audioEngine.extractWaveformFromBuffer(buf, 1024);
+          setWaveforms((prev) => ({ ...prev, [assetId]: wf }));
+        }
+        showToast(`Relinked "${res.asset.name}"`);
+      } catch (err) {
+        showToast(`Relink failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
   );
 
   const exportStereoWav = useCallback(
@@ -613,9 +890,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       setIsExporting(true);
       try {
         const result = await renderProjectOfflineWav(current, audioEngine, { useLoopRange });
-        // Save rendered Stereo WAV into local project exports/ directory
         const savedInfo = await dawApi.uploadExportWav(current.id, result.filename, result.blob);
-        // Trigger local browser download
         const url = URL.createObjectURL(result.blob);
         const a = document.createElement("a");
         a.href = url;
@@ -659,6 +934,7 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     libraryItems,
     health,
     waveforms,
+    assetStates,
     selection,
     setSelection,
     selectedTrack,
@@ -667,6 +943,11 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     isSaving,
     isExporting,
     lastSavedAt,
+    savedRevision,
+    revisionConflict,
+    resolveConflictReload,
+    resolveConflictOverwrite,
+    dismissConflict,
     canUndo: past.length > 0,
     canRedo: future.length > 0,
     isPlaying,
@@ -697,7 +978,11 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     importFile,
     importLibraryAsset,
     addAssetToTimeline,
+    retryAssetLoad,
+    relinkAssetFile,
     exportStereoWav,
+    applyExternalProjectUpdate,
+    refreshLists,
   };
 
   return <DawContext.Provider value={value}>{children}</DawContext.Provider>;

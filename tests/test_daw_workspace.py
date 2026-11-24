@@ -236,3 +236,44 @@ def test_path_safety_rejects_traversal(isolated_daw_env):
     client = TestClient(app)
     res = client.get("/api/projects/..%2F..%2Fetc")
     assert res.status_code in (400, 404)
+
+
+def test_revision_conflict_and_schema_migration_and_relink(isolated_daw_env):
+    """Phase 01.1: Verify optimistic revision locking (409), v1.0->v1.1 migration, and asset relink."""
+    client = TestClient(app)
+    created = client.post("/api/projects", json={"name": "Rev Guard", "bpm": 120.0}).json()
+    pid = created["id"]
+    assert created["revision"] == 1
+
+    # Save with expectedRevision=1 succeeds and bumps to revision 2
+    created["name"] = "Rev Guard v2"
+    r_ok = client.put(f"/api/projects/{pid}?expectedRevision=1", json=created)
+    assert r_ok.status_code == 200
+    assert r_ok.json()["revision"] == 2
+
+    # Stale client attempting save or command with expectedRevision=1 gets HTTP 409 Conflict
+    r_stale = client.put(f"/api/projects/{pid}?expectedRevision=1", json=created)
+    assert r_stale.status_code == 409
+    assert r_stale.json()["code"] == "REVISION_CONFLICT"
+    assert r_stale.json()["serverRevision"] == 2
+
+    r_cmd_stale = client.post(
+        f"/api/projects/{pid}/commands",
+        json={"type": "project.setTempo", "payload": {"bpm": 130.0}, "expectedRevision": 1},
+    )
+    assert r_cmd_stale.status_code == 409
+
+    # Schema migration from legacy 1.0.0 JSON without revision/references
+    migrated = store.migrate_project_dict({"id": pid, "schemaVersion": "1.0.0", "name": "Old"})
+    assert migrated["revision"] == 1
+    assert migrated["references"] == []
+
+    # Asset relink replaces broken/missing file while keeping asset ID intact
+    wav1 = _make_sine_wav(440.0, 0.5, amp=0.3)
+    wav2 = _make_sine_wav(880.0, 1.0, amp=0.6)
+    imp = client.post(f"/api/projects/{pid}/assets/import", files={"file": ("orig.wav", wav1, "audio/wav")}).json()
+    aid = imp["asset"]["id"]
+    rel = client.post(f"/api/projects/{pid}/assets/{aid}/relink", files={"file": ("fixed.wav", wav2, "audio/wav")})
+    assert rel.status_code == 200
+    assert rel.json()["asset"]["id"] == aid
+    assert abs(rel.json()["asset"]["durationSec"] - 1.0) < 0.02

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sliders } from "lucide-react";
 import { ProjectBrowser } from "../browser/ProjectBrowser";
-import { useDaw } from "../commands/store";
+import { loadWorkspacePrefs, saveWorkspacePrefs, useDaw } from "../commands/store";
 import { MixerPanel } from "../mixer/MixerPanel";
 import { PianoRoll } from "../piano-roll/PianoRoll";
 import { AIProducerPanel } from "../producer/AIProducerPanel";
@@ -37,15 +37,24 @@ export function DawWorkspace() {
     createNewProject,
     saveAsProject,
     exportStereoWav,
+    revisionConflict,
+    resolveConflictReload,
+    resolveConflictOverwrite,
+    dismissConflict,
   } = useDaw();
 
-  const [browserOpen, setBrowserOpen] = useState(true);
+  const savedPrefs = loadWorkspacePrefs();
+  const [browserOpen, setBrowserOpen] = useState(savedPrefs.browserOpen ?? true);
   const [browserWidth, setBrowserWidth] = useState(216);
-  const [producerOpen, setProducerOpen] = useState(true);
+  const [producerOpen, setProducerOpen] = useState(savedPrefs.producerOpen ?? true);
   const [producerWidth, setProducerWidth] = useState(258);
-  const [dockOpen, setDockOpen] = useState(true);
+  const [dockOpen, setDockOpen] = useState(savedPrefs.dockOpen ?? true);
   const [dockHeight, setDockHeight] = useState(224);
   const [dockTab, setDockTab] = useState<DockTab>("clip");
+
+  useEffect(() => {
+    saveWorkspacePrefs({ browserOpen, producerOpen, dockOpen });
+  }, [browserOpen, producerOpen, dockOpen]);
 
   // Modals
   const [newModalOpen, setNewModalOpen] = useState(false);
@@ -473,6 +482,29 @@ export function DawWorkspace() {
                 data-testid="btn-confirm-export"
               >
                 {isExporting ? "Rendering…" : "Render & Download WAV"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revision Conflict Banner */}
+      {revisionConflict && (
+        <div className="modal-backdrop" onClick={dismissConflict}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()} data-testid="conflict-modal">
+            <div style={{ fontWeight: 600, fontSize: 14, color: "var(--accent-playhead)" }}>
+              Project Revision Conflict
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+              The backend project was updated (server rev {revisionConflict.serverRevision}, local base rev{" "}
+              {revisionConflict.expectedRevision}). Choose whether to load the latest server revision or overwrite with
+              your local edits.
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 4 }}>
+              <button onClick={dismissConflict}>Cancel</button>
+              <button onClick={() => void resolveConflictOverwrite()}>Overwrite Server</button>
+              <button className="btn-primary" onClick={() => void resolveConflictReload()}>
+                Load Latest (rev {revisionConflict.serverRevision})
               </button>
             </div>
           </div>

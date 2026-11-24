@@ -15,6 +15,7 @@ __pycache__/
 apps/daw/node_modules/
 apps/daw/dist/
 apps/daw/.vite/
+*.tsbuildinfo
 
 # Local QA records can contain machine paths and session metadata
 docs/*-qa.json

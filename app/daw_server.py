@@ -49,6 +49,20 @@ async def not_found_handler(request: Request, exc: FileNotFoundError):
     return JSONResponse({"error": str(exc)}, status_code=404)
 
 
+@app.exception_handler(store.RevisionConflictError)
+async def revision_conflict_handler(request: Request, exc: store.RevisionConflictError):
+    return JSONResponse(
+        {
+            "error": str(exc),
+            "code": "REVISION_CONFLICT",
+            "expectedRevision": exc.expected,
+            "serverRevision": exc.actual,
+            "serverProject": exc.server_project.model_dump(),
+        },
+        status_code=409,
+    )
+
+
 class CreateProjectBody(BaseModel):
     name: str = Field(default="Untitled 01", min_length=1, max_length=120)
     bpm: float = Field(default=128.0, ge=30.0, le=300.0)
@@ -109,25 +123,33 @@ def get_project(project_id: str) -> dict[str, Any]:
 
 
 @app.put("/api/projects/{project_id}")
-def put_project(project_id: str, project: Project) -> dict[str, Any]:
+def put_project(
+    project_id: str,
+    project: Project,
+    expectedRevision: int | None = None,
+) -> dict[str, Any]:
     if project.id != project_id:
         raise ValueError("Project payload ID does not match URL project_id")
-    saved = store.save_project(project)
+    saved = store.save_project(project, expected_revision=expectedRevision)
     return saved.model_dump()
 
 
 @app.post("/api/projects/{project_id}/autosave")
-def post_autosave(project_id: str, project: Project) -> dict[str, Any]:
+def post_autosave(
+    project_id: str,
+    project: Project,
+    expectedRevision: int | None = None,
+) -> dict[str, Any]:
     if project.id != project_id:
         raise ValueError("Project payload ID does not match URL project_id")
-    return store.autosave_project(project)
+    return store.autosave_project(project, expected_revision=expectedRevision)
 
 
 @app.patch("/api/projects/{project_id}")
 def patch_project(project_id: str, body: RenameBody) -> dict[str, Any]:
     proj = store.load_project(project_id)
     updated = commands.apply_command(proj, "project.rename", {"name": body.name})
-    return store.save_project(updated).model_dump()
+    return store.save_project(updated, expected_revision=proj.revision).model_dump()
 
 
 @app.post("/api/projects/{project_id}/save-as")
@@ -145,9 +167,24 @@ def delete_project(project_id: str) -> dict[str, Any]:
 @app.post("/api/projects/{project_id}/commands")
 def execute_command(project_id: str, req: CommandRequest) -> dict[str, Any]:
     proj = store.load_project(project_id)
+    if req.expectedRevision is not None and proj.revision != req.expectedRevision:
+        raise store.RevisionConflictError(req.expectedRevision, proj.revision, proj)
     updated = commands.apply_command(proj, req.type, req.payload)
-    saved = store.save_project(updated, clear_autosave=False)
+    saved = store.save_project(updated, clear_autosave=False, expected_revision=proj.revision)
     return {"command": req.type, "project": saved.model_dump()}
+
+
+@app.post("/api/projects/{project_id}/assets/{asset_id}/relink")
+async def relink_asset(
+    project_id: str,
+    asset_id: str,
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    raw = await file.read()
+    if not raw:
+        raise ValueError("Uploaded file is empty")
+    asset, rev = store.relink_asset_bytes(project_id, asset_id, file.filename or "relinked.wav", raw)
+    return {"asset": asset.model_dump(), "projectRevision": rev}
 
 
 @app.post("/api/projects/{project_id}/assets/import")
