@@ -302,6 +302,30 @@ export interface TrackMeterLevel {
   clipping: boolean;
 }
 
+export interface ChangeProposal {
+  id: string;
+  projectId: string;
+  baseRevision: number;
+  summary: string;
+  sourceAgent: string;
+  status: "pending" | "applied" | "rejected";
+  operations: Array<{ type: string; payload: Record<string, unknown> }>;
+  affectedTracks: string[];
+  affectedClipIds: string[];
+  operationCount: number;
+  createdAt: string;
+  resolvedAt?: string | null;
+}
+
+export interface ProducerInstructResponse {
+  supported: boolean;
+  action: string;
+  proposal?: ChangeProposal;
+  referenceId?: string;
+  messageKo?: string;
+  messageEn?: string;
+}
+
 export interface HealthInfo {
   status: string;
   product: string;

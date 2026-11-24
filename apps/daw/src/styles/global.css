@@ -228,6 +228,31 @@ button:disabled {
   min-width: 56px;
 }
 
+@media (max-width: 1360px) {
+  .transport-bar {
+    padding: 0 8px;
+    gap: 5px;
+  }
+  .transport-group {
+    gap: 4px;
+  }
+  .transport-group button {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+  .project-name-input {
+    width: 102px;
+    font-size: 12px;
+  }
+  .lcd-readout {
+    padding: 0 6px;
+    gap: 6px;
+  }
+  .lcd-seconds {
+    display: none;
+  }
+}
+
 .pill-toggle {
   height: 28px;
   padding: 0 10px;
