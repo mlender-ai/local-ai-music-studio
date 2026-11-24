@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { ChevronRight, Code2, Radio } from "lucide-react";
 import { useDaw } from "../commands/store";
+import { useI18n } from "../i18n";
 import { beatsToSeconds, formatBarRange } from "../project/time";
 
 interface AIProducerPanelProps {
@@ -9,7 +10,8 @@ interface AIProducerPanelProps {
 }
 
 export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
-  const { project, selection, selectedTrack, selectedClip, health } = useDaw();
+  const { t } = useI18n();
+  const { project, selection, selectedTrack, selectedClip, health, savedRevision } = useDaw();
   const [draftPrompt, setDraftPrompt] = useState("");
   const [showPayload, setShowPayload] = useState(false);
 
@@ -67,7 +69,7 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
     <aside className="sidebar-right" style={{ width }} data-testid="ai-producer-panel">
       <div className="panel-header">
         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          AI Producer
+          {t("producer.title")}
           <span
             style={{
               fontSize: 9,
@@ -80,10 +82,10 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
               letterSpacing: 0,
             }}
           >
-            Offline
+            {t("producer.offline")}
           </span>
         </span>
-        <button className="icon-btn" title="Collapse AI Producer Panel" onClick={onCollapse}>
+        <button className="icon-btn" title={t("producer.collapseTooltip")} onClick={onCollapse}>
           <ChevronRight size={14} />
         </button>
       </div>
@@ -91,16 +93,19 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
       <div className="producer-body">
         {/* Live Project & Selection Context */}
         <div className="producer-card" data-testid="producer-context-card">
-          <div className="producer-label">Project Context</div>
+          <div className="producer-label">{t("producer.projectContext")}</div>
           <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>
             {selectedTrack ? `${selectedTrack.name} · ${barSummary}` : barSummary}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>
             {selectedClip
-              ? `${selectedClip.type === "midi" ? "MIDI" : selectedTrack?.type === "stem" ? "Audio stem" : "Audio"} clip "${selectedClip.name}" selected`
+              ? t("producer.clipSelected", {
+                  kind: selectedClip.type === "midi" ? "MIDI" : selectedTrack?.type === "stem" ? "STEM" : "Audio",
+                  name: selectedClip.name,
+                })
               : selectedTrack
-                ? `${selectedTrack.type.toUpperCase()} track selected`
-                : "Select a track, clip, or bar range"}
+                ? t("producer.trackSelected", { kind: selectedTrack.type.toUpperCase() })
+                : t("producer.selectPrompt")}
           </div>
 
           <div
@@ -114,80 +119,79 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
             }}
           >
             <div className="producer-kv">
-              <span style={{ color: "var(--text-muted)" }}>Tempo / Meter</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("producer.tempoMeter")}</span>
               <span className="mono">
                 {project.bpm.toFixed(2)} BPM · {project.timeSignature.numerator}/{project.timeSignature.denominator}
               </span>
             </div>
             <div className="producer-kv">
-              <span style={{ color: "var(--text-muted)" }}>Section</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("producer.section")}</span>
               <span>{activeSection ? activeSection.name : "—"}</span>
             </div>
             <div className="producer-kv">
-              <span style={{ color: "var(--text-muted)" }}>Selected Clips</span>
+              <span style={{ color: "var(--text-muted)" }}>{t("producer.selectedClips")}</span>
               <span className="mono">{selection.selectedClipIds.length}</span>
+            </div>
+            <div className="producer-kv">
+              <span style={{ color: "var(--text-muted)" }}>{t("producer.revision")}</span>
+              <span className="mono">rev {savedRevision}</span>
             </div>
             {timeRangeSecLabel && (
               <div className="producer-kv">
-                <span style={{ color: "var(--text-muted)" }}>Time Span</span>
+                <span style={{ color: "var(--text-muted)" }}>{t("producer.timeSpan")}</span>
                 <span className="mono">{timeRangeSecLabel}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Honest Phase 01 AI Status Card */}
+        {/* Honest AI Status Card */}
         <div className="producer-card dashed">
           <div style={{ fontWeight: 600, fontSize: 12, color: "var(--text-primary)" }}>
-            AI integration
+            {t("producer.aiStatusTitle")}
           </div>
           <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-            Available in a later phase (Phase 02–04). Selected track, clips, section, and bar range are already shared via
-            the unified Command Payload interface.
+            {t("producer.aiStatusDesc")}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
             <Radio size={11} color="var(--text-muted)" />
-            <span style={{ fontSize: 10, color: "var(--text-muted)" }}>
-              No AI model or external API connected in Phase 01
-            </span>
+            <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{t("producer.notConnected")}</span>
           </div>
         </div>
 
         {/* Inspectable Shared Command Payload */}
         <div className="producer-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span className="producer-label">Command Payload</span>
+            <span className="producer-label">{t("producer.payloadTitle")}</span>
             <button
               style={{ fontSize: 10, padding: "2px 6px" }}
               onClick={() => setShowPayload((s) => !s)}
             >
               <Code2 size={11} />
-              {showPayload ? "Hide JSON" : "Inspect"}
+              {showPayload ? t("producer.hideJson") : t("producer.inspectJson")}
             </button>
           </div>
           {showPayload ? (
             <pre className="payload-pre">{JSON.stringify(commandPayload, null, 2)}</pre>
           ) : (
-            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>
-              Structured MCP / agent target payload updates live with timeline selection.
-            </div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{t("producer.payloadDesc")}</div>
           )}
         </div>
 
         {/* Audio Engine / REAPER Adapter Status */}
         <div style={{ fontSize: 10, color: "var(--text-muted)", padding: "2px 2px" }}>
-          <div>Engine: Web Audio Realtime + Offline WAV</div>
+          <div>{t("producer.engineWebAudio")}</div>
           <div>
-            Host Bridge: {health?.reaper.available ? "REAPER detected (Phase 05)" : "Standalone (Phase 01)"}
+            {health?.reaper.available ? t("producer.hostReaperFound") : t("producer.hostStandalone")}
           </div>
         </div>
       </div>
 
-      {/* Bottom Prompt Box (explicitly Not connected — never fakes AI execution) */}
+      {/* Bottom Prompt Box */}
       <div className="producer-footer">
         <textarea
           rows={2}
-          placeholder="Describe your edit... (draft payload only)"
+          placeholder={t("producer.inputPlaceholder")}
           value={draftPrompt}
           onChange={(e) => setDraftPrompt(e.target.value)}
           style={{
@@ -199,10 +203,8 @@ export function AIProducerPanel({ width, onCollapse }: AIProducerPanelProps) {
           }}
         />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>Not connected · Phase 01</span>
-          <button disabled title="AI Producer execution is enabled in Phases 02–04">
-            Send
-          </button>
+          <span style={{ fontSize: 10, color: "var(--text-muted)" }}>{t("producer.notConnected")}</span>
+          <button disabled>{t("producer.send")}</button>
         </div>
       </div>
     </aside>

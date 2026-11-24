@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { audioEngine } from "../audio/audioEngine";
 import { makeClientId } from "../commands/executor";
 import { useDaw } from "../commands/store";
+import { useI18n } from "../i18n";
 import { isBlackKey, midiPitchToName, snapBeats } from "../project/time";
 import type { MidiNote } from "../project/types";
 
@@ -29,6 +30,7 @@ type NoteDrag =
     };
 
 export function PianoRoll() {
+  const { t } = useI18n();
   const { project, selectedClip, playheadBeats, dispatch, beginTransaction, commitTransaction } = useDaw();
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [noteGridBeats, setNoteGridBeats] = useState(0.25); // 1/16 note default
@@ -131,7 +133,7 @@ export function PianoRoll() {
           fontSize: 12,
         }}
       >
-        No MIDI clip selected. Add a MIDI track (+MIDI) and double-click its lane, or import a .mid file.
+        {t("pianoRoll.empty")}
       </div>
     );
   }
@@ -183,10 +185,10 @@ export function PianoRoll() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <strong style={{ color: "var(--text-primary)" }}>{midiClip.name}</strong>
           <span style={{ color: "var(--text-muted)" }} className="mono">
-            {midiClip.notes.length} notes · Basic Poly Synth (Phase 01 preview)
+            {t("pianoRoll.notesInfo", { count: midiClip.notes.length })}
           </span>
           <label style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--text-secondary)" }}>
-            Snap
+            {t("timeline.snap")}
             <select
               value={noteGridBeats}
               onChange={(e) => setNoteGridBeats(parseFloat(e.target.value))}
@@ -216,13 +218,11 @@ export function PianoRoll() {
                 }}
               >
                 <Trash2 size={10} />
-                Delete Note
+                {t("pianoRoll.deleteNote")}
               </button>
             </>
           )}
-          <span style={{ color: "var(--text-muted)", fontSize: 10 }}>
-            Click grid to add · Drag edge to resize · Right-click note to delete
-          </span>
+          <span style={{ color: "var(--text-muted)", fontSize: 10 }}>{t("pianoRoll.helpHint")}</span>
         </div>
       </div>
 
