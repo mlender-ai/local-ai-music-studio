@@ -33,7 +33,7 @@ from engine.composition.validation import validate_midi_composition
 from engine.daw_workspace import analysis, comparison, loudness
 from engine.daw_workspace.renderer import db_to_linear, equal_power_pan
 from engine.daw_workspace.schema import Project, make_id
-from engine.instruments import synth_note_for_instrument
+from engine.instruments import render_track_instrument, synth_note_for_instrument
 
 from .yue2_adapter import screen_vocal_leakage
 
@@ -44,31 +44,16 @@ def _render_part_audio(
     bpm: float,
     total_beats: float,
     sr: int = 48000,
+    instrument_config: dict[str, Any] | None = None,
 ) -> np.ndarray:
-    sec_per_beat = 60.0 / bpm
-    total_sec = max(0.5, total_beats * sec_per_beat + 0.5)
-    total_samples = int(round(total_sec * sr))
-    buf = np.zeros((total_samples, 2), dtype=np.float64)
-
-    for n in notes:
-        start_sec = float(n["startBeat"]) * sec_per_beat
-        dur_sec = float(n["durationBeats"]) * sec_per_beat
-        voice = synth_note_for_instrument(
-            instrument_ref,
-            int(n["pitch"]),
-            int(n.get("velocity", 100)),
-            dur_sec,
-            sr,
-        )
-        dst = int(round(start_sec * sr))
-        if dst >= total_samples or len(voice) == 0:
-            continue
-        s0 = max(0, -dst)
-        d0 = max(0, dst)
-        w = min(len(voice) - s0, total_samples - d0)
-        if w > 0:
-            buf[d0 : d0 + w] += voice[s0 : s0 + w]
-    return buf.astype(np.float32)
+    return render_track_instrument(
+        notes,
+        instrument_ref=instrument_ref,
+        bpm=bpm,
+        total_beats=total_beats,
+        sr=sr,
+        instrument_config=instrument_config,
+    )
 
 
 def _soft_limit_stereo(audio: np.ndarray, ceiling: float = 0.92) -> np.ndarray:

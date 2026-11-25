@@ -11,7 +11,7 @@ import numpy as np
 import soundfile as sf
 from scipy.signal import resample_poly
 
-from engine.instruments import synth_note_for_instrument
+from engine.instruments import render_track_instrument, synth_note_for_instrument
 
 from .schema import Clip, Project, Track
 from .store import project_dir, resolve_asset_file
@@ -200,6 +200,7 @@ def render_project_to_array(
                     max((n.startBeat + n.durationBeats for n in clip.notes), default=4.0),
                 )
                 reps = int(math.ceil(clip.durationBeats / loop_len_beats)) if clip.loop else 1
+                clip_notes_expanded: list[dict[str, Any]] = []
                 for rep in range(reps):
                     rep_offset_beats = rep * loop_len_beats
                     for note in clip.notes:
@@ -209,20 +210,44 @@ def render_project_to_array(
                         clipped_dur_beats = min(note.durationBeats, clip.durationBeats - rel_start_beats)
                         if clipped_dur_beats <= 0.0:
                             continue
-                        note_start_sec = clip_start_sec + rel_start_beats * sec_per_beat
-                        note_dur_sec = clipped_dur_beats * sec_per_beat
-                        voice = (
-                            synth_note_for_instrument(trk.instrumentRef, note.pitch, note.velocity, note_dur_sec, sr)
-                            * clip_gain
+                        clip_notes_expanded.append(
+                            {
+                                "id": note.id,
+                                "pitch": note.pitch,
+                                "velocity": note.velocity,
+                                "startBeat": rel_start_beats,
+                                "durationBeats": clipped_dur_beats,
+                            }
                         )
-                        dst_start = int(round(note_start_sec * sr))
-                        src_slice_start = max(0, -dst_start)
-                        dst_write_start = max(0, dst_start)
-                        write_len = min(len(voice) - src_slice_start, total_samples - dst_write_start)
-                        if write_len > 0:
-                            trk_buf[dst_write_start : dst_write_start + write_len] += voice[
-                                src_slice_start : src_slice_start + write_len
-                            ]
+                if clip_notes_expanded:
+                    def _resolve_asset_path(aid: str) -> Path | None:
+                        try:
+                            _, ap = resolve_asset_file(project.id, aid)
+                            return ap
+                        except Exception:
+                            return None
+
+                    inst_cfg = getattr(trk, "instrumentConfig", None) or {}
+                    clip_pcm = (
+                        render_track_instrument(
+                            clip_notes_expanded,
+                            instrument_ref=trk.instrumentRef,
+                            bpm=project.bpm,
+                            total_beats=clip.durationBeats,
+                            sr=sr,
+                            instrument_config=inst_cfg,
+                            asset_resolver=_resolve_asset_path,
+                        )
+                        * clip_gain
+                    )
+                    dst_start = int(round(clip_start_sec * sr))
+                    src_slice_start = max(0, -dst_start)
+                    dst_write_start = max(0, dst_start)
+                    write_len = min(len(clip_pcm) - src_slice_start, total_samples - dst_write_start)
+                    if write_len > 0:
+                        trk_buf[dst_write_start : dst_write_start + write_len] += clip_pcm[
+                            src_slice_start : src_slice_start + write_len
+                        ]
 
         mix[:, 0] += trk_buf[:, 0] * trk_gain * pan_l
         mix[:, 1] += trk_buf[:, 1] * trk_gain * pan_r
