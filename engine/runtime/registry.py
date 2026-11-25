@@ -383,6 +383,107 @@ def get_runtime_registry() -> dict[str, Any]:
     demucs = _probe_demucs_entry(roots, overrides, verifs.get("demucs-htdemucs"))
     vocal_qa = _probe_vocal_qa_models(roots)
 
+    # Phase 03.2 Transcription & Music Structure Engines (honest 6-state probe)
+    has_bp = importlib.util.find_spec("basic_pitch") is not None and importlib.util.find_spec("onnxruntime") is not None
+    bp_verif = verifs.get("basic-pitch-onnx")
+    bp_state = _compute_state(has_bp, has_bp, bp_verif) if has_bp else "uninstalled"
+    basic_pitch_entry = {
+        "id": "basic-pitch-onnx",
+        "name": "Spotify Basic Pitch (ONNX Audio-to-MIDI)",
+        "kind": "transcription",
+        "category": "transcription",
+        "state": bp_state,
+        "available": bp_state in ("ready", "verified"),
+        "verified": bp_state == "verified",
+        "license": "Apache-2.0",
+        "memoryRequirementGiB": 0.4,
+        "capabilities": ["polyphonic_midi_transcription", "bass_transcription", "melody_transcription", "pitch_bend"],
+        "statusNoteKo": (
+            f"Basic Pitch ONNX 채보 엔진 준비됨 ({bp_state}, Apache-2.0, Apple Silicon 네이티브)."
+            if bp_state in ("ready", "verified")
+            else "Basic Pitch ONNX 미설치 (`uv pip install onnxruntime librosa pretty_midi mir-eval` + `--no-deps basic-pitch`)."
+        ),
+        "statusNoteEn": (
+            f"Basic Pitch ONNX transcription {bp_state} (Apache-2.0, Apple Silicon native)."
+            if bp_state in ("ready", "verified")
+            else "Basic Pitch ONNX not installed."
+        ),
+    }
+
+    has_ss2 = importlib.util.find_spec("sheetsage2") is not None or any(
+        (r / "sheetsage2").is_dir() for r in roots
+    )
+    ss2_state = _compute_state(has_ss2, has_ss2, verifs.get("sheetsage2")) if has_ss2 else "uninstalled"
+    sheetsage2_entry = {
+        "id": "sheetsage2",
+        "name": "SheetSage2 (Lead Sheet & ABC — CC BY-NC 4.0)",
+        "kind": "transcription",
+        "category": "transcription",
+        "state": ss2_state,
+        "available": ss2_state in ("ready", "verified"),
+        "verified": ss2_state == "verified",
+        "license": "CC-BY-NC-4.0 (Non-Commercial)",
+        "memoryRequirementGiB": 3.0,
+        "capabilities": ["lead_sheet_abc", "chords_melody_beats"],
+        "missingItems": [] if ss2_state in ("ready", "verified") else ["FFmpeg shared libs", "m-a-p/SheetSage2 + MERT-v2 weights (~3 GiB, CC BY-NC 4.0)"],
+        "statusNoteKo": (
+            f"SheetSage2 실행 가능 ({ss2_state}, 비상업 라이선스 CC BY-NC 4.0)."
+            if ss2_state in ("ready", "verified")
+            else "SheetSage2 미설치 (CC BY-NC 4.0 비상업 라이선스 · FFmpeg 및 ~3 GiB MERT-v2 가중치 필요). 대체 경로로 Demucs+Basic Pitch+ABC 변환기가 즉시 작동합니다."
+        ),
+        "statusNoteEn": (
+            f"SheetSage2 {ss2_state} (CC BY-NC 4.0 non-commercial)."
+            if ss2_state in ("ready", "verified")
+            else "SheetSage2 not installed (CC BY-NC 4.0 non-commercial; requires FFmpeg + ~3 GiB MERT-v2 weights). Demucs + Basic Pitch + YuE2 ABC exporter runs natively."
+        ),
+    }
+
+    has_allin1 = importlib.util.find_spec("allin1") is not None
+    allin1_entry = {
+        "id": "allin1-structure",
+        "name": "All-In-One Music Structure Analyzer",
+        "kind": "structure-analysis",
+        "category": "transcription",
+        "state": "ready" if has_allin1 else "uninstalled",
+        "available": has_allin1,
+        "verified": False,
+        "license": "MIT",
+        "capabilities": ["functional_section_labels", "beat_downbeat_tracking"],
+        "statusNoteKo": (
+            "All-In-One 구조 분석기 준비됨."
+            if has_allin1
+            else "All-In-One 미설치 (madmom/NATTEN/FFmpeg 필요). Demucs 스템 에너지 + DSP 구간 구조 분석기가 기본 작동합니다."
+        ),
+        "statusNoteEn": (
+            "All-In-One structure analyzer ready."
+            if has_allin1
+            else "All-In-One not installed (requires madmom/NATTEN/FFmpeg). Demucs stem-energy + DSP Arrangement Map runs natively."
+        ),
+    }
+
+    has_ymt3 = importlib.util.find_spec("yourmt3") is not None
+    yourmt3_entry = {
+        "id": "yourmt3-plus",
+        "name": "YourMT3+ Multi-Instrument Transcription",
+        "kind": "transcription",
+        "category": "transcription",
+        "state": "ready" if has_ymt3 else "uninstalled",
+        "available": has_ymt3,
+        "verified": False,
+        "license": "Apache-2.0 / Research",
+        "capabilities": ["multi_instrument_midi"],
+        "statusNoteKo": (
+            "YourMT3+ 다중 악기 채보 준비됨."
+            if has_ymt3
+            else "YourMT3+ 미설치 (별도 PyTorch 리포지토리 및 대용량 체크포인트 필요). Demucs 스템 분리 + Basic Pitch + Drum Groove 채보가 기본 작동합니다."
+        ),
+        "statusNoteEn": (
+            "YourMT3+ multi-instrument transcription ready."
+            if has_ymt3
+            else "YourMT3+ not installed. Stem-guided Demucs + Basic Pitch + Drum Groove transcription runs natively."
+        ),
+    }
+
     neural_ready = any(e["available"] for e in (yue2, acestep))
     return {
         "configPath": str(_local_config_path()),
@@ -390,6 +491,7 @@ def get_runtime_registry() -> dict[str, Any]:
         "neuralAudioReady": neural_ready,
         "editableMidiReady": True,
         "stemSeparationReady": demucs["available"],
+        "transcriptionReady": basic_pitch_entry["available"],
         "vocalQaModels": vocal_qa,
-        "engines": [yue2, acestep, demucs, local_midi],
+        "engines": [yue2, acestep, demucs, basic_pitch_entry, sheetsage2_entry, allin1_entry, yourmt3_entry, local_midi],
     }

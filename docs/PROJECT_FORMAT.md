@@ -1,4 +1,4 @@
-# PROJECT_FORMAT.md — AI-Native DAW Project Data Model (v1.3.0)
+# PROJECT_FORMAT.md — AI-Native DAW Project Data Model (v1.4.0)
 
 ## Directory Layout
 
@@ -6,7 +6,7 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 
 ```text
 <project_id>/
-├── project.json              # Canonical versioned project state (atomic write, schema v1.3.0)
+├── project.json              # Canonical versioned project state (atomic write, schema v1.4.0)
 ├── project.autosave.json     # Latest periodic autosave snapshot
 ├── assets/
 │   ├── audio/                # Immutable audio files (<asset_id>_<sanitized_name>.<ext>)
@@ -21,6 +21,8 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 ├── cache/
 │   ├── waveforms/            # Cached real PCM peak envelopes (<sha256>.json)
 │   ├── analysis/             # Cached v3.0.0 acoustic analysis results
+│   ├── transcription/        # Cached v4.0.0 transcription results (<sha256>_4.0.0_*.json)
+│   ├── stems/                # Cached Demucs separated reference stems (<sha256[:16]>/htdemucs/)
 │   └── extracted/            # Audio extracted from video references
 ├── versions/                 # Manual/checkpoint snapshots
 └── exports/                  # Rendered 48 kHz 24-bit Stereo WAV outputs
@@ -30,7 +32,7 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 - Never embed Base64 audio inside `project.json`.
 - Original assets under `assets/` are immutable; deleting a track/clip or reversing an audio clip never alters or deletes the original asset file.
 - Every project save checks `revision` (optimistic locking, HTTP `409 REVISION_CONFLICT` on mismatch) and uses temp file + `fsync` + `os.replace()`.
-- Automatic migration upgrades `1.0.0`, `1.1.0`, and `1.2.0` projects into `1.3.0` cleanly on load (`revision`, `references`, `compositionPlans`, `takes`, `musicMemory`, `track.takeLanes`, `track.stemMeta`, `clip.fadeInBeats`, `clip.fadeOutBeats`, `clip.reversed`).
+- Automatic migration upgrades `1.0.0`–`1.3.0` projects into `1.4.0` cleanly on load (`chordTrack`, `chordTrackLocked`, `revision`, `references`, `compositionPlans`, `takes`, `musicMemory`, `track.takeLanes`, `track.stemMeta`, `clip.fadeInBeats`, `clip.fadeOutBeats`, `clip.reversed`).
 
 ## Explicit Time & Unit Conventions
 
@@ -45,6 +47,12 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 | `pan` | `number` (float) | Stereo balance in `[-1.0, 1.0]` |
 | `integratedLufs` | `number` (float) | Standard ITU-R BS.1770-4 gated loudness |
 | `truePeakDbtp` | `number` (float) | 4× polyphase oversampled True Peak in dBTP |
+
+## Schema `1.4.0` Additions (Phase 03.2 Advanced Reference Intelligence)
+
+- `project.chordTrack: list[ChordEvent]` — Editable global Timeline Chord Track supporting fractional sub-bar boundaries (`id`, `symbol`, `root`, `quality`, `extension`, `bassNote`, `startBeat`, `endBeat`, `sourceReferenceId`, `confidence`, `isEstimate`, `userCorrected`, `locked`).
+- `project.chordTrackLocked: bool` — Locks the Timeline Chord Track so AI composition strictly obeys every beat-aligned chord symbol and bass inversion.
+- `reference.transcription` & `reference.blueprint` (Blueprint v2, `blueprintVersion: "2.0.0"`) — Stores Demucs `htdemucs` stem references (`assetKind: "separated_stem"`), Basic Pitch ONNX Bass & Melody MIDI notes, Multi-band Drum & Microtiming groove templates, Sub-bar Chord Timeline, stem-enriched Arrangement Map, validated YuE2 Instrumental ABC score, 10-feature `featureLocks` (`free | reference | locked | unsupported`), and `userCorrections`.
 
 ## Schema `1.3.0` Additions (Phase 03.1 + Phase 04)
 

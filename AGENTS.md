@@ -12,27 +12,28 @@ Transform `local-ai-music-studio` into **AI-Native DAW** — a local-first macOS
 
 ## 2. Current Phase
 
-- **Active Phase:** Phase 03.1 + Phase 04 — Engine Recovery · AI Arrangement · Musical Variation · Take Comping (`docs/phases/PHASE_04.md`)
+- **Active Phase:** Phase 03.2 — Advanced Reference Intelligence (Music Transcription · Demucs MPS · Basic Pitch ONNX · Chord Track · Blueprint v2 · Reference-Conditioned Composition & Reconstruct) (`docs/phases/PHASE_03_2.md`), stacked cleanly on Phase 03.1 + Phase 04 (`docs/phases/PHASE_04.md`)
 - **Integration Branch:** `develop/ai-native-daw`
-- **Latest Stacked Task Branch:** `feat/daw-phase-04-arrangement` (stacked on `fix/daw-phase-03-engine-integration` PR #21)
+- **Latest Stacked Task Branch:** `feat/daw-advanced-reference-intelligence` (stacked on `feat/daw-phase-04-arrangement` PR #22)
 - Read `docs/STATUS.md` for live progress and `docs/HANDOFF.md` for the latest handoff context.
 
 ## 3. Repository Map
 
 | Path | Role |
 |---|---|
-| `apps/daw/` | React + TypeScript + Vite DAW frontend (Timeline + Take Lanes, Audio Engine, Clip Editor Fades/Reverse, Piano Roll, Mixer, AI Producer, Commands) |
-| `engine/daw_workspace/` | Python DAW backend (Project persistence v1.3.0, asset store, waveform cache, MIDI SMF parser, BS.1770-4 loudness, offline WAV renderer with fades, shared command executor, staged proposals, MCP tools) |
-| `engine/runtime/` | Shared Runtime Registry (`~/.config/ai-native-daw/runtime.json`) with honest 6-state engine lifecycle (`uninstalled` → `verified`) |
+| `apps/daw/` | React + TypeScript + Vite DAW frontend (Timeline + Chord Track + Take Lanes, Audio Engine, Clip Editor Fades/Reverse, Piano Roll, Mixer, Advanced Reference Dock, AI Producer, Commands) |
+| `engine/daw_workspace/` | Python DAW backend (Project persistence v1.4.0, Chord Track commands, asset store, waveform cache, MIDI SMF parser, BS.1770-4 loudness, offline WAV renderer with fades, shared command executor, staged proposals, MCP tools) |
+| `engine/transcription/` | Phase 03.2 Advanced Reference Intelligence (`Basic Pitch ONNX` polyphonic MIDI, `Demucs htdemucs` MPS stem analysis, Multi-Band Drum & Microtiming Groove extractor, Sub-bar Viterbi Chord & Inversion tracker, Reference Blueprint v2, 10-feature Lock Matrix, YuE2 Instrumental ABC builder, Mode A Reconstruct) |
+| `engine/runtime/` | Shared Runtime Registry (`~/.config/ai-native-daw/runtime.json`) with honest 6-state engine lifecycle (`uninstalled` → `verified`) across YuE2, ACE-Step, Demucs, Basic Pitch ONNX, SheetSage2, All-In-One, YourMT3+, and Editable MIDI |
 | `engine/providers/` | AI Producer Provider Registry (verified isolated local Claude Code CLI `--tools ""`, Built-in Music Director, MCP Bridge, Ollama/Codex/Env API probes) |
-| `engine/composition/` | Composition Director, Reference Context Binding, Motif MIDI Composer, Musical Validation, Sample Catalog |
-| `engine/generation/` | Single-worker Generation Job Manager, Process-Group Guard (`SIGTERM → SIGKILL`, 10 GiB RSS cap), Safe Take Apply, YuE2/ACE-Step/Demucs/Local adapters |
+| `engine/composition/` | Composition Director, Reference Context Binding & Feature Locks, Reference-Conditioned Motif MIDI Composer (sub-bar chords + drum/bass groove transfer), Musical Validation, Sample Catalog |
+| `engine/generation/` | Single-worker Generation Job Manager, Process-Group Guard (`SIGTERM → SIGKILL`, 10 GiB RSS cap), Safe Take Apply, Post-Generation 5-State Feature Verification, YuE2/ACE-Step/Demucs/Local adapters |
 | `engine/arrangement/` | Phase 04 Selective Arrangement, `EditScope`/`ArrangementEditPlan`, MIDI Musical Variations, Non-Destructive Audio Reverse & Seam Validation, Contextual A/B Previews, Timeline Take Lanes & Selective Comping, Project Music Memory |
 | `engine/instruments/` | 6-voice multi-timbre studio synth voices mirrored in Web Audio |
 | `app/daw_server.py` | FastAPI DAW HTTP + SSE server (`127.0.0.1:8796`, serves API + built frontend) |
 | `engine/` | Existing Local AI Music Studio engine (ACE-Step generation, DSP chain, SQLite version store, jobs, rendering). Do not break. |
 | `app/player/` | Existing A/B player (`127.0.0.1:8795`). Preserve compatibility. |
-| `app/mcp_server.py` | FastMCP STDIO server exposing 61 tools (`9 music.*` + `52 daw.*`) |
+| `app/mcp_server.py` | FastMCP STDIO server exposing 68 tools (`9 music.*` + `59 daw.*`) |
 | `scripts/start_daw.sh` | Single-command launcher for DAW backend + frontend |
 | `scripts/seed_daw_demos.py` | Seeds Demo Project A (V7.2 Magnetic Afterhours) and Demo Project B (Multitrack Session) locally |
 | `docs/` | Shared product, design, architecture, project format, roadmap, status, handoff, phase specs, and screenshots |

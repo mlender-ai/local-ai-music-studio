@@ -43,8 +43,9 @@ def parse_key_root_and_scale(key_str: str, scale_hint: str = "natural_minor") ->
 
 
 def parse_chord(chord_symbol: str, fallback_root_pc: int = 5) -> tuple[int, list[int]]:
-    """Return (root_pc, intervals_in_semitones) for chord symbols like Fm7, Dbmaj7, G13, Cadd9."""
-    m = re.match(r"^([A-G][#b]?)(.*)$", chord_symbol.strip())
+    """Return (root_pc, intervals_in_semitones) for chord symbols like Fm7, Dbmaj7/F, G13, Cadd9."""
+    clean = chord_symbol.strip().split("/", 1)[0].strip()
+    m = re.match(r"^([A-G][#b]?)(.*)$", clean)
     if not m:
         return fallback_root_pc, [0, 3, 7, 10]
     root_pc = NOTE_TO_PC.get(m.group(1), fallback_root_pc)
@@ -74,6 +75,35 @@ def parse_chord(chord_symbol: str, fallback_root_pc: int = 5) -> tuple[int, list
     if "add9" in qual:
         return root_pc, [0, 4, 7, 14]
     return root_pc, [0, 4, 7]
+
+
+def chord_at_beat(
+    beat: float,
+    chord_timeline: list[dict[str, Any]] | None,
+    fallback_chords: list[str],
+    bpb: float,
+    fallback_root_pc: int,
+) -> tuple[str, int, list[int], int | None]:
+    """Resolve the EXACT active chord (including sub-bar changes & bass inversions) at `beat`!"""
+    if chord_timeline:
+        valid_tl = [c for c in chord_timeline if c.get("symbol") and c["symbol"] != "N/C"]
+        if valid_tl:
+            tl_span = max(float(c.get("endBeat", bpb)) for c in valid_tl)
+            q_beat = beat if beat < tl_span else (beat % max(bpb, tl_span))
+            for ev in valid_tl:
+                if float(ev.get("startBeat", 0.0)) - 1e-4 <= q_beat < float(ev.get("endBeat", 0.0)) - 1e-4:
+                    sym = str(ev["symbol"])
+                    c_root, c_ints = parse_chord(sym, fallback_root_pc)
+                    bass_note = ev.get("bassNote")
+                    bass_pc = NOTE_TO_PC.get(str(bass_note)) if bass_note else None
+                    return sym, c_root, c_ints, bass_pc
+    bar_idx = int(beat // max(1.0, bpb))
+    sym = fallback_chords[bar_idx % len(fallback_chords)] if fallback_chords else "Fm7"
+    c_root, c_ints = parse_chord(sym, fallback_root_pc)
+    bass_pc = None
+    if "/" in sym:
+        bass_pc = NOTE_TO_PC.get(sym.split("/", 1)[1].strip())
+    return sym, c_root, c_ints, bass_pc
 
 
 def _clamp_midi(pitch: int, lo: int, hi: int) -> int:
@@ -134,6 +164,39 @@ def _compose_drums(
     force_active: bool,
 ) -> list[dict[str, Any]]:
     notes: list[dict[str, Any]] = []
+    groove_pat = plan.harmonyAndGroove.get("drumGroovePattern")
+    template_2bar = list((groove_pat or {}).get("template2Bar") or [])
+    groove_lock = str((groove_pat or {}).get("lockMode") or "free")
+    bpm = float(plan.musicalIdentity.get("tempoBpm") or 128.0)
+    sec_per_beat = 60.0 / max(30.0, bpm)
+
+    # REAL GROOVE TRANSFER (Phase 03.2 · TEST C): use ACTUAL transcribed hit positions, velocities & microtiming!
+    if template_2bar and groove_lock in ("locked", "reference"):
+        tpl_span = bpb * 2.0 if any(float(h.get("startBeat", 0.0)) >= bpb - 0.05 for h in template_2bar) else bpb
+        for bar in range(total_bars):
+            sec, energy, _, is_end = _bar_context(plan, bar)
+            if not force_active and "drums" not in sec.get("activeRoles", []):
+                continue
+            base = bar * bpb
+            bar_in_tpl = (bar % 2) * bpb if tpl_span > bpb + 0.1 else 0.0
+            vel_scale = 1.0 if groove_lock == "locked" else (0.86 + 0.18 * energy)
+            for hit in template_2bar:
+                hb = float(hit.get("startBeat", 0.0))
+                if bar_in_tpl - 1e-4 <= hb < bar_in_tpl + bpb - 1e-4:
+                    rel_b = hb - bar_in_tpl
+                    # Preserve measured audio microtiming offset (clamped safely to ±28 ms; NEVER random humanize!)
+                    mt_ms = max(-28.0, min(28.0, float(hit.get("microtimingOffsetMs", 0.0))))
+                    mt_beats = (mt_ms / 1000.0) / sec_per_beat
+                    pos = max(0.0, min(bpb - 0.05, rel_b + mt_beats))
+                    vel = max(32, min(125, int(round(int(hit.get("velocity", 96)) * vel_scale))))
+                    notes.append(_note(int(hit["pitch"]), base + pos, float(hit.get("durationBeats", 0.25)), vel))
+            # Subtle turnaround fill on section endings ONLY in `reference` mode (never mutates `locked` groove!)
+            if groove_lock == "reference" and is_end and bpb >= 4.0:
+                notes.append(_note(38, base + bpb - 0.5, 0.22, 96))
+                notes.append(_note(45, base + bpb - 0.25, 0.22, 102))
+        if notes:
+            return notes
+
     for bar in range(total_bars):
         sec, energy, is_start, is_end = _bar_context(plan, bar)
         if not force_active and "drums" not in sec.get("activeRoles", []):
@@ -233,27 +296,58 @@ def _compose_bass(
     force_active: bool,
 ) -> list[dict[str, Any]]:
     notes: list[dict[str, Any]] = []
+    chord_tl = plan.harmonyAndGroove.get("chordTimeline") or None
+    bass_pat = plan.harmonyAndGroove.get("bassGroovePattern") or {}
+    ref_bass_notes = list(bass_pat.get("notes") or [])
+    bass_lock = str(bass_pat.get("lockMode") or "free")
+
+    # Extract 2-bar rhythmic contour from transcribed Bass stem if bass_groove is locked/referenced!
+    ref_rhythm_2bar: list[tuple[float, float, int, bool]] = []
+    if ref_bass_notes and bass_lock in ("locked", "reference"):
+        span = bpb * 2.0
+        for rn in ref_bass_notes:
+            sb = float(rn.get("quantizedStartBeat", rn.get("startBeat", 0.0)))
+            if 0.0 <= sb < span:
+                dur = max(0.18, min(bpb, float(rn.get("quantizedDurationBeats", rn.get("durationBeats", 0.5)))))
+                vel = int(rn.get("velocity", 102))
+                is_oct = int(rn.get("pitch", 40)) >= 48
+                ref_rhythm_2bar.append((sb, dur, vel, is_oct))
+
     for bar in range(total_bars):
         sec, energy, _, is_end = _bar_context(plan, bar)
         if not force_active and "bass" not in sec.get("activeRoles", []):
             continue
         base = bar * bpb
-        chord_sym = chords[bar % len(chords)]
-        next_sym = chords[(bar + 1) % len(chords)]
-        c_root, c_ints = parse_chord(chord_sym, root_pc)
-        n_root, _ = parse_chord(next_sym, root_pc)
+        vel_base = int(96 + 18 * energy)
 
-        bass_root = _clamp_midi(36 + c_root, 31, 44)
+        if ref_rhythm_2bar:
+            bar_off = (bar % 2) * bpb
+            placed = False
+            for sb, dur, vel, is_oct in ref_rhythm_2bar:
+                if bar_off - 1e-4 <= sb < bar_off + bpb - 1e-4:
+                    rel_pos = sb - bar_off
+                    _, c_root, _, bass_pc = chord_at_beat(base + rel_pos, chord_tl, chords, bpb, root_pc)
+                    eff_root = bass_pc if bass_pc is not None else c_root
+                    p = _clamp_midi(36 + eff_root + (12 if is_oct else 0), 31, 55)
+                    notes.append(_note(p, base + rel_pos, min(dur, bpb - rel_pos), vel))
+                    placed = True
+            if placed:
+                continue
+
+        # Beat-accurate chord lookup (honors sub-bar harmonic changes & slash-chord bass inversions!)
+        _, c_root, c_ints, bass_pc = chord_at_beat(base, chord_tl, chords, bpb, root_pc)
+        _, n_root, _, n_bass_pc = chord_at_beat(base + bpb, chord_tl, chords, bpb, root_pc)
+        eff_root = bass_pc if bass_pc is not None else c_root
+        eff_next = n_bass_pc if n_bass_pc is not None else n_root
+
+        bass_root = _clamp_midi(36 + eff_root, 31, 44)
         fifth = _clamp_midi(bass_root + 7, 34, 51)
         octave = _clamp_midi(bass_root + 12, 43, 55)
         third = _clamp_midi(bass_root + c_ints[1], 33, 49)
-        next_bass = _clamp_midi(36 + n_root, 31, 44)
-        # Passing lead-in note 1 or 2 semitones from next bar's root
+        next_bass = _clamp_midi(36 + eff_next, 31, 44)
         approach = next_bass - 1 if next_bass > bass_root else next_bass + 2
-        vel_base = int(96 + 18 * energy)
 
         if genre == "house":
-            # Syncopated House groove with Motif A (bars 1,3) and A' octave bounce (bars 2,4)
             if bar % 2 == 0:
                 pattern = [
                     (0.0, 0.65, bass_root, vel_base),
@@ -274,7 +368,6 @@ def _compose_bass(
                     (3.75, 0.22, approach, vel_base - 2),
                 ]
         elif genre == "synthwave":
-            # Driving 8th-note synth bass
             pattern = []
             for step in range(int(bpb * 2)):
                 p = octave if (step % 4 == 2 and energy >= 0.7) else bass_root
@@ -300,6 +393,12 @@ def _compose_bass(
 
         for pos, dur, p, vel in pattern:
             if pos < bpb:
+                # Re-anchor note to sub-bar chord root if chord changes mid-bar (e.g., beat >= 2.0)!
+                if chord_tl and pos >= 1.5:
+                    _, sub_root, _, sub_bass_pc = chord_at_beat(base + pos, chord_tl, chords, bpb, root_pc)
+                    sub_eff = sub_bass_pc if sub_bass_pc is not None else sub_root
+                    if sub_eff != eff_root:
+                        p = _clamp_midi(36 + sub_eff, 31, 44)
                 notes.append(_note(p, base + _apply_swing(pos, swing), min(dur, bpb - pos), vel))
     return notes
 
@@ -351,14 +450,12 @@ def _compose_synth_hook(
             "cadence": [(0.0, 0.65), (1.0, 0.65), (2.0, 1.6)],
         }
 
+    chord_tl = plan.harmonyAndGroove.get("chordTimeline") or None
     for bar in range(total_bars):
         sec, energy, _, _ = _bar_context(plan, bar)
         if not force_active and "synth_hook" not in sec.get("activeRoles", []):
             continue
         base = bar * bpb
-        chord_sym = chords[bar % len(chords)]
-        c_root, c_ints = parse_chord(chord_sym, root_pc)
-        chord_tones = [_clamp_midi(60 + c_root + iv, 62, 79) for iv in c_ints[:4]]
 
         phrase_pos = bar % 4
         if phrase_pos == 0:
@@ -379,10 +476,13 @@ def _compose_synth_hook(
         for idx, (pos, dur) in enumerate(cell):
             if pos >= bpb:
                 continue
+            # Beat-accurate chord tone lookup (respects locked Chord Track & sub-bar chord changes!)
+            _, c_root, c_ints, _ = chord_at_beat(base + pos, chord_tl, chords, bpb, root_pc)
+            chord_tones = [_clamp_midi(60 + c_root + iv, 62, 79) for iv in c_ints[:4]]
             # Anchor strong beats on chord tones, passing beats on scale degrees
-            if idx == 0 or idx == len(cell) - 1:
+            if idx == 0 or idx == len(cell) - 1 or (chord_tl and idx == len(cell) // 2):
                 anchor = chord_tones[0 if idx == len(cell) - 1 and phrase_pos == 3 else (idx + phrase_pos) % len(chord_tones)]
-                pitch = nearest_scale(anchor + (12 if energy >= 0.95 and phrase_pos == 2 and idx == 0 else 0))
+                pitch = anchor if chord_tl else nearest_scale(anchor + (12 if energy >= 0.95 and phrase_pos == 2 and idx == 0 else 0))
             else:
                 deg = deg_offsets[(idx + bar) % len(deg_offsets)]
                 scale_idx = max(0, min(len(scale_pool) - 1, (deg % len(scale_ints)) + (2 if octave_lift else 1)))
@@ -415,21 +515,30 @@ def _compose_keys_or_pad(
     force_active: bool,
 ) -> list[dict[str, Any]]:
     notes: list[dict[str, Any]] = []
+    chord_tl = plan.harmonyAndGroove.get("chordTimeline") or None
     for bar in range(total_bars):
         sec, energy, _, _ = _bar_context(plan, bar)
         if not force_active and role not in sec.get("activeRoles", []):
             continue
         base = bar * bpb
-        chord_sym = chords[bar % len(chords)]
-        c_root, c_ints = parse_chord(chord_sym, root_pc)
+        _, c_root, c_ints, _ = chord_at_beat(base, chord_tl, chords, bpb, root_pc)
 
         # Voice-lead chords cleanly into C3–C5 (MIDI 50–72)
         voicing = sorted({_clamp_midi(48 + c_root + iv, 52, 71) for iv in c_ints[:4]})
 
         if role == "pad":
             vel = int(58 + 22 * energy)
-            for p in voicing:
-                notes.append(_note(p, base, bpb - 0.08, vel))
+            # Split pad cleanly on mid-bar chord change if chordTimeline changes at half-bar!
+            _, mid_root, mid_ints, _ = chord_at_beat(base + bpb * 0.5, chord_tl, chords, bpb, root_pc)
+            if chord_tl and mid_root != c_root:
+                for p in voicing:
+                    notes.append(_note(p, base, bpb * 0.5 - 0.06, vel))
+                mid_voicing = sorted({_clamp_midi(48 + mid_root + iv, 52, 71) for iv in mid_ints[:4]})
+                for p in mid_voicing:
+                    notes.append(_note(p, base + bpb * 0.5, bpb * 0.5 - 0.06, vel))
+            else:
+                for p in voicing:
+                    notes.append(_note(p, base, bpb - 0.08, vel))
         elif role == "guitar":
             # Rhythmic clean guitar plucks / arpeggios in MIDI 55–76
             guitar_voicing = sorted({_clamp_midi(p + 5, 55, 76) for p in voicing})

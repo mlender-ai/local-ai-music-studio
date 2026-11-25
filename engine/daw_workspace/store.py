@@ -122,6 +122,9 @@ def migrate_project_dict(data: dict[str, Any]) -> dict[str, Any]:
         out["takes"] = []
     if "musicMemory" not in out or not isinstance(out["musicMemory"], dict):
         out["musicMemory"] = {}
+    if "chordTrack" not in out or not isinstance(out["chordTrack"], list):
+        out["chordTrack"] = []
+    out.setdefault("chordTrackLocked", False)
     for trk in out.get("tracks", []):
         if isinstance(trk, dict):
             trk.setdefault("takeLanes", [])

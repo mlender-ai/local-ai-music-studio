@@ -329,21 +329,34 @@ def create_composition_plan(
     reference_ids: list[str] | None = None,
     selected_influences: list[str] | None = None,
     per_reference_influences: dict[str, list[str]] | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",  # "reconstruct" | "reference_compose" | "reinterpret"
+    use_project_chord_track: bool = False,
     selection: dict[str, Any] | None = None,
     provider_id: str | None = None,
     engine_preference: str = "auto",
     production_mode: str = "editable_midi",  # "neural_audio" | "editable_midi" | "hybrid"
 ) -> CompositionPlan:
-    """Create a complete, traceable, genre-adaptive CompositionPlan with real AI authoring authority."""
+    """Create a complete, traceable, genre-adaptive CompositionPlan honoring Reference Feature Locks & Chord Track."""
     binding = build_reference_binding(
         project,
         reference_ids=reference_ids,
         explicit_influences=selected_influences,
         per_reference_influences=per_reference_influences,
+        feature_locks=feature_locks,
         target_engine=engine_preference,
+        reference_mode=reference_mode,
+        use_project_chord_track=use_project_chord_track,
     )
     ref_bpm = binding.appliedFeatures.get("tempoBpm")
     ref_key = binding.appliedFeatures.get("key")
+    eff_locks: dict[str, str] = dict(binding.appliedFeatures.get("featureLocks") or {})
+    chord_timeline: list[dict[str, Any]] = list(binding.appliedFeatures.get("chordTimeline") or [])
+    chords_locked = (
+        project.chordTrackLocked
+        or eff_locks.get("chord_progression") == "locked"
+        or bool(chord_timeline)
+    )
 
     genre = _detect_genre(instruction, ref_bpm=ref_bpm)
     profile = GENRE_PROFILES[genre]
@@ -359,13 +372,16 @@ def create_composition_plan(
     key = prompt_key or ref_key or profile["defaultKey"]
     scale = "major" if "major" in key.lower() else profile["scale"]
 
-    # Chord progression: respect reference chords if bass_movement/mood_energy/harmony selected and valid
+    # Chord progression: strictly honor locked Chord Track / Reference Chord Timeline (NEVER replace with generic genre defaults!)
     ref_chords = binding.appliedFeatures.get("referenceChords") or []
-    valid_ref_chords = [c for c in ref_chords if c and c != "N/C"]
-    if len(valid_ref_chords) >= 2 and any(k in binding.selectedInfluences for k in ("bass_movement", "mood_energy", "harmony_mood")):
-        chords = valid_ref_chords[:4]
-        while len(chords) < 4:
-            chords.append(chords[len(chords) % len(valid_ref_chords)])
+    valid_ref_chords = [c for c in ref_chords if c and c not in ("N/C", "uncertain")]
+    if chord_timeline and valid_ref_chords:
+        chords = valid_ref_chords[:16]
+    elif len(valid_ref_chords) >= 2 and (
+        eff_locks.get("chord_progression") in ("locked", "reference")
+        or any(k in binding.selectedInfluences for k in ("bass_movement", "mood_energy", "harmony_mood"))
+    ):
+        chords = valid_ref_chords[:8]
     else:
         chords = _chords_for_key(key, profile["chords"])
 
@@ -545,10 +561,11 @@ def create_composition_plan(
     swing_val = float(binding.appliedFeatures.get("swingRatio") or profile["swingRatio"])
 
     if isinstance(llm_patch, dict):
-        # Apply validated AI-authored chord progression (unless user explicitly bound reference chords)
+        # Apply validated AI-authored chord progression ONLY if chords are NOT locked by user / Chord Track / Reference!
         ai_chords = llm_patch.get("chordProgression")
         if (
-            isinstance(ai_chords, list)
+            not chords_locked
+            and isinstance(ai_chords, list)
             and 2 <= len(ai_chords) <= 8
             and all(isinstance(c, str) and re.match(r"^[A-G][#b]?[a-zA-Z0-9]*$", c.strip()) for c in ai_chords)
             and not (len(valid_ref_chords) >= 2 and any(k in binding.selectedInfluences for k in ("bass_movement", "harmony_mood")))
@@ -652,9 +669,15 @@ def create_composition_plan(
             "key": key,
             "scale": scale,
             "chordProgression": chords,
-            "chordsPerBar": 1,
+            "chordTimeline": chord_timeline,
+            "chordsLocked": chords_locked,
+            "chordsPerBar": 1 if not chord_timeline else 0,
             "grooveFeel": binding.appliedFeatures.get("grooveFeel") or profile["grooveFeel"],
             "swingRatio": swing_val,
+            "drumGroovePattern": binding.appliedFeatures.get("drumGroovePattern"),
+            "bassGroovePattern": binding.appliedFeatures.get("bassGroovePattern"),
+            "featureLocks": eff_locks,
+            "referenceMode": reference_mode,
         },
         instrumentRoles=instrument_roles,
         arrangement=planned_sections,

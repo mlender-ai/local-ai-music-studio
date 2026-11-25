@@ -133,6 +133,11 @@ def build_yue2_request_from_plan(
     if instrumental and not re.search(r"\binstrumental\b", style, re.IGNORECASE):
         style += " Instrumental."
 
+    if abc_score is None:
+        abc_meta = (plan.referenceBinding.appliedFeatures or {}).get("abcScore")
+        if isinstance(abc_meta, dict) and abc_meta.get("validInstrumentalYuE2") and abc_meta.get("abc"):
+            abc_score = str(abc_meta["abc"])
+
     if abc_score is not None and instrumental:
         ok, issues = check_resting_voice(abc_score)
         if not ok:

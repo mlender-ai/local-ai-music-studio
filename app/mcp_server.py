@@ -290,12 +290,24 @@ def daw_create_composition_plan(
     target_instrument: str | None = None,
     reference_ids: list[str] | None = None,
     selected_influences: list[str] | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",
+    use_project_chord_track: bool = False,
     project_id: str | None = None,
     provider_id: str | None = None,
 ) -> dict:
-    """Design a structured CompositionPlan (Identity, Motif, Harmony, Roles, Sections, Reference Binding) before generating audio/MIDI."""
+    """Design a structured CompositionPlan (Identity, Motif, Harmony, Roles, Sections, Reference Binding & Feature Locks) before generating audio/MIDI."""
     return daw_mcp.create_composition_plan(
-        instruction, mode, target_instrument, reference_ids, selected_influences, project_id, provider_id
+        instruction,
+        mode,
+        target_instrument,
+        reference_ids,
+        selected_influences,
+        project_id,
+        provider_id,
+        feature_locks=feature_locks,
+        reference_mode=reference_mode,
+        use_project_chord_track=use_project_chord_track,
     )
 
 
@@ -311,14 +323,27 @@ def daw_generate_music(
     plan_id: str | None = None,
     reference_ids: list[str] | None = None,
     selected_influences: list[str] | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",
+    use_project_chord_track: bool = False,
     engine_choice: str = "auto",
     seed: int | None = None,
     sync: bool = True,
     project_id: str | None = None,
 ) -> dict:
-    """Mode A: Generate a full multi-section arrangement Take with BS.1770-4 loudness, quality report & level-matched preview."""
+    """Mode A: Generate a full multi-section arrangement Take with BS.1770-4 loudness, Reference Feature Verification & level-matched preview."""
     return daw_mcp.generate_music(
-        instruction, plan_id, reference_ids, selected_influences, engine_choice, seed, sync, project_id
+        instruction,
+        plan_id,
+        reference_ids,
+        selected_influences,
+        engine_choice,
+        seed,
+        sync,
+        project_id,
+        feature_locks=feature_locks,
+        reference_mode=reference_mode,
+        use_project_chord_track=use_project_chord_track,
     )
 
 
@@ -517,6 +542,95 @@ def daw_reverse_audio_clip(
 def daw_get_music_memory(project_id: str | None = None) -> dict:
     """Read compact Project Music Memory (genre, key, chords, instrument roles, liked/rejected takes, recent conversation turns)."""
     return daw_mcp.get_music_memory(project_id)
+
+
+# --- AI-Native DAW Phase 03.2 Advanced Reference Intelligence MCP Tools ---
+
+@server.tool(name="daw.transcribe_reference", annotations=WRITE)
+def daw_transcribe_reference(
+    reference_id: str | None = None,
+    use_demucs: bool = True,
+    demucs_model: str = "htdemucs",
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Run precision transcription on a Reference (Demucs 4-stem separation + Basic Pitch ONNX + Drum groove + Sub-bar Chords + Blueprint v2)."""
+    return daw_mcp.transcribe_reference(reference_id, use_demucs, demucs_model, sync, project_id)
+
+
+@server.tool(name="daw.get_chord_track", annotations=READ)
+def daw_get_chord_track(project_id: str | None = None) -> dict:
+    """Read the project's editable Timeline Chord Track (sub-bar chord symbols, inversions, confidence & lock state)."""
+    return daw_mcp.get_chord_track(project_id)
+
+
+@server.tool(name="daw.set_chord_track", annotations=WRITE)
+def daw_set_chord_track(
+    chords: list[dict],
+    locked: bool | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Replace or lock the project's Timeline Chord Track (recorded with 1-click Undo snapshot)."""
+    return daw_mcp.set_chord_track(chords, locked, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.update_reference_locks", annotations=WRITE)
+def daw_update_reference_locks(
+    reference_id: str | None = None,
+    feature_locks: dict[str, str] | None = None,
+    chord_corrections: list[dict] | None = None,
+    section_renames: dict[str, str] | None = None,
+    project_id: str | None = None,
+) -> dict:
+    """Update a Reference's 10-feature lock matrix (free/reference/locked) and direct user chord/section corrections."""
+    return daw_mcp.update_reference_locks(reference_id, feature_locks, chord_corrections, section_renames, project_id)
+
+
+@server.tool(name="daw.import_reference_transcription", annotations=WRITE)
+def daw_import_reference_transcription(
+    reference_id: str | None = None,
+    import_chords: bool = True,
+    import_drums_midi: bool = False,
+    import_bass_midi: bool = False,
+    import_melody_midi: bool = False,
+    import_stems: bool = False,
+    import_sections: bool = False,
+    project_id: str | None = None,
+) -> dict:
+    """Selectively import transcribed Reference Chord Track, Drum/Bass/Melody MIDI, Stems, or Sections into the DAW project."""
+    return daw_mcp.import_reference_transcription(
+        reference_id,
+        import_chords,
+        import_drums_midi,
+        import_bass_midi,
+        import_melody_midi,
+        import_stems,
+        import_sections,
+        project_id,
+    )
+
+
+@server.tool(name="daw.reconstruct_from_reference", annotations=WRITE)
+def daw_reconstruct_from_reference(
+    reference_id: str | None = None,
+    import_stems: bool = False,
+    use_quantized_drums: bool = True,
+    project_id: str | None = None,
+) -> dict:
+    """Mode A Reconstruct: rebuild an analyzed Reference as editable MIDI tracks, Chord Track, Arrangement Markers & optional Demucs Stems (1-click Undoable)."""
+    return daw_mcp.reconstruct_from_reference(reference_id, import_stems, use_quantized_drums, project_id)
+
+
+@server.tool(name="daw.get_reference_abc_score", annotations=READ)
+def daw_get_reference_abc_score(
+    reference_id: str | None = None,
+    mode: str = "reference_compose",
+    project_id: str | None = None,
+) -> dict:
+    """Build or read a YuE2-compliant instrumental ABC score (passing check_resting_voice) derived from a transcribed Reference."""
+    return daw_mcp.get_reference_abc_score(reference_id, mode, project_id)
 
 
 def main():

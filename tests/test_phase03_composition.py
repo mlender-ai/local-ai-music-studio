@@ -120,9 +120,9 @@ def test_a_full_128bpm_house_production_end_to_end(isolated_phase03_env):
     assert applied["applied"] is True
     assert len(applied["createdTrackIds"]) >= 4
 
-    # 4. Reopen project from disk & verify persistence + schema v1.3.0
+    # 4. Reopen project from disk & verify persistence + schema v1.4.0
     reopened = store.load_project(proj.id)
-    assert reopened.schemaVersion == "1.3.0"
+    assert reopened.schemaVersion == "1.4.0"
     assert len(reopened.tracks) >= 4
     assert any(t.instrumentRef == "drum-kit-electronic" for t in reopened.tracks)
     assert any(t.instrumentRef == "bass-fm-sub" for t in reopened.tracks)

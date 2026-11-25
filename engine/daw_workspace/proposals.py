@@ -299,6 +299,118 @@ def interpret_producer_instruction(
                 "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition (full music, instrument sessions, loops/MIDI), reference analysis, track/clip/MIDI edits, and section markers.",
             }
 
+    # 0. Phase 03.2 Advanced Reference Intelligence routing (Transcription, Chords, Reconstruct, Feature-Locked Compose)
+    default_ref_id = active_reference_id or (project.references[0]["id"] if project.references else None)
+
+    # 0.1 Precision Transcription request
+    if any(k in low for k in ("정밀 채보", "채보", "어떤 악기", "악기 분석", "스템 분석", "transcribe", "transcription")):
+        if not default_ref_id:
+            return {
+                "supported": False,
+                "action": "no_reference",
+                "messageKo": "정밀 채보할 레퍼런스가 없습니다. 좌측 브라우저 '레퍼런스' 탭에서 오디오 파일을 먼저 가져오세요.",
+                "messageEn": "No reference found to transcribe. Import an audio file in the References tab first.",
+            }
+        return {
+            "supported": True,
+            "action": "transcribe_reference",
+            "referenceId": default_ref_id,
+            "messageKo": "Demucs 스템 분리 + Basic Pitch ONNX + 코드·드럼 정밀 채보를 실행합니다.",
+            "messageEn": "Running precision transcription (Demucs + Basic Pitch ONNX + Drum/Chord analysis).",
+        }
+
+    # 0.2 Import Reference Chord Track only
+    if (
+        any(k in low for k in ("코드 진행만", "코드만 가져", "코드 트랙으로", "코드 가져와", "import chords", "import chord track"))
+        and not any(k in low for k in ("만들어", "작곡", "생성", "compose", "generate"))
+    ):
+        if not default_ref_id:
+            return {
+                "supported": False,
+                "action": "no_reference",
+                "messageKo": "코드를 가져올 레퍼런스가 없습니다.",
+                "messageEn": "No reference available to import chords from.",
+            }
+        return {
+            "supported": True,
+            "action": "import_reference_chords",
+            "referenceId": default_ref_id,
+            "messageKo": "레퍼런스에서 추출한 코드 진행을 타임라인 Chord Track으로 가져옵니다.",
+            "messageEn": "Importing extracted reference chord progression into the Timeline Chord Track.",
+        }
+
+    # 0.3 Mode A: Reconstruct Reference to editable MIDI/Stem session
+    if any(k in low for k in ("midi 세션으로 재구성", "세션으로 재구성", "미디 세션으로", "세션 재구성", "재구성해줘", "재구성 해줘", "reconstruct")):
+        if not default_ref_id:
+            return {
+                "supported": False,
+                "action": "no_reference",
+                "messageKo": "세션으로 재구성할 레퍼런스가 없습니다. 먼저 레퍼런스 오디오를 가져오세요.",
+                "messageEn": "No reference found to reconstruct. Import a reference audio file first.",
+            }
+        return {
+            "supported": True,
+            "action": "reconstruct_reference",
+            "referenceId": default_ref_id,
+            "messageKo": "레퍼런스 분석·채보 결과를 편집 가능한 MIDI 세션 + Chord Track으로 재구성합니다.",
+            "messageEn": "Reconstructing reference transcription into an editable MIDI session & Chord Track.",
+        }
+
+    # 0.4 Reference-Conditioned Composition / Reinterpretation with parsed Feature Locks
+    is_ref_compose_req = (
+        any(k in low for k in ("재해석", "reinterpret"))
+        or (
+            any(k in low for k in ("레퍼런스", "reference", "이 곡", "이 음악", "코드 진행"))
+            and any(
+                k in low
+                for k in (
+                    "만들어",
+                    "작곡",
+                    "생성",
+                    "사용해줘",
+                    "참고해서",
+                    "바꿔줘",
+                    "바꿔 줘",
+                    "compose",
+                    "generate",
+                    "make a",
+                    "same chord",
+                    "drum rhythm",
+                )
+            )
+            and not any(k in low for k in ("볼륨", "volume", "게인", "gain", "뮤트", "mute", "솔로", "solo", "복제", "duplicate"))
+        )
+    )
+    if is_ref_compose_req:
+        parsed_locks: dict[str, str] = {}
+        ref_mode = "reinterpret" if any(k in low for k in ("재해석", "reinterpret")) else "reference_compose"
+        if any(k in low for k in ("bpm", "템포", "같은 빠르기", "same tempo")):
+            parsed_locks["bpm"] = "locked"
+        if any(k in low for k in ("코드 진행", "같은 코드", "코드 그대로", "코드 고정", "chord progression", "same chord")):
+            parsed_locks["chord_progression"] = "locked"
+        if any(k in low for k in ("드럼 리듬", "드럼 그루브", "리듬을 사용", "리듬은 유지", "리듬과 코드", "drum rhythm", "drum groove")):
+            parsed_locks["drum_rhythm"] = "locked"
+        if any(k in low for k in ("베이스 그루브", "베이스는 유지", "bass groove", "keep bass")):
+            parsed_locks["bass_groove"] = "locked"
+        if any(k in low for k in ("후반부 전개", "편곡 구조", "전개 방식", "arrangement")):
+            parsed_locks["arrangement"] = "locked"
+        if any(k in low for k in ("멜로디만 바꿔", "새로운 멜로디", "새 멜로디", "새로운 곡", "new melody", "fresh melody", "멜로디는 새")):
+            parsed_locks["melody"] = "free"
+        if any(k in low for k in ("공간감", "음색", "timbre", "spatial")):
+            parsed_locks["timbre"] = "reference"
+            parsed_locks["spatial_character"] = "reference"
+        return {
+            "supported": True,
+            "action": "composition_plan",
+            "instruction": text,
+            "referenceId": default_ref_id,
+            "featureLocks": parsed_locks or None,
+            "referenceMode": ref_mode,
+            "useProjectChordTrack": bool(project.chordTrack and ("코드" in low or project.chordTrackLocked)),
+            "messageKo": f"레퍼런스 조건({ref_mode})이 반영된 작곡 계획(Composition Plan)을 설계합니다.",
+            "messageEn": f"Designing a reference-conditioned Composition Plan ({ref_mode}).",
+        }
+
     # 0A. Phase 04 Selective Arrangement, Musical Variation, Fill-in, Strip/Extend, Reverse/Fade
     arrangement_triggers = (
         "변주",

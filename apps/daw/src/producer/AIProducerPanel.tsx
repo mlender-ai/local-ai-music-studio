@@ -207,7 +207,7 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
           if (res.action === "arrangement_edit_plan_created" && res.arrangementPlan) {
             setVarIntensity(res.arrangementPlan.intensity);
           }
-          if (res.action === "analyze_reference") {
+          if (res.action === "analyze_reference" || res.action === "transcription_started") {
             onOpenReferenceTab();
           }
         }
@@ -429,9 +429,24 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                 <span style={{ fontWeight: 600, fontSize: 11.5, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {selectedTrack ? `${selectedTrack.name} · ${barSummary}` : barSummary}
                 </span>
-                <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)", flexShrink: 0 }}>
-                  {project.bpm.toFixed(0)} BPM
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                  {(project.chordTrack?.length ?? 0) > 0 && (
+                    <span
+                      className="tag-badge"
+                      style={{
+                        fontSize: 8.5,
+                        color: project.chordTrackLocked ? "#a9e1ba" : "#d9b468",
+                        borderColor: project.chordTrackLocked ? "var(--accent-play)" : "#6e5c33",
+                      }}
+                      data-testid="producer-chord-track-badge"
+                    >
+                      {project.chordTrackLocked ? "🔒 " : ""}Chords ({project.chordTrack?.length})
+                    </span>
+                  )}
+                  <span className="mono" style={{ fontSize: 10, color: "var(--text-muted)" }}>
+                    {project.bpm.toFixed(0)} BPM
+                  </span>
+                </div>
               </div>
 
               {/* Production Mode Selector (No Silent Substitution — Section 3.1) */}
@@ -880,6 +895,54 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                         Planned: {take.plannedSections.length} sec · Detected: {take.detectedSections.length} sec
                       </div>
                     )}
+
+                    {/* Phase 03.2 5-State Feature Verification Matrix (Extracted -> Consumed -> Verified) */}
+                    {(() => {
+                      const fv = (take.qualityReport?.musical as Record<string, unknown> | undefined)?.featureVerification as
+                        | {
+                            chordMatchRatio?: number;
+                            grooveHitMatchRatio?: number | null;
+                            featureLifecycle?: Array<{
+                              feature: string;
+                              consumed?: boolean;
+                              verified?: boolean;
+                            }>;
+                          }
+                        | undefined;
+                      if (!fv?.featureLifecycle?.length) return null;
+                      return (
+                        <div
+                          style={{ display: "flex", flexWrap: "wrap", gap: 3, marginTop: 2 }}
+                          data-testid={`take-feature-ver-${take.id}`}
+                        >
+                          {fv.featureLifecycle.slice(0, 8).map((fl) => (
+                            <span
+                              key={fl.feature}
+                              className="tag-badge"
+                              style={{
+                                fontSize: 8.5,
+                                color: fl.verified
+                                  ? "#a9e1ba"
+                                  : fl.consumed
+                                    ? "#f0cf7b"
+                                    : "var(--text-muted)",
+                                borderColor: fl.verified ? "rgba(99, 180, 124, 0.55)" : undefined,
+                              }}
+                              title={
+                                fl.verified
+                                  ? "Consumed & Verified in generated output"
+                                  : fl.consumed
+                                    ? "Consumed by generator (unverified)"
+                                    : "Not consumed by this engine (comparison only)"
+                              }
+                            >
+                              {fl.verified ? "✓ " : fl.consumed ? "• " : "○ "}
+                              {fl.feature}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
 
                     {/* Reference Comparison Observation if available */}
                     {take.qualityReport?.referenceComparison?.observations?.[0] && (

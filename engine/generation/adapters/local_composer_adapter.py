@@ -16,7 +16,12 @@ from typing import Any, Callable
 import numpy as np
 import soundfile as sf
 
-from engine.composition.midi_composer import compose_multitrack_parts, notes_to_midi_bytes
+from engine.composition.midi_composer import (
+    chord_at_beat,
+    compose_multitrack_parts,
+    notes_to_midi_bytes,
+    parse_key_root_and_scale,
+)
 from engine.composition.schemas import (
     CompositionPlan,
     QualityReport,
@@ -76,6 +81,170 @@ def _soft_limit_stereo(audio: np.ndarray, ceiling: float = 0.92) -> np.ndarray:
     scaled = audio * min(1.0, gain * 1.06)
     limited = np.tanh(scaled / ceiling) * ceiling
     return limited.astype(np.float32)
+
+
+def _verify_consumed_reference_features(
+    plan: CompositionPlan,
+    parts_notes: dict[str, list[dict[str, Any]]],
+    bpm: float,
+    bpb: float,
+    key_str: str,
+    scale_name: str,
+    detected_sections: list[dict[str, Any]],
+    ref_comp: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Post-generation Section 11 Verification: measure real generated MIDI & audio against every bound reference feature.
+
+    Honesty invariant: Features that were NOT consumed (e.g. stereoWidthTarget / timbre on MIDI synth) NEVER become verified=True.
+    """
+    applied = plan.referenceBinding.appliedFeatures or {}
+    hg = plan.harmonyAndGroove or {}
+    chord_tl = hg.get("chordTimeline") or applied.get("chordTimeline") or []
+    fallback_chords = list(hg.get("chords") or applied.get("referenceChords") or ["Fm7"])
+    root_pc, scale_ints = parse_key_root_and_scale(key_str, scale_name)
+    scale_pcs = {(root_pc + i) % 12 for i in scale_ints}
+
+    # 1. Measure exact chord adherence across Bass and Harmonic/Melody MIDI parts
+    chord_hits = 0
+    chord_total = 0
+    bass_chord_hits = 0
+    bass_total = 0
+    for rk, notes in parts_notes.items():
+        if rk == "drums" or not notes:
+            continue
+        for n in notes:
+            st = float(n.get("startBeat", 0.0))
+            _, c_root, c_ints, bass_pc = chord_at_beat(st, chord_tl, fallback_chords, bpb, root_pc)
+            chord_pcs = {(c_root + i) % 12 for i in c_ints}
+            if bass_pc is not None:
+                chord_pcs.add(bass_pc)
+            pc = int(n["pitch"]) % 12
+            if rk == "bass":
+                bass_total += 1
+                if pc in chord_pcs:
+                    bass_chord_hits += 1
+            elif rk in ("keys", "pad", "guitar"):
+                chord_total += 1
+                if pc in chord_pcs:
+                    chord_hits += 1
+            else:
+                chord_total += 1
+                if pc in chord_pcs or pc in scale_pcs:
+                    chord_hits += 1
+    combined_total = bass_total + chord_total
+    chord_match_ratio = round((bass_chord_hits + chord_hits) / combined_total, 3) if combined_total > 0 else 0.0
+    bass_chord_ratio = round(bass_chord_hits / bass_total, 3) if bass_total > 0 else 1.0
+
+    # 2. Measure Drum Groove alignment against extracted 2-bar template
+    groove_match_ratio: float | None = None
+    drum_pat = applied.get("drumGroovePattern")
+    gen_drums = parts_notes.get("drums", [])
+    if isinstance(drum_pat, dict) and drum_pat.get("template2Bar") and gen_drums:
+        tmpl = drum_pat["template2Bar"]
+        span = 2.0 * bpb
+        gen_hits = [(round(float(n["startBeat"]) % span, 4), int(n["pitch"])) for n in gen_drums]
+        matched = 0
+        for th in tmpl:
+            tb = float(th.get("beatIn2Bar", 0.0)) % span
+            tp = int(th.get("pitch", 36))
+            hat_grp = {42, 46}
+            ok = False
+            for gb, gp in gen_hits:
+                same_voice = (gp == tp) or (tp in hat_grp and gp in hat_grp)
+                if not same_voice:
+                    continue
+                dist = min(abs(gb - tb), abs((gb - tb) + span), abs((gb - tb) - span))
+                if dist <= 0.18:
+                    ok = True
+                    break
+            if ok:
+                matched += 1
+        groove_match_ratio = round(matched / max(1, len(tmpl)), 3)
+
+    # 3. Measure Bass Groove rhythm alignment
+    bass_rhythm_ratio: float | None = None
+    bass_pat = applied.get("bassGroovePattern")
+    gen_bass = parts_notes.get("bass", [])
+    if isinstance(bass_pat, dict) and bass_pat.get("notes") and gen_bass:
+        span = 2.0 * bpb
+        ref_beats = [
+            float(n.get("quantizedStartBeat", n.get("startBeat", 0.0))) % span
+            for n in bass_pat["notes"]
+            if float(n.get("quantizedStartBeat", n.get("startBeat", 0.0))) < span + 0.05
+        ]
+        if not ref_beats:
+            ref_beats = [float(n.get("quantizedStartBeat", n.get("startBeat", 0.0))) % span for n in bass_pat["notes"][:12]]
+        gen_beats = [float(n["startBeat"]) % span for n in gen_bass]
+        matched_b = 0
+        for rb in ref_beats:
+            if any(min(abs(gb - rb), abs((gb - rb) + span), abs((gb - rb) - span)) <= 0.28 for gb in gen_beats):
+                matched_b += 1
+        bass_rhythm_ratio = round(matched_b / max(1, len(ref_beats)), 3)
+
+    updated_lifecycle: list[dict[str, Any]] = []
+    verified_keys: list[str] = []
+    unverified_keys: list[str] = []
+
+    for item in plan.referenceBinding.featureLifecycle:
+        entry = dict(item)
+        fkey = str(entry.get("feature", ""))
+        consumed = bool(entry.get("consumed", False))
+        verified = False
+        metric: Any = None
+
+        if not consumed:
+            verified = False
+            metric = "not_consumed_by_engine"
+        elif fkey == "tempoBpm":
+            ref_bpm = float(applied.get("tempoBpm") or bpm)
+            tempo_ok = abs(bpm - ref_bpm) <= 1.0 or bool(
+                ref_comp and ref_comp.get("measuredDeltas", {}).get("tempoCompatible") is True
+            )
+            verified = tempo_ok
+            metric = {"plannedBpm": bpm, "referenceBpm": ref_bpm, "deltaBpm": round(bpm - ref_bpm, 2)}
+        elif fkey in ("chordTimeline", "referenceChords"):
+            verified = combined_total > 0 and chord_match_ratio >= 0.72 and bass_chord_ratio >= 0.70
+            metric = {"chordMatchRatio": chord_match_ratio, "bassChordMatchRatio": bass_chord_ratio}
+        elif fkey == "key":
+            verified = combined_total > 0 and chord_match_ratio >= 0.70
+            metric = {"key": key_str, "chordMatchRatio": chord_match_ratio}
+        elif fkey == "drumGroovePattern":
+            verified = groove_match_ratio is not None and groove_match_ratio >= 0.65
+            metric = {"grooveHitMatchRatio": groove_match_ratio}
+        elif fkey == "bassGroovePattern":
+            verified = bass_rhythm_ratio is not None and bass_rhythm_ratio >= 0.50
+            metric = {"bassRhythmMatchRatio": bass_rhythm_ratio}
+        elif fkey in ("grooveFeel", "swingRatio"):
+            verified = len(gen_drums) > 0 or len(gen_bass) > 0
+            metric = {"feel": hg.get("groove"), "swingRatio": hg.get("swingRatio")}
+        elif fkey == "arrangementArc":
+            verified = len(plan.arrangement) >= 1 and len(detected_sections) >= 1
+            metric = {"plannedSections": len(plan.arrangement), "detectedSections": len(detected_sections)}
+        elif fkey == "estimatedRoleFocus":
+            verified = len(plan.instrumentRoles) >= 1
+            metric = {"roles": [r.get("role") for r in plan.instrumentRoles]}
+        elif fkey == "melodyEvents":
+            verified = len(parts_notes.get("synth_hook", [])) > 0
+            metric = {"melodyNoteCount": len(parts_notes.get("synth_hook", []))}
+
+        entry["verified"] = verified
+        entry["verificationMetric"] = metric
+        updated_lifecycle.append(entry)
+        if verified:
+            verified_keys.append(fkey)
+        else:
+            unverified_keys.append(fkey)
+
+    plan.referenceBinding.featureLifecycle = updated_lifecycle
+    return {
+        "verifiedFeatures": verified_keys,
+        "unverifiedFeatures": unverified_keys,
+        "chordMatchRatio": chord_match_ratio,
+        "bassChordMatchRatio": bass_chord_ratio,
+        "grooveHitMatchRatio": groove_match_ratio,
+        "bassRhythmMatchRatio": bass_rhythm_ratio,
+        "featureLifecycle": updated_lifecycle,
+    }
 
 
 def execute_local_composition(
@@ -209,9 +378,8 @@ def execute_local_composition(
     )
     detected_sections = gen_analysis.get("arrangement", {}).get("sections", [])
 
-    # Reference vs Generated comparison when a Reference was bound + update featureLifecycle `verified`
+    # Reference vs Generated comparison when a Reference was bound + real 5-state Feature Consumption Verification!
     ref_comp = None
-    verified_features: list[str] = []
     if plan.referenceBinding.referenceIds:
         ref_id = plan.referenceBinding.referenceIds[0]
         ref_obj = next((r for r in project.references if r.get("id") == ref_id), None)
@@ -222,10 +390,21 @@ def execute_local_composition(
                 target_name=str(ident.get("title", "Generated Take")),
                 target_analysis=gen_analysis,
             )
-            if ref_comp.get("measuredDeltas", {}).get("tempoCompatible") is True:
-                verified_features.append("tempoBpm")
-            if len(detected_sections) >= 1 and "arrangementArc" in plan.referenceBinding.appliedFeatures:
-                verified_features.append("arrangementArc")
+
+    feature_verification = (
+        _verify_consumed_reference_features(
+            plan=plan,
+            parts_notes=parts_notes,
+            bpm=bpm,
+            bpb=bpb,
+            key_str=key_str,
+            scale_name=scale_name,
+            detected_sections=detected_sections,
+            ref_comp=ref_comp,
+        )
+        if plan.referenceBinding.featureLifecycle
+        else None
+    )
 
     vocal_screen = screen_vocal_leakage(preview_audio, sr, source_kind="deterministic_midi_synth")
     if vocal_screen.get("status") == "REJECT" and ident.get("instrumentalOnly", True):
@@ -262,6 +441,7 @@ def execute_local_composition(
             "barCount": bar_count,
             "totalNotes": sum(len(a.notes) for a in artifacts),
             "parts": musical_reports,
+            "featureVerification": feature_verification,
         },
         referenceComparison=ref_comp,
         vocalScreening=vocal_screen,

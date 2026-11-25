@@ -123,6 +123,7 @@ def run_cancellable_guarded(
     started = time.monotonic()
     peak_rss = 0
     last_pressure_check = 0.0
+    consecutive_critical_pressure = 0
 
     with shared_model_execution_lock(cancel_event=cancel_event):
         if cancel_event and cancel_event.is_set():
@@ -159,6 +160,7 @@ def run_cancellable_guarded(
 
                     if sys.platform == "darwin" and (time.monotonic() - last_pressure_check) >= 2.0:
                         last_pressure_check = time.monotonic()
+                        pressure_val = ""
                         try:
                             pr = subprocess.run(
                                 ["/usr/sbin/sysctl", "-n", "kern.memorystatus_vm_pressure_level"],
@@ -167,11 +169,18 @@ def run_cancellable_guarded(
                                 timeout=1.0,
                                 check=False,
                             )
-                            if pr.stdout.strip() == "4":
-                                _terminate_process_group(proc)
-                                raise RuntimeError("Generation stopped: macOS critical memory pressure.")
+                            pressure_val = pr.stdout.strip()
                         except Exception:
-                            pass
+                            pressure_val = ""
+                        if pressure_val == "4" and rss > 2 * GiB:
+                            consecutive_critical_pressure += 1
+                            if consecutive_critical_pressure >= 3:
+                                _terminate_process_group(proc)
+                                raise RuntimeError(
+                                    f"Generation stopped: sustained macOS critical memory pressure (RSS {rss / GiB:.2f} GiB)."
+                                )
+                        else:
+                            consecutive_critical_pressure = 0
 
                     time.sleep(0.15)
 

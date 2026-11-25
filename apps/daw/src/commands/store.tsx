@@ -9,6 +9,7 @@ import type {
   Asset,
   AssetLoadState,
   ChangeProposal,
+  ChordEvent,
   Clip,
   CompositionPlan,
   GenerationEngineInfo,
@@ -144,8 +145,25 @@ interface DawContextValue {
   addReferenceUrl: (url: string) => Promise<ReferenceItem | null>;
   deleteReference: (refId: string) => Promise<void>;
   runReferenceAnalysis: (refId: string) => Promise<void>;
+  runReferenceTranscription: (refId: string, useDemucs?: boolean) => Promise<void>;
   cancelReferenceAnalysis: () => Promise<void>;
   toggleBlueprintInfluence: (refId: string, influenceId: string) => Promise<void>;
+  updateReferenceLocks: (
+    refId: string,
+    body: { featureLocks?: Record<string, string>; chordCorrections?: ChordEvent[] }
+  ) => Promise<void>;
+  reconstructReference: (
+    refId: string,
+    opts?: {
+      importChords?: boolean;
+      importDrumsMidi?: boolean;
+      importBassMidi?: boolean;
+      importMelodyMidi?: boolean;
+      importStems?: boolean;
+      importSections?: boolean;
+      applyBpm?: boolean;
+    }
+  ) => Promise<void>;
   sessionId: string;
   sseConnected: boolean;
   pendingProposals: ChangeProposal[];
@@ -167,7 +185,15 @@ interface DawContextValue {
   selectAiProvider: (providerId: string) => Promise<void>;
   requestCompositionPlan: (
     instruction: string,
-    opts?: { mode?: string; targetInstrument?: string; useReference?: boolean; enginePreference?: string }
+    opts?: {
+      mode?: string;
+      targetInstrument?: string;
+      useReference?: boolean;
+      enginePreference?: string;
+      featureLocks?: Record<string, string>;
+      referenceMode?: "reconstruct" | "reference_compose" | "reinterpret";
+      useProjectChordTrack?: boolean;
+    }
   ) => Promise<CompositionPlan | null>;
   startGenerationFromPlan: (plan: CompositionPlan, engine?: string) => Promise<boolean>;
   cancelActiveGeneration: () => Promise<void>;
@@ -1206,6 +1232,123 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     [showToast]
   );
 
+  const pollAnalysisOrTranscriptionJob = useCallback(
+    (projectId: string, job: AnalysisJobStatus, doneMessage: string) => {
+      setActiveAnalysisJob(job);
+      const jobId = job.jobId;
+      const poll = async () => {
+        try {
+          const st = await dawApi.getAnalysisJob(jobId);
+          setActiveAnalysisJob(st);
+          if (st.status === "completed") {
+            const reloaded = await dawApi.openProject(projectId);
+            setProject((prev) => {
+              if (!prev || prev.id !== reloaded.id) return prev;
+              const next = { ...prev, revision: reloaded.revision, references: reloaded.references };
+              setSavedRevision(reloaded.revision);
+              setSavedFingerprint(projectFingerprint(next));
+              return next;
+            });
+            showToast(doneMessage);
+          } else if (st.status === "failed" || st.status === "cancelled") {
+            showToast(st.error || "분석/채보가 취소되었습니다.", st.status === "failed" ? "error" : "info");
+          } else {
+            window.setTimeout(() => void poll(), 400);
+          }
+        } catch {
+          setActiveAnalysisJob(null);
+        }
+      };
+      window.setTimeout(() => void poll(), 250);
+    },
+    [showToast]
+  );
+
+  const runReferenceTranscription = useCallback(
+    async (refId: string, useDemucs = true) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const started = await dawApi.startReferenceTranscription(current.id, refId, {
+          sync: false,
+          useDemucs,
+        });
+        if (started.job) {
+          pollAnalysisOrTranscriptionJob(
+            current.id,
+            started.job,
+            "정밀 채보 완료 (Demucs 스템 + Basic Pitch + 코드/드럼 Blueprint v2)"
+          );
+        }
+      } catch (err) {
+        showToast(`Transcription failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [pollAnalysisOrTranscriptionJob, showToast]
+  );
+
+  const updateReferenceLocks = useCallback(
+    async (
+      refId: string,
+      body: { featureLocks?: Record<string, string>; chordCorrections?: ChordEvent[] }
+    ) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        const res = await dawApi.updateReferenceLocks(current.id, refId, body);
+        setSavedRevision(res.projectRevision);
+        setProject((prev) => {
+          if (!prev) return prev;
+          const next: Project = {
+            ...prev,
+            revision: res.projectRevision,
+            references: (prev.references ?? []).map((r) => (r.id === refId ? res.reference : r)),
+          };
+          setSavedFingerprint(projectFingerprint(next));
+          return next;
+        });
+        if (body.chordCorrections) showToast("레퍼런스 코드 수정이 Blueprint v2에 반영되었습니다.");
+      } catch (err) {
+        showToast(`Reference lock update failed: ${(err as Error).message}`, "error");
+      }
+    },
+    [showToast]
+  );
+
+  const reconstructReference = useCallback(
+    async (
+      refId: string,
+      opts?: {
+        importChords?: boolean;
+        importDrumsMidi?: boolean;
+        importBassMidi?: boolean;
+        importMelodyMidi?: boolean;
+        importStems?: boolean;
+        importSections?: boolean;
+        applyBpm?: boolean;
+      }
+    ) => {
+      const current = projectRef.current;
+      if (!current) return;
+      try {
+        if (projectFingerprint(current) !== savedFingerprint) {
+          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          setSavedRevision(saved.revision);
+          setSavedFingerprint(projectFingerprint(saved));
+          setProject(saved);
+        }
+        const res = await dawApi.reconstructReference(current.id, refId, opts ?? {});
+        applyExternalProjectUpdate(
+          res.project,
+          `레퍼런스 가져오기 완료: ${res.importedItems.join(", ")} (Cmd+Z / Undo 지원)`
+        );
+      } catch (err) {
+        showToast(`재구성 실패: ${(err as Error).message}`, "error");
+      }
+    },
+    [applyExternalProjectUpdate, savedFingerprint, showToast]
+  );
+
   const activeReference = useMemo(() => {
     if (!project || !project.references?.length) return null;
     if (activeReferenceId) {
@@ -1406,6 +1549,14 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         });
         if (res.action === "analyze_reference" && res.referenceId) {
           await runReferenceAnalysis(res.referenceId);
+        } else if (res.action === "transcription_started" && res.job) {
+          pollAnalysisOrTranscriptionJob(
+            current.id,
+            res.job,
+            "정밀 채보 완료 (Demucs + Basic Pitch + 코드/드럼 Blueprint v2)"
+          );
+        } else if (res.action === "reference_reconstructed" && res.project) {
+          applyExternalProjectUpdate(res.project, res.messageKo || "레퍼런스 재구성 완료");
         } else if (res.action === "proposal_created" && res.proposal) {
           setPendingProposals((prev) =>
             prev.some((p) => p.id === res.proposal!.id) ? prev : [...prev, res.proposal!]
@@ -1429,7 +1580,15 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
     },
-    [selection, activeReference?.id, savedFingerprint, runReferenceAnalysis, showToast]
+    [
+      selection,
+      activeReference?.id,
+      savedFingerprint,
+      runReferenceAnalysis,
+      pollAnalysisOrTranscriptionJob,
+      applyExternalProjectUpdate,
+      showToast,
+    ]
   );
 
   // --- Phase 03 AI Composition Engine Store Actions ---
@@ -1450,7 +1609,15 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
   const requestCompositionPlan = useCallback(
     async (
       instruction: string,
-      opts?: { mode?: string; targetInstrument?: string; useReference?: boolean; enginePreference?: string }
+      opts?: {
+        mode?: string;
+        targetInstrument?: string;
+        useReference?: boolean;
+        enginePreference?: string;
+        featureLocks?: Record<string, string>;
+        referenceMode?: "reconstruct" | "reference_compose" | "reinterpret";
+        useProjectChordTrack?: boolean;
+      }
     ): Promise<CompositionPlan | null> => {
       const current = projectRef.current;
       if (!current || !instruction.trim()) return null;
@@ -1468,6 +1635,9 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
           targetInstrument: opts?.targetInstrument,
           referenceIds: useRef && activeReference ? [activeReference.id] : [],
           selectedInfluences: useRef && activeReference ? activeReference.selectedInfluences : undefined,
+          featureLocks: opts?.featureLocks ?? (useRef ? activeReference?.featureLocks : undefined),
+          referenceMode: opts?.referenceMode ?? "reference_compose",
+          useProjectChordTrack: opts?.useProjectChordTrack ?? Boolean(current.chordTrackLocked),
           selection,
           enginePreference: opts?.enginePreference,
         });
@@ -1869,8 +2039,11 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
     addReferenceUrl,
     deleteReference,
     runReferenceAnalysis,
+    runReferenceTranscription,
     cancelReferenceAnalysis,
     toggleBlueprintInfluence,
+    updateReferenceLocks,
+    reconstructReference,
     sessionId,
     sseConnected,
     pendingProposals,

@@ -5,7 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from .schema import Clip, LoopRegion, MidiNote, Project, SectionMarker, TimeSignature, Track, make_id, utc_now_iso
+from .schema import ChordEvent, Clip, LoopRegion, MidiNote, Project, SectionMarker, TimeSignature, Track, make_id, utc_now_iso
 
 TRACK_PALETTE = [
     "#6a997c",  # sage green
@@ -354,6 +354,36 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
     elif cmd_type == "section.remove":
         sec_id = str(payload["sectionId"])
         p.sections = [s for s in p.sections if s.id != sec_id]
+
+    elif cmd_type == "chord.setTrack":
+        raw_chords = payload.get("chords") or []
+        p.chordTrack = [ChordEvent(**c) for c in raw_chords]
+        p.chordTrack.sort(key=lambda c: (c.startBeat, c.endBeat))
+        if "locked" in payload:
+            p.chordTrackLocked = bool(payload["locked"])
+
+    elif cmd_type == "chord.upsert":
+        c_data = dict(payload.get("chord") or payload)
+        c_data.setdefault("id", make_id("chd"))
+        ev = ChordEvent(**c_data)
+        p.chordTrack = [c for c in p.chordTrack if c.id != ev.id] + [ev]
+        p.chordTrack.sort(key=lambda c: (c.startBeat, c.endBeat))
+
+    elif cmd_type == "chord.delete":
+        cid = str(payload["chordId"])
+        p.chordTrack = [c for c in p.chordTrack if c.id != cid]
+
+    elif cmd_type == "chord.setLocked":
+        if payload.get("chordId"):
+            cid = str(payload["chordId"])
+            for c in p.chordTrack:
+                if c.id == cid:
+                    c.locked = bool(payload["locked"])
+                    break
+            else:
+                raise ValueError(f"ChordEvent not found: {cid}")
+        else:
+            p.chordTrackLocked = bool(payload["locked"])
 
     else:
         raise ValueError(f"Unsupported DAW command: {cmd_type}")
