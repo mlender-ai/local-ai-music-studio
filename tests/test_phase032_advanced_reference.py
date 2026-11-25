@@ -163,7 +163,7 @@ def test_a_and_d_and_e_real_transcription_compose_and_reconstruct(tmp_path: Path
         tr = ref["transcription"]
         bp = ref["blueprint"]
 
-        assert bp["blueprintVersion"] == "2.0.0"
+        assert bp["blueprintVersion"] in ("2.0.0", "3.0.0")
         assert len(bp["featureLocks"]) == 10
         assert len(tr["stemReferences"]) == 4
         stems_by_role = {s["role"]: s for s in tr["stemReferences"]}

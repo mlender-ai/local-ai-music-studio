@@ -81,6 +81,8 @@ class ChordEvent(DawModel):
     sourceReferenceId: str | None = None
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     isEstimate: bool = False
+    isPassing: bool = False
+    candidates: list[dict[str, Any]] = Field(default_factory=list)
     userCorrected: bool = False
     locked: bool = False
 

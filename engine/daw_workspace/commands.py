@@ -373,6 +373,54 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
         cid = str(payload["chordId"])
         p.chordTrack = [c for c in p.chordTrack if c.id != cid]
 
+    elif cmd_type == "chord.split":
+        cid = str(payload["chordId"])
+        split_beat = float(payload["splitBeat"])
+        idx = next((i for i, c in enumerate(p.chordTrack) if c.id == cid), None)
+        if idx is None:
+            raise ValueError(f"ChordEvent not found: {cid}")
+        orig = p.chordTrack[idx]
+        if split_beat <= orig.startBeat + 0.125 or split_beat >= orig.endBeat - 0.125:
+            raise ValueError("splitBeat must fall strictly inside chord bounds")
+        right_symbol = str(payload.get("rightSymbol") or orig.symbol).strip()
+        right_root = str(payload.get("rightRoot") or orig.root)
+        right_quality = str(payload.get("rightQuality") or orig.quality)
+        right_ev = ChordEvent(
+            id=payload.get("rightChordId") or make_id("chd"),
+            symbol=right_symbol,
+            root=right_root,
+            quality=right_quality,
+            extension=payload.get("rightExtension", orig.extension),
+            bassNote=payload.get("rightBassNote", orig.bassNote),
+            startBeat=round(split_beat, 4),
+            endBeat=orig.endBeat,
+            sourceReferenceId=orig.sourceReferenceId,
+            confidence=orig.confidence,
+            isEstimate=False,
+            userCorrected=True,
+            locked=orig.locked,
+        )
+        orig.endBeat = round(split_beat, 4)
+        orig.userCorrected = True
+        p.chordTrack.insert(idx + 1, right_ev)
+        p.chordTrack.sort(key=lambda c: (c.startBeat, c.endBeat))
+
+    elif cmd_type == "chord.merge":
+        left_id = str(payload["leftChordId"])
+        right_id = str(payload["rightChordId"])
+        left = next((c for c in p.chordTrack if c.id == left_id), None)
+        right = next((c for c in p.chordTrack if c.id == right_id), None)
+        if not left or not right or left.id == right.id:
+            raise ValueError("Valid distinct leftChordId and rightChordId are required")
+        first, second = (left, right) if left.startBeat <= right.startBeat else (right, left)
+        first.endBeat = max(first.endBeat, second.endBeat)
+        if payload.get("symbol"):
+            first.symbol = str(payload["symbol"]).strip()
+        first.userCorrected = True
+        first.isPassing = False
+        p.chordTrack = [c for c in p.chordTrack if c.id != second.id]
+        p.chordTrack.sort(key=lambda c: (c.startBeat, c.endBeat))
+
     elif cmd_type == "chord.setLocked":
         if payload.get("chordId"):
             cid = str(payload["chordId"])

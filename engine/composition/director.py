@@ -330,6 +330,8 @@ def create_composition_plan(
     selected_influences: list[str] | None = None,
     per_reference_influences: dict[str, list[str]] | None = None,
     feature_locks: dict[str, str] | None = None,
+    feature_source_map: dict[str, str] | None = None,
+    bass_lock_mode: str = "rhythm_and_duration",
     reference_mode: str = "reference_compose",  # "reconstruct" | "reference_compose" | "reinterpret"
     use_project_chord_track: bool = False,
     selection: dict[str, Any] | None = None,
@@ -344,6 +346,8 @@ def create_composition_plan(
         explicit_influences=selected_influences,
         per_reference_influences=per_reference_influences,
         feature_locks=feature_locks,
+        feature_source_map=feature_source_map,
+        bass_lock_mode=bass_lock_mode,
         target_engine=engine_preference,
         reference_mode=reference_mode,
         use_project_chord_track=use_project_chord_track,

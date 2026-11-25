@@ -22,6 +22,8 @@ class ReferenceBinding(CompModel):
     traceabilityNote: str = ""
     featureLifecycle: list[dict[str, Any]] = Field(default_factory=list)
     perReferenceBindings: list[dict[str, Any]] = Field(default_factory=list)
+    featureSourceMap: dict[str, str] = Field(default_factory=dict)
+    conflicts: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PlannedSection(CompModel):

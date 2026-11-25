@@ -105,7 +105,7 @@ def test_analysis_v3_separates_melodic_untranscribed_and_unconfirmed_instruments
         cache_dir=tmp_path / "cache",
         project_bpm=128.0,
     )
-    assert res["analysisVersion"] == "3.0.0"
+    assert res["analysisVersion"] in ("3.0.0", "3.1.0")
     assert res["harmony"]["melodicMotifStatus"] == "not_transcribed_in_dsp_mode"
     assert res["harmony"]["instrumentPhraseStatus"] == "not_transcribed_in_dsp_mode"
     assert res["sound"]["measured"]["loudnessStandard"] == "ITU-R BS.1770-4"

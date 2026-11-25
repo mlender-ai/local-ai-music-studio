@@ -768,6 +768,8 @@ class CreateCompositionPlanBody(BaseModel):
     referenceIds: list[str] | None = None
     selectedInfluences: list[str] | None = None
     featureLocks: dict[str, str] | None = None
+    featureSourceMap: dict[str, str] | None = None
+    bassLockMode: str = "rhythm_and_duration"
     referenceMode: str = "reference_compose"
     useProjectChordTrack: bool = False
     selection: dict[str, Any] | None = None
@@ -783,6 +785,8 @@ class StartGenerationBody(BaseModel):
     referenceIds: list[str] | None = None
     selectedInfluences: list[str] | None = None
     featureLocks: dict[str, str] | None = None
+    featureSourceMap: dict[str, str] | None = None
+    bassLockMode: str = "rhythm_and_duration"
     referenceMode: str = "reference_compose"
     useProjectChordTrack: bool = False
     selection: dict[str, Any] | None = None
@@ -862,6 +866,8 @@ def api_create_composition_plan(project_id: str, body: CreateCompositionPlanBody
         provider_id=body.providerId,
         engine_preference=body.enginePreference,
         feature_locks=body.featureLocks,
+        feature_source_map=body.featureSourceMap,
+        bass_lock_mode=body.bassLockMode,
         reference_mode=body.referenceMode,
         use_project_chord_track=body.useProjectChordTrack,
     )
@@ -896,6 +902,8 @@ def api_start_generation_job(project_id: str, body: StartGenerationBody) -> dict
             selection=body.selection,
             engine_preference=body.engine,
             feature_locks=body.featureLocks,
+            feature_source_map=body.featureSourceMap,
+            bass_lock_mode=body.bassLockMode,
             reference_mode=body.referenceMode,
             use_project_chord_track=body.useProjectChordTrack,
         )
