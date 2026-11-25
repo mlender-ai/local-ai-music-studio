@@ -842,6 +842,48 @@ def api_get_instruments() -> dict[str, Any]:
     return {"instruments": list_instruments()}
 
 
+@app.get("/api/instruments/catalog")
+def api_get_instruments_catalog() -> dict[str, Any]:
+    from engine.instruments import get_instrument_catalog, probe_fluidsynth_engine
+
+    return {
+        "instruments": get_instrument_catalog(),
+        "fluidsynth": probe_fluidsynth_engine(),
+    }
+
+
+class InstrumentPreviewBody(BaseModel):
+    instrumentRef: str = Field(min_length=1, max_length=120)
+    presetId: str | None = None
+    parameters: dict[str, Any] | None = None
+
+
+@app.post("/api/instruments/preview")
+def api_preview_instrument(body: InstrumentPreviewBody):
+    import io
+    import numpy as np
+    import soundfile as sf
+    from fastapi.responses import Response
+    from engine.instruments import render_instrument_preview
+
+    pcm = render_instrument_preview(
+        body.instrumentRef,
+        preset_id=body.presetId,
+        params=body.parameters,
+        sr=44100,
+    )
+    buf = io.BytesIO()
+    sf.write(buf, np.clip(pcm, -1.0, 1.0), 44100, format="WAV", subtype="PCM_16")
+    return Response(content=buf.getvalue(), media_type="audio/wav")
+
+
+@app.get("/api/plugins/scan")
+def api_scan_host_plugins(probeExternal: bool = True) -> dict[str, Any]:
+    from engine.instruments import scan_host_plugins
+
+    return scan_host_plugins(probe_external=probeExternal)
+
+
 @app.get("/api/generation/engines")
 def api_get_generation_engines() -> dict[str, Any]:
     return {"engines": detect_generation_engines()}
