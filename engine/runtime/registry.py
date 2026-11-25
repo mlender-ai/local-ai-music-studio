@@ -484,6 +484,50 @@ def get_runtime_registry() -> dict[str, Any]:
         ),
     }
 
+    # Phase 05 Professional Audio Engines (Spotify Pedalboard + FluidSynth SF3/SF2)
+    has_pb = importlib.util.find_spec("pedalboard") is not None
+    pedalboard_entry = {
+        "id": "spotify-pedalboard",
+        "name": "Spotify Pedalboard C++ DSP & AU/VST3 Host",
+        "kind": "audio-fx-and-host",
+        "category": "professional_dsp",
+        "state": "verified" if has_pb else "uninstalled",
+        "available": has_pb,
+        "verified": has_pb,
+        "license": "GPL-3.0",
+        "capabilities": ["parametric_eq", "compressor", "limiter", "reverb", "convolution_ir", "delay", "chorus", "phaser", "distortion", "ladder_filter", "au_vst3_host"],
+        "statusNoteKo": "Spotify Pedalboard C++ DSP 및 AU/VST3 호스트 준비됨." if has_pb else "Pedalboard 미설치 (`uv pip install pedalboard`).",
+        "statusNoteEn": "Spotify Pedalboard C++ DSP & AU/VST3 host ready." if has_pb else "Pedalboard not installed.",
+    }
+
+    sf3_path = engine_paths.ROOT / "outputs" / "daw" / "soundfonts" / "MuseScore_General.sf3"
+    has_fs_bin = bool(shutil.which("fluidsynth") or Path("/opt/homebrew/bin/fluidsynth").is_file())
+    has_fs_lib = Path("/opt/homebrew/lib/libfluidsynth.dylib").is_file() or Path("/usr/local/lib/libfluidsynth.dylib").is_file()
+    has_pyfs = importlib.util.find_spec("fluidsynth") is not None
+    has_fs = (has_fs_bin or (has_pyfs and has_fs_lib)) and sf3_path.is_file()
+    fluidsynth_entry = {
+        "id": "fluidsynth-sf3",
+        "name": "FluidSynth Multi-Sampled SF3/SF2 Engine (MuseScore General MIT)",
+        "kind": "instrument-engine",
+        "category": "professional_instruments",
+        "state": "verified" if has_fs else ("binary_found" if (has_fs_bin or has_pyfs) else "uninstalled"),
+        "available": has_fs,
+        "verified": has_fs,
+        "license": "LGPL-2.1 (FluidSynth) + MIT (MuseScore_General.sf3)",
+        "soundfontPath": str(sf3_path) if sf3_path.is_file() else None,
+        "capabilities": ["multi_sampled_piano", "electric_piano", "organ", "acoustic_guitar", "electric_guitar", "electric_bass", "acoustic_drums", "electronic_drums", "strings"],
+        "statusNoteKo": (
+            "FluidSynth + MuseScore General SF3(MIT) 멀티샘플 가상악기 엔진 준비됨."
+            if has_fs
+            else "FluidSynth 또는 MuseScore_General.sf3 미설치."
+        ),
+        "statusNoteEn": (
+            "FluidSynth + MuseScore_General.sf3 (MIT) multi-sampled instrument engine ready."
+            if has_fs
+            else "FluidSynth or MuseScore_General.sf3 missing."
+        ),
+    }
+
     neural_ready = any(e["available"] for e in (yue2, acestep))
     return {
         "configPath": str(_local_config_path()),
@@ -492,6 +536,8 @@ def get_runtime_registry() -> dict[str, Any]:
         "editableMidiReady": True,
         "stemSeparationReady": demucs["available"],
         "transcriptionReady": basic_pitch_entry["available"],
+        "proDspReady": has_pb,
+        "proSoundfontReady": has_fs,
         "vocalQaModels": vocal_qa,
-        "engines": [yue2, acestep, demucs, basic_pitch_entry, sheetsage2_entry, allin1_entry, yourmt3_entry, local_midi],
+        "engines": [yue2, acestep, demucs, basic_pitch_entry, pedalboard_entry, fluidsynth_entry, sheetsage2_entry, allin1_entry, yourmt3_entry, local_midi],
     }

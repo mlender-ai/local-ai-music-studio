@@ -847,6 +847,38 @@ def api_get_generation_engines() -> dict[str, Any]:
     return {"engines": detect_generation_engines()}
 
 
+@app.get("/api/generation/golden-references")
+def api_get_golden_references() -> dict[str, Any]:
+    from engine.generation.golden_references import YUE2_RECOVERY_GUIDE, list_golden_references
+
+    return {
+        "goldenReferences": list_golden_references(),
+        "yue2RecoveryGuide": YUE2_RECOVERY_GUIDE,
+    }
+
+
+class HybridLayerBody(BaseModel):
+    goldenReferenceId: str | None = None
+    sourceAssetId: str | None = None
+    layerRoles: list[str] | None = None
+    instruction: str = "원본 네이티브 오디오를 보존하면서 어울리는 MIDI 레이어를 추가해줘"
+    bars: int = Field(default=8, ge=2, le=64)
+
+
+@app.post("/api/projects/{project_id}/hybrid/layer")
+def api_create_hybrid_layer(project_id: str, body: HybridLayerBody) -> dict[str, Any]:
+    from engine.generation.golden_references import create_hybrid_session
+
+    return create_hybrid_session(
+        project_id=project_id,
+        golden_reference_id=body.goldenReferenceId,
+        source_asset_id=body.sourceAssetId,
+        layer_roles=body.layerRoles,
+        instruction=body.instruction,
+        bars=body.bars,
+    )
+
+
 @app.get("/api/library/catalog")
 def api_get_library_catalog(projectBpm: float | None = None) -> dict[str, Any]:
     return {"items": list_library_catalog(project_bpm=projectBpm)}
