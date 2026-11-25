@@ -26,7 +26,7 @@ from scipy import ndimage, signal
 from .loudness import measure_loudness
 from .schema import make_id, utc_now_iso
 
-ANALYSIS_VERSION = "3.0.0"
+ANALYSIS_VERSION = "3.1.0"
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
@@ -54,10 +54,11 @@ def resolve_octave_tempo_relation(bpm_a: float | None, bpm_b: float | None) -> d
     return {"compatible": False, "relation": "different_tempo", "effectiveDeltaBpm": direct_delta, "normalizedTargetBpm": bpm_b}
 
 
-def _load_audio_bounded(path: Path, max_duration_sec: float = 360.0) -> tuple[np.ndarray, int]:
+def _load_audio_bounded(path: Path, max_duration_sec: float = 600.0) -> tuple[np.ndarray, int, dict[str, Any]]:
     info = sf.info(str(path))
     if info.frames <= 0 or info.samplerate <= 0:
         raise ValueError("Audio file contains no readable PCM frames")
+    orig_sec = float(info.frames) / float(info.samplerate)
     max_frames = int(min(info.frames, max_duration_sec * info.samplerate))
     data, sr = sf.read(str(path), frames=max_frames, dtype="float32", always_2d=True)
     if data.shape[1] == 1:
@@ -66,7 +67,15 @@ def _load_audio_bounded(path: Path, max_duration_sec: float = 360.0) -> tuple[np
         data = data[:, :2]
     if not np.isfinite(data).all():
         data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
-    return data, int(sr)
+    analyzed_sec = len(data) / float(sr)
+    coverage = {
+        "originalDurationSec": round(orig_sec, 3),
+        "analyzedDurationSec": round(analyzed_sec, 3),
+        "coveragePct": round(min(100.0, (analyzed_sec / max(1e-6, orig_sec)) * 100.0), 2),
+        "isComplete": analyzed_sec >= orig_sec - 0.15,
+        "truncated": analyzed_sec < orig_sec - 0.15,
+    }
+    return data, int(sr), coverage
 
 
 def _downsample_mono(stereo: np.ndarray, sr: int, target_sr: int = 12000) -> tuple[np.ndarray, int]:
@@ -205,6 +214,63 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int, project_bpm: float | None
             offbeat_phases.append(rel)
     swing_ratio = round(float(np.median(offbeat_phases)), 3) if len(offbeat_phases) >= 6 else 0.50
 
+    # Phase 03.2.1: Actual acoustic Beat Grid vs Fixed BPM Grid (local onset tracking around nominal beats)
+    search_rad_frames = max(2, int(round(beat_period * 0.14 * flux_rate)))
+    actual_beat_grid: list[dict[str, Any]] = []
+    fixed_bpm_grid: list[dict[str, Any]] = []
+    local_bpms: list[float] = []
+    prev_actual_t: float | None = None
+    for i, nom_t in enumerate(beat_grid):
+        nom_frame = min(len(flux_norm) - 1, max(0, int(round(nom_t * flux_rate))))
+        lo_f = max(0, nom_frame - search_rad_frames)
+        hi_f = min(len(flux_norm), nom_frame + search_rad_frames + 1)
+        win = flux_norm[lo_f:hi_f]
+        if len(win) > 0:
+            # Bias slightly toward nominal beat center when flux is flat
+            offsets = np.arange(lo_f, hi_f) - nom_frame
+            gauss = np.exp(-0.5 * (offsets / max(1.0, search_rad_frames * 0.65)) ** 2)
+            scored = win * (0.75 + 0.25 * gauss)
+            best_rel = int(np.argmax(scored))
+            peak_val = float(win[best_rel])
+            actual_t = round(float((lo_f + best_rel) / flux_rate), 4) if peak_val >= 0.08 else round(nom_t, 4)
+            beat_conf = round(float(np.clip(peak_val, 0.0, 1.0)), 3)
+        else:
+            actual_t = round(nom_t, 4)
+            beat_conf = 0.0
+        if prev_actual_t is not None and actual_t > prev_actual_t + 0.15:
+            lbpm = round(60.0 / (actual_t - prev_actual_t), 2)
+            if 40.0 <= lbpm <= 240.0:
+                local_bpms.append(lbpm)
+        else:
+            lbpm = round(float(bpm_for_grid), 2)
+        prev_actual_t = actual_t
+        bar_idx = (i // bpb) + 1
+        beat_in_bar = (i % bpb) + 1
+        actual_beat_grid.append(
+            {
+                "beatIndex": i,
+                "barIndex": bar_idx,
+                "beatInBar": beat_in_bar,
+                "timeSeconds": actual_t,
+                "localBpm": lbpm,
+                "isDownbeat": beat_in_bar == 1,
+                "confidence": beat_conf,
+            }
+        )
+        fixed_bpm_grid.append(
+            {
+                "beatIndex": i,
+                "barIndex": bar_idx,
+                "beatInBar": beat_in_bar,
+                "timeSeconds": round(nom_t, 4),
+                "localBpm": round(float(bpm_for_grid), 2),
+                "isDownbeat": beat_in_bar == 1,
+            }
+        )
+
+    tempo_var_std = round(float(np.std(local_bpms)), 2) if len(local_bpms) >= 4 else 0.0
+    tempo_stability = "steady" if tempo_var_std <= 2.2 else ("slight_drift" if tempo_var_std <= 6.0 else "expressive_rubato")
+
     return {
         "measuredPulseBpm": measured_pulse,
         "estimatedBpm": adopted,  # backward-compatible field carrying musical adopted tempo
@@ -220,8 +286,15 @@ def _analyze_rhythm(mono_12k: np.ndarray, sr_12k: int, project_bpm: float | None
         "grooveFeel": "swung" if swing_ratio >= 0.56 else ("pushed" if swing_ratio <= 0.45 else "straight"),
         "regularity": confidence,
         "rhythmicMotifRegularity": confidence,
-        "beatGridSec": beat_grid[:256],
-        "downbeatsSec": downbeats[:64],
+        "beatGridSec": beat_grid,
+        "downbeatsSec": downbeats,
+        "actualBeatGrid": actual_beat_grid,
+        "fixedBpmGrid": fixed_bpm_grid,
+        "tempoVariationBpmStd": tempo_var_std,
+        "tempoStability": tempo_stability,
+        "dawFixedBpmApproximationNote": (
+            f"실측 비트 그리드(표준편차 ±{tempo_var_std} BPM, {tempo_stability})와 DAW 고정 BPM 그리드({round(bpm_for_grid, 1)} BPM)를 분리 보존합니다."
+        ),
         "onsetCount": len(onset_times),
         "accentPattern": [round(float(v), 3) for v in accents],
         "assessment": "half_double_resolved" if (ambiguous and adopted) else ("estimated" if strong else "uncertain"),
@@ -609,7 +682,7 @@ def analyze_audio_file(
 
     if progress_cb:
         progress_cb(10, "decoding_audio")
-    stereo, sr = _load_audio_bounded(audio_path)
+    stereo, sr, analysis_coverage = _load_audio_bounded(audio_path)
     check_cancel()
 
     if progress_cb:
@@ -644,6 +717,7 @@ def analyze_audio_file(
         "analyzedAt": utc_now_iso(),
         "fromCache": False,
         "durationSec": arrangement["durationSec"],
+        "analysisCoverage": analysis_coverage,
         "rhythm": rhythm,
         "harmony": harmony,
         "arrangement": arrangement,

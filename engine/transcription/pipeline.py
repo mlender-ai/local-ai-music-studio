@@ -35,8 +35,13 @@ from .basic_pitch_transcriber import extract_melody_topline, transcribe_audio_ba
 from .chord_tracker import extract_chord_timeline
 from .drum_transcriber import transcribe_drum_groove
 from .sheetsage_adapter import build_yue2_abc_from_reference
+from .sound_profiler import (
+    analyze_bass_performance,
+    classify_instruments_honestly,
+    extract_sound_and_spatial_profile,
+)
 
-TRANSCRIPTION_VERSION = "4.0.0"
+TRANSCRIPTION_VERSION = "4.1.0"
 
 # Section 8: 10 Canonical Reference Feature Lock definitions
 FEATURE_LOCK_SPECS: list[dict[str, Any]] = [
@@ -84,21 +89,27 @@ def validate_feature_locks_for_engine(
                 f"'{spec['labelEn']}' cannot be faithfully matched by MIDI synth voices (tracked for post-comparison only)."
             )
         elif fid == "drum_rhythm" and req_state == "locked" and not has_transcribed_drums:
-            effective[fid] = "reference"
-            warnings_ko.append("드럼 채보 데이터가 없어 드럼 리듬을 완전 고정할 수 없습니다. 정밀 채보를 먼저 실행하세요.")
-            warnings_en.append("No transcribed drum events available for strict drum rhythm lock; run transcription first.")
+            effective[fid] = "unsupported"
+            warnings_ko.append("드럼 채보 데이터가 없어 드럼 리듬을 완전 고정할 수 없습니다. 정밀 채보를 먼저 실행하세요 (LOCK→REFERENCE 암묵 강등 없음).")
+            warnings_en.append("No transcribed drum events available for strict drum rhythm lock; run transcription first (never silently downgraded).")
         elif fid == "bass_groove" and req_state == "locked" and not has_transcribed_bass:
-            effective[fid] = "reference"
-            warnings_ko.append("베이스 채보 데이터가 없어 베이스 그루브를 완전 고정할 수 없습니다.")
-            warnings_en.append("No transcribed bass events available for strict bass groove lock.")
+            effective[fid] = "unsupported"
+            warnings_ko.append("베이스 채보 데이터가 없어 베이스 그루브를 완전 고정할 수 없습니다. 정밀 채보를 먼저 실행하세요.")
+            warnings_en.append("No transcribed bass events available for strict bass groove lock; run transcription first.")
         elif fid == "chord_progression" and req_state == "locked" and not has_chord_timeline:
-            effective[fid] = "reference"
-            warnings_ko.append("확정된 코드 타임라인이 없어 기본 키 기반 진행을 사용합니다.")
-            warnings_en.append("No chord timeline extracted yet; falling back to key-derived harmony.")
+            effective[fid] = "unsupported"
+            warnings_ko.append("확정된 코드 타임라인이 없어 코드 진행을 완전 고정할 수 없습니다. 정밀 채보 또는 코드 트랙을 먼저 설정하세요.")
+            warnings_en.append("No chord timeline available for strict chord lock; run transcription or set Chord Track first.")
         elif not is_midi and fid in ("drum_rhythm", "bass_groove") and req_state == "locked":
-            effective[fid] = "reference"
-            warnings_ko.append(f"신경망 오디오 엔진({engine_id})은 '{spec['labelKo']}'의 정확한 MIDI 타이밍 고정을 보장하지 않습니다 (Hybrid/MIDI 권장).")
-            warnings_en.append(f"Neural audio engine ({engine_id}) cannot guarantee exact note-level lock for '{spec['labelEn']}' (use Hybrid/MIDI).")
+            effective[fid] = "unsupported"
+            warnings_ko.append(
+                f"신경망 오디오 엔진({engine_id})은 '{spec['labelKo']}'의 음표 단위 완전 고정을 지원하지 않습니다. "
+                "Editable MIDI 또는 Hybrid 모드로 전환하세요."
+            )
+            warnings_en.append(
+                f"Neural audio engine ({engine_id}) cannot guarantee exact note-level lock for '{spec['labelEn']}' "
+                "(marked unsupported — switch to Editable MIDI or Hybrid mode instead)."
+            )
         else:
             effective[fid] = req_state
 
@@ -226,12 +237,20 @@ def build_reference_blueprint_v2(
 
     drums_tr = transcription.get("drums") or {}
     bass_tr = transcription.get("bass") or {}
+    bass_perf = transcription.get("bassPerformance") or {}
     melody_tr = transcription.get("melody") or {}
     other_tr = transcription.get("other") or {}
     chords = list(transcription.get("chordTimeline") or [])
     stems = transcription.get("stems") or {}
     arr_map = list(transcription.get("arrangementMap") or dsp_analysis.get("arrangement", {}).get("sections", []))
     abc_info = transcription.get("abcScore") or {}
+    sound_profiles = transcription.get("soundProfiles") or {}
+    inst_classes = transcription.get("instrumentClassifications") or []
+    analysis_cov = transcription.get("analysisCoverage") or dsp_analysis.get("analysisCoverage") or {}
+    drum_var_map = drums_tr.get("variationMap") or {}
+    full_quant_drums = list(drums_tr.get("quantizedMidiNotes") or [])
+    full_raw_drums = list(drums_tr.get("rawMidiNotes") or [])
+    full_bass_notes = list(bass_perf.get("notes") or bass_tr.get("notes") or [])
 
     locks = dict(DEFAULT_FEATURE_LOCKS)
     if existing_locks:
@@ -283,11 +302,13 @@ def build_reference_blueprint_v2(
     else:
         inst_estimates = list(dsp_analysis.get("instrumentation", {}).get("elements", []))
 
+    master_sp = (sound_profiles.get("master") or {}).get("spatialProfile") or {}
     return {
         **base_bp,
-        "blueprintVersion": "2.0.0",
+        "blueprintVersion": "3.0.0",
         "referenceId": ref_id,
         "sourceAudioHash": sha256,
+        "analysisCoverage": analysis_cov,
         "analysisModels": transcription.get("modelsUsed", []),
         "tempoMap": {
             "bpm": bpm_val,
@@ -295,10 +316,15 @@ def build_reference_blueprint_v2(
             "halfDoubleAmbiguous": rhythm.get("halfDoubleAmbiguous", False),
             "meter": rhythm.get("meterEstimate", "4/4"),
             "beatOffsetSec": (rhythm.get("beatGridSec") or [0.0])[0] if rhythm.get("beatGridSec") else 0.0,
+            "tempoVariationBpmStd": rhythm.get("tempoVariationBpmStd", 0.0),
+            "tempoStability": rhythm.get("tempoStability", "steady"),
+            "dawFixedBpmApproximationNote": rhythm.get("dawFixedBpmApproximationNote", ""),
         },
         "beatGrid": {
             "beatGridSec": rhythm.get("beatGridSec", []),
             "downbeatsSec": rhythm.get("downbeatsSec", []),
+            "actualBeatGrid": rhythm.get("actualBeatGrid", []),
+            "fixedBpmGrid": rhythm.get("fixedBpmGrid", []),
         },
         "chordTimeline": chords,
         "harmonicCharacter": {
@@ -307,6 +333,7 @@ def build_reference_blueprint_v2(
             "sampleChords": sample_chord_syms[:16] or base_bp.get("harmonicCharacter", {}).get("sampleChords", []),
             "chordEventCount": len(chords),
             "hasSubBarChanges": any((float(c.get("endBeat", 4.0)) - float(c.get("startBeat", 0.0))) < 3.9 for c in chords),
+            "hasPassingChords": any(bool(c.get("isPassing")) for c in chords),
         },
         "melodyEvents": {
             "transcribed": bool(melody_tr.get("noteCount", 0) > 0),
@@ -314,29 +341,50 @@ def build_reference_blueprint_v2(
             "pitchMin": melody_tr.get("pitchMin"),
             "pitchMax": melody_tr.get("pitchMax"),
             "meanConfidence": melody_tr.get("meanConfidence", 0.0),
-            "notes": list(melody_tr.get("notes", []))[:300],
+            "notes": list(melody_tr.get("notes", [])),
         },
         "drumEvents": {
             "transcribed": bool(drums_tr.get("hasDrums")),
             "sourceKind": drums_tr.get("sourceKind", "untranscribed"),
+            "analysisCoverage": drums_tr.get("analysisCoverage", analysis_cov),
+            "totalBars": drums_tr.get("totalBars", drum_var_map.get("totalBars", 0)),
             "hitCounts": drums_tr.get("hitCounts", {}),
-            "noteCount": len(drums_tr.get("quantizedMidiNotes", [])),
+            "noteCount": len(full_quant_drums),
             "fillBars": drums_tr.get("fillBars", []),
+            "breakdownBars": drums_tr.get("breakdownBars", []),
+            "cymbalReentryBars": drums_tr.get("cymbalReentryBars", []),
             "patternRepetitionBars": drums_tr.get("patternRepetitionBars", 1),
+            "variationMap": drum_var_map,
             "patternTemplate1Bar": drums_tr.get("patternTemplate1Bar", []),
             "patternTemplate2Bar": drums_tr.get("patternTemplate2Bar", []),
-            "quantizedNotes": list(drums_tr.get("quantizedMidiNotes", []))[:600],
-            "rawNotes": list(drums_tr.get("rawMidiNotes", []))[:600],
+            # Full bar-by-bar performance (NO 2-bar or 600-hit truncation!)
+            "quantizedNotes": full_quant_drums,
+            "rawNotes": full_raw_drums,
+        },
+        "drumPerformance": {
+            "totalBars": drums_tr.get("totalBars", drum_var_map.get("totalBars", 0)),
+            "analysisCoverage": drums_tr.get("analysisCoverage", analysis_cov),
+            "variationMap": drum_var_map,
+            "rawPerformance": full_raw_drums,
+            "quantizedPerformance": full_quant_drums,
+            "hitCounts": drums_tr.get("hitCounts", {}),
         },
         "bassEvents": {
-            "transcribed": bool(bass_tr.get("noteCount", 0) > 0),
-            "noteCount": int(bass_tr.get("noteCount", 0)),
-            "pitchMin": bass_tr.get("pitchMin"),
-            "pitchMax": bass_tr.get("pitchMax"),
+            "transcribed": bool(len(full_bass_notes) > 0),
+            "noteCount": len(full_bass_notes),
+            "pitchMin": bass_perf.get("pitchMin", bass_tr.get("pitchMin")),
+            "pitchMax": bass_perf.get("pitchMax", bass_tr.get("pitchMax")),
             "meanConfidence": bass_tr.get("meanConfidence", 0.0),
-            "notes": list(bass_tr.get("notes", []))[:400],
+            "syncopationScore": bass_perf.get("syncopationScore", 0.0),
+            "kickInteractionScore": bass_perf.get("kickInteractionScore"),
+            "octaveJumpCount": bass_perf.get("octaveJumpCount", 0),
+            "slideCandidateCount": bass_perf.get("slideCandidateCount", 0),
+            "variationMap": bass_perf.get("variationMap", []),
+            "notes": full_bass_notes,
         },
+        "bassPerformance": bass_perf,
         "instrumentEstimates": inst_estimates,
+        "instrumentClassifications": inst_classes,
         "stemReferences": transcription.get("stemReferences", []),
         "arrangementMap": arr_map,
         "arrangementTimeline": arr_map,
@@ -355,10 +403,12 @@ def build_reference_blueprint_v2(
             "integratedLufs": sound_m.get("integratedLufs"),
             "truePeakDbtp": sound_m.get("truePeakDbtp"),
         },
+        "soundProfiles": sound_profiles,
         "spatialProfile": {
             "stereoWidth": sound_m.get("stereoWidth", 0.0),
             "lrCorrelation": sound_m.get("lrCorrelation", 1.0),
             "reverbCharacter": sound_e.get("reverbCharacter", "balanced room"),
+            **master_sp,
         },
         "abcScore": abc_info,
         "featureLocks": locks,
@@ -384,8 +434,24 @@ def build_reference_blueprint_v2(
         },
         "userCorrections": corr,
         "provenanceSeparation": {
-            "measured": ["tempoMap.measuredPulseBpm", "beatGrid", "timbreProfile.frequencyBandsPct", "timbreProfile.integratedLufs", "spatialProfile.stereoWidth", "stemReferences.rmsDbfs"],
-            "estimated": ["chordTimeline (unless userCorrected)", "melodyEvents", "drumEvents", "bassEvents", "arrangementMap", "instrumentEstimates"],
+            "measured": [
+                "analysisCoverage",
+                "tempoMap.measuredPulseBpm",
+                "beatGrid.actualBeatGrid",
+                "timbreProfile.frequencyBandsPct",
+                "timbreProfile.integratedLufs",
+                "soundProfiles",
+                "spatialProfile",
+                "stemReferences.rmsDbfs",
+            ],
+            "estimated": [
+                "chordTimeline (unless userCorrected)",
+                "melodyEvents",
+                "drumPerformance",
+                "bassPerformance",
+                "arrangementMap",
+                "instrumentClassifications",
+            ],
             "userCorrected": list(corr.keys()),
         },
     }
@@ -556,9 +622,9 @@ def transcribe_reference_audio(
     models_used.append({"id": "basic-pitch-onnx", "role": "Polyphonic Bass & Melody MIDI Transcription", "license": "Apache-2.0"})
     check_cancel()
 
-    # Step 5: Sub-bar Chord Track from Bass + Other harmonic stems
+    # Step 5: Sub-bar 15-Quality Chord Track from Bass + Other harmonic stems
     if progress_cb:
-        progress_cb(84, "chord_track_extraction")
+        progress_cb(82, "chord_track_extraction")
     chord_timeline = extract_chord_timeline(
         audio_path,
         bpm=bpm,
@@ -567,15 +633,42 @@ def transcribe_reference_audio(
         source_reference_id=ref_id,
         bass_stem_path=stem_paths.get("bass"),
         other_stem_path=stem_paths.get("other"),
-        slice_beats=2.0,
+        slice_beats=1.0,
     )
-    models_used.append({"id": "harmonic-viterbi-chords-v1", "role": "Sub-bar Chord & Inversion Track", "license": "MIT"})
+    models_used.append({"id": "harmonic-viterbi-chords-v2", "role": "15-Quality Sub-bar Chord, Passing Chord & Inversion Track", "license": "MIT"})
 
-    # Step 6: Enrich Arrangement Map with real per-stem entry/exit activity + build YuE2 ABC score!
+    # Step 6: Full-Length Bass Performance, Sound/Spatial Profiles & Honest Instrument Classification
     if progress_cb:
-        progress_cb(94, "arrangement_map_and_abc")
+        progress_cb(90, "sound_spatial_and_performance_profiles")
+    bass_perf = analyze_bass_performance(
+        bass_result.get("notes", []),
+        drum_notes=drum_result.get("quantizedMidiNotes", []),
+        bpb=bpb,
+        duration_sec=float(dsp.get("durationSec", 0.0)),
+        bpm=bpm,
+        coverage=dsp.get("analysisCoverage"),
+    )
+    sound_profiles: dict[str, Any] = {
+        "master": extract_sound_and_spatial_profile(audio_path, role="master", bpm=bpm),
+    }
+    for srole, spath in stem_paths.items():
+        if stem_analyses.get(srole, {}).get("active"):
+            sound_profiles[srole] = extract_sound_and_spatial_profile(spath, role=srole, bpm=bpm)
+
+    inst_classifications = classify_instruments_honestly(
+        stem_analyses=stem_analyses,
+        drum_result=drum_result,
+        bass_result=bass_result,
+        melody_result=melody_result,
+        other_result=other_result,
+        dsp_elements=list(dsp.get("instrumentation", {}).get("elements", [])),
+    )
+
+    # Step 7: Enrich Arrangement Map with real per-stem entry/exit activity + build YuE2 ABC score!
+    if progress_cb:
+        progress_cb(95, "arrangement_map_and_abc")
     arr_map = _enrich_arrangement_map_with_stems(base_sections, stem_analyses)
-    total_bars = max(4, min(32, int(math.ceil(dsp.get("durationSec", 16.0) / ((60.0 / bpm) * bpb)))))
+    total_bars = max(4, min(64, int(math.ceil(dsp.get("durationSec", 16.0) / ((60.0 / bpm) * bpb)))))
     abc_score = build_yue2_abc_from_reference(
         chord_timeline=chord_timeline,
         melody_notes=melody_notes,
@@ -592,6 +685,7 @@ def transcribe_reference_audio(
         "transcribedAt": utc_now_iso(),
         "fromCache": False,
         "sourceSha256": sha256,
+        "analysisCoverage": dsp.get("analysisCoverage"),
         "bpm": bpm,
         "key": key_str,
         "modelsUsed": models_used,
@@ -600,14 +694,17 @@ def transcribe_reference_audio(
         "chordTimeline": chord_timeline,
         "drums": drum_result,
         "bass": bass_result,
+        "bassPerformance": bass_perf,
         "other": other_result,
         "melody": melody_result,
+        "soundProfiles": sound_profiles,
+        "instrumentClassifications": inst_classifications,
         "arrangementMap": arr_map,
         "abcScore": abc_score,
         "limitationsKo": [
-            "Other 스템은 기타·건반·신스·패드가 혼합되어 있어 단일 악기로 단정하지 않습니다.",
-            "원본 믹스의 정확한 이펙터/EQ/리버브 플러그인 파라미터는 역산하지 않습니다.",
-            "SheetSage2(CC BY-NC 4.0) 및 YourMT3+는 미설치 상태로, Demucs + Basic Pitch ONNX + Multi-band Drum + Viterbi Chord 경로로 실행되었습니다.",
+            "Other 스템은 기타·건반·신스·패드가 혼합된 Mixed Harmonic Content이며 단일 스튜디오 악기로 단정하지 않습니다.",
+            "사운드·공간감 프로필은 음향 실측 기반 시작점 추정이며, 원본 믹스의 정확한 EQ/컴프레서/리버브 플러그인 파라미터를 역산하지 않습니다.",
+            "SheetSage2(CC BY-NC 4.0) 및 YourMT3+는 미설치 상태로, Demucs + Basic Pitch ONNX + Full-Length Multi-Band Drum + 15-Quality Viterbi Chord 경로로 실행되었습니다.",
         ],
     }
 
