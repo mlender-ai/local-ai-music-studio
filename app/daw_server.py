@@ -884,6 +884,99 @@ def api_scan_host_plugins(probeExternal: bool = True) -> dict[str, Any]:
     return scan_host_plugins(probe_external=probeExternal)
 
 
+@app.get("/api/fx/catalog")
+def api_get_fx_catalog() -> dict[str, Any]:
+    from engine.fx import list_fx_catalog
+
+    return {"effects": list_fx_catalog()}
+
+
+class EqCurveBody(BaseModel):
+    bands: list[dict[str, Any]]
+    outputGainDb: float = 0.0
+    sampleRate: int = 48000
+
+
+@app.post("/api/fx/eq-curve")
+def api_compute_eq_curve(body: EqCurveBody) -> dict[str, Any]:
+    from engine.fx import compute_eq_response_curve
+
+    return compute_eq_response_curve(body.bands, output_gain_db=body.outputGainDb, sr=body.sampleRate)
+
+
+@app.post("/api/projects/{project_id}/tracks/{track_id}/freeze")
+def api_freeze_track(project_id: str, track_id: str) -> dict[str, Any]:
+    from engine.fx import freeze_track
+
+    res = freeze_track(project_id, track_id)
+    session.event_bus.publish("project.updated", {"projectId": project_id, "revision": res["project"]["revision"], "source": "freeze"})
+    return res
+
+
+@app.post("/api/projects/{project_id}/tracks/{track_id}/unfreeze")
+def api_unfreeze_track(project_id: str, track_id: str) -> dict[str, Any]:
+    from engine.fx import unfreeze_track
+
+    res = unfreeze_track(project_id, track_id)
+    session.event_bus.publish("project.updated", {"projectId": project_id, "revision": res["project"]["revision"], "source": "unfreeze"})
+    return res
+
+
+class SamplerSliceBody(BaseModel):
+    assetId: str = Field(min_length=1)
+    sensitivity: float = Field(default=0.55, ge=0.1, le=0.95)
+    createMidiClip: bool = True
+
+
+@app.post("/api/projects/{project_id}/tracks/{track_id}/sampler/slice")
+def api_sampler_slice(project_id: str, track_id: str, body: SamplerSliceBody) -> dict[str, Any]:
+    from engine.instruments import slice_audio_by_transients
+
+    proj = store.load_project(project_id)
+    _, abs_path = store.resolve_asset_file(project_id, body.assetId)
+    sliced = slice_audio_by_transients(abs_path, bpm=proj.bpm, sensitivity=body.sensitivity)
+    updated = commands.apply_command(
+        proj,
+        "track.setInstrument",
+        {"trackId": track_id, "instrumentRef": "pro-sampler", "preset": "transient-slice"},
+    )
+    updated = commands.apply_command(
+        updated,
+        "instrument.setParams",
+        {
+            "trackId": track_id,
+            "parameters": {},
+            "samplerConfig": {
+                "audioAssetId": body.assetId,
+                "samplePath": str(abs_path),
+                "playbackMode": "one_shot",
+                "slices": sliced["slices"],
+            },
+        },
+    )
+    if body.createMidiClip and sliced["midiNotes"]:
+        bpb = updated.timeSignature.beats_per_bar
+        max_b = max(n["startBeat"] + n["durationBeats"] for n in sliced["midiNotes"])
+        dur_b = max(bpb, float(int((max_b + bpb - 0.01) // bpb) * bpb))
+        updated = commands.apply_command(
+            updated,
+            "clip.add",
+            {
+                "trackId": track_id,
+                "clip": {
+                    "name": f"{abs_path.stem[:24]} (Sliced)",
+                    "type": "midi",
+                    "timelineStartBeats": 0.0,
+                    "durationBeats": dur_b,
+                    "notes": sliced["midiNotes"],
+                },
+            },
+        )
+    saved = store.save_project(updated, clear_autosave=False)
+    session.event_bus.publish("project.updated", {"projectId": project_id, "revision": saved.revision, "source": "sampler_slice"})
+    return {"sliceResult": sliced, "project": saved.model_dump()}
+
+
 @app.get("/api/generation/engines")
 def api_get_generation_engines() -> dict[str, Any]:
     return {"engines": detect_generation_engines()}

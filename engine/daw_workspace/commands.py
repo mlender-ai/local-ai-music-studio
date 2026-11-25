@@ -132,6 +132,259 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
         trk = _find_track(p, str(payload["trackId"]))
         inst = payload.get("instrumentRef")
         trk.instrumentRef = str(inst).strip() if inst else None
+        if "preset" in payload:
+            trk.instrumentConfig = {**trk.instrumentConfig, "preset": payload["preset"]}
+        if "parameters" in payload and isinstance(payload["parameters"], dict):
+            cur_p = dict(trk.instrumentConfig.get("parameters") or {})
+            cur_p.update(payload["parameters"])
+            trk.instrumentConfig = {**trk.instrumentConfig, "parameters": cur_p}
+        trk.freezeState = None
+
+    elif cmd_type == "instrument.setPreset":
+        trk = _find_track(p, str(payload["trackId"]))
+        trk.instrumentConfig = {**trk.instrumentConfig, "preset": payload.get("preset")}
+        if isinstance(payload.get("parameters"), dict):
+            cur_p = dict(trk.instrumentConfig.get("parameters") or {})
+            cur_p.update(payload["parameters"])
+            trk.instrumentConfig["parameters"] = cur_p
+        trk.freezeState = None
+
+    elif cmd_type == "instrument.setParams":
+        trk = _find_track(p, str(payload["trackId"]))
+        cur_p = dict(trk.instrumentConfig.get("parameters") or {})
+        cur_p.update(dict(payload.get("parameters") or {}))
+        cfg = {**trk.instrumentConfig, "parameters": cur_p}
+        if "articulation" in payload:
+            cfg["articulation"] = str(payload["articulation"])
+        if "samplerConfig" in payload and isinstance(payload["samplerConfig"], dict):
+            cfg["samplerConfig"] = {**dict(cfg.get("samplerConfig") or {}), **payload["samplerConfig"]}
+        if "drumRackConfig" in payload and isinstance(payload["drumRackConfig"], dict):
+            cfg["drumRackConfig"] = {**dict(cfg.get("drumRackConfig") or {}), **payload["drumRackConfig"]}
+        trk.instrumentConfig = cfg
+        trk.freezeState = None
+
+    elif cmd_type in ("fx.add", "fx.remove", "fx.move", "fx.setParams", "fx.setBypass", "fx.setWetDry"):
+        from engine.fx.chain import default_fx_slot
+
+        target_kind = str(payload.get("target") or "track")
+        if target_kind == "master":
+            fx_list = p.masterEffects
+            owner_trk = None
+        elif target_kind == "bus" or payload.get("busId"):
+            bid = str(payload["busId"])
+            bus_obj = next((b for b in p.buses if b.get("id") == bid), None)
+            if bus_obj is None:
+                raise ValueError(f"Bus not found: {bid}")
+            bus_obj.setdefault("effects", [])
+            fx_list = bus_obj["effects"]
+            owner_trk = None
+        else:
+            owner_trk = _find_track(p, str(payload["trackId"]))
+            fx_list = owner_trk.effects
+
+        if cmd_type == "fx.add":
+            slot_id = str(payload.get("id") or make_id("fx"))
+            slot = default_fx_slot(
+                str(payload["type"]),
+                slot_id,
+                preset_id=payload.get("preset"),
+                params_override=payload.get("parameters"),
+            )
+            if "sidechainTrackId" in payload:
+                slot["sidechainTrackId"] = payload["sidechainTrackId"]
+            if "wetDry" in payload:
+                slot["wetDry"] = max(0.0, min(1.0, float(payload["wetDry"])))
+            idx_ins = payload.get("index")
+            if isinstance(idx_ins, int) and 0 <= idx_ins <= len(fx_list):
+                fx_list.insert(idx_ins, slot)
+            else:
+                fx_list.append(slot)
+        elif cmd_type == "fx.remove":
+            fx_id = str(payload["fxId"])
+            before = len(fx_list)
+            fx_list[:] = [f for f in fx_list if f.get("id") != fx_id]
+            if len(fx_list) == before:
+                raise ValueError(f"FX slot not found: {fx_id}")
+        elif cmd_type == "fx.move":
+            from_i = int(payload["fromIndex"])
+            to_i = int(payload["toIndex"])
+            if not (0 <= from_i < len(fx_list) and 0 <= to_i < len(fx_list)):
+                raise ValueError("FX move indices out of bounds")
+            item = fx_list.pop(from_i)
+            fx_list.insert(to_i, item)
+        elif cmd_type == "fx.setParams":
+            fx_id = str(payload["fxId"])
+            slot = next((f for f in fx_list if f.get("id") == fx_id), None)
+            if slot is None:
+                raise ValueError(f"FX slot not found: {fx_id}")
+            cur_p = dict(slot.get("parameters") or {})
+            cur_p.update(dict(payload.get("parameters") or {}))
+            slot["parameters"] = cur_p
+            if "preset" in payload:
+                slot["preset"] = payload["preset"]
+            if "wetDry" in payload:
+                slot["wetDry"] = max(0.0, min(1.0, float(payload["wetDry"])))
+                slot["parameters"]["wetDry"] = slot["wetDry"]
+            if "sidechainTrackId" in payload:
+                slot["sidechainTrackId"] = payload["sidechainTrackId"]
+        elif cmd_type == "fx.setBypass":
+            fx_id = str(payload["fxId"])
+            slot = next((f for f in fx_list if f.get("id") == fx_id), None)
+            if slot is None:
+                raise ValueError(f"FX slot not found: {fx_id}")
+            slot["bypass"] = bool(payload["bypass"])
+        elif cmd_type == "fx.setWetDry":
+            fx_id = str(payload["fxId"])
+            slot = next((f for f in fx_list if f.get("id") == fx_id), None)
+            if slot is None:
+                raise ValueError(f"FX slot not found: {fx_id}")
+            w = max(0.0, min(1.0, float(payload["wetDry"])))
+            slot["wetDry"] = w
+            slot.setdefault("parameters", {})["wetDry"] = w
+        if owner_trk is not None:
+            owner_trk.freezeState = None
+
+    elif cmd_type == "bus.add":
+        bid = str(payload.get("id") or make_id("bus"))
+        bus_kind = str(payload.get("kind") or "return")
+        if bus_kind not in ("return", "group"):
+            raise ValueError("Bus kind must be 'return' or 'group'")
+        bus = {
+            "id": bid,
+            "name": str(payload.get("name") or f"{bus_kind.title()} Bus {len(p.buses) + 1}"),
+            "kind": bus_kind,
+            "gainDb": max(-60.0, min(6.0, float(payload.get("gainDb", 0.0)))),
+            "pan": max(-1.0, min(1.0, float(payload.get("pan", 0.0)))),
+            "mute": False,
+            "solo": False,
+            "effects": list(payload.get("effects") or []),
+        }
+        p.buses = [b for b in p.buses if b.get("id") != bid] + [bus]
+
+    elif cmd_type == "bus.remove":
+        bid = str(payload["busId"])
+        p.buses = [b for b in p.buses if b.get("id") != bid]
+        for t in p.tracks:
+            t.sends = [s for s in t.sends if s.get("busId") != bid]
+            if t.outputBusId == bid:
+                t.outputBusId = "master"
+
+    elif cmd_type in ("bus.setGain", "bus.setPan", "bus.setMute", "bus.setSolo"):
+        bid = str(payload["busId"])
+        bus_obj = next((b for b in p.buses if b.get("id") == bid), None)
+        if bus_obj is None:
+            raise ValueError(f"Bus not found: {bid}")
+        if cmd_type == "bus.setGain":
+            bus_obj["gainDb"] = max(-60.0, min(6.0, float(payload["gainDb"])))
+        elif cmd_type == "bus.setPan":
+            bus_obj["pan"] = max(-1.0, min(1.0, float(payload["pan"])))
+        elif cmd_type == "bus.setMute":
+            bus_obj["mute"] = bool(payload["mute"])
+        elif cmd_type == "bus.setSolo":
+            bus_obj["solo"] = bool(payload["solo"])
+
+    elif cmd_type == "track.setOutputBus":
+        trk = _find_track(p, str(payload["trackId"]))
+        bid = str(payload.get("busId") or "master")
+        if bid != "master" and not any(b.get("id") == bid for b in p.buses):
+            raise ValueError(f"Output bus not found: {bid}")
+        trk.outputBusId = bid
+
+    elif cmd_type == "send.set":
+        trk = _find_track(p, str(payload["trackId"]))
+        bid = str(payload["busId"])
+        if not any(b.get("id") == bid for b in p.buses):
+            raise ValueError(f"Send target bus not found: {bid}")
+        lvl_db = max(-60.0, min(6.0, float(payload.get("levelDb", -12.0))))
+        pre = bool(payload.get("preFader", False))
+        en = bool(payload.get("enabled", True))
+        existing = next((s for s in trk.sends if s.get("busId") == bid), None)
+        if existing:
+            existing["levelDb"] = lvl_db
+            existing["preFader"] = pre
+            existing["enabled"] = en
+        else:
+            trk.sends.append({"id": make_id("snd"), "busId": bid, "levelDb": lvl_db, "preFader": pre, "enabled": en})
+
+    elif cmd_type == "send.remove":
+        trk = _find_track(p, str(payload["trackId"]))
+        bid = str(payload["busId"])
+        trk.sends = [s for s in trk.sends if s.get("busId") != bid]
+
+    elif cmd_type == "automation.upsertLane":
+        trk = _find_track(p, str(payload["trackId"]))
+        lane = dict(payload.get("lane") or payload)
+        lane_id = str(lane.get("id") or make_id("auto"))
+        norm_pts = sorted(
+            [
+                {
+                    "id": str(pt.get("id") or make_id("apt")),
+                    "beat": max(0.0, float(pt["beat"])),
+                    "value": float(pt["value"]),
+                    "interpolation": str(pt.get("interpolation") or "linear"),
+                }
+                for pt in (lane.get("points") or [])
+            ],
+            key=lambda x: x["beat"],
+        )
+        new_lane = {
+            "id": lane_id,
+            "targetType": str(lane.get("targetType") or "track"),
+            "targetId": lane.get("targetId"),
+            "parameterId": str(lane.get("parameterId") or "gainDb"),
+            "enabled": bool(lane.get("enabled", True)),
+            "points": norm_pts,
+        }
+        trk.automationLanes = [ln for ln in trk.automationLanes if ln.get("id") != lane_id] + [new_lane]
+        trk.freezeState = None
+
+    elif cmd_type == "automation.addPoint":
+        trk = _find_track(p, str(payload["trackId"]))
+        lid = str(payload["laneId"])
+        lane = next((ln for ln in trk.automationLanes if ln.get("id") == lid), None)
+        if lane is None:
+            raise ValueError(f"Automation lane not found: {lid}")
+        pt = {
+            "id": str(payload.get("pointId") or make_id("apt")),
+            "beat": max(0.0, float(payload["beat"])),
+            "value": float(payload["value"]),
+            "interpolation": str(payload.get("interpolation") or "linear"),
+        }
+        lane["points"] = sorted(list(lane.get("points") or []) + [pt], key=lambda x: x["beat"])
+        trk.freezeState = None
+
+    elif cmd_type == "automation.movePoint":
+        trk = _find_track(p, str(payload["trackId"]))
+        lid = str(payload["laneId"])
+        pid_pt = str(payload["pointId"])
+        lane = next((ln for ln in trk.automationLanes if ln.get("id") == lid), None)
+        if lane is None:
+            raise ValueError(f"Automation lane not found: {lid}")
+        for pt in lane.get("points") or []:
+            if pt.get("id") == pid_pt:
+                pt["beat"] = max(0.0, float(payload["beat"]))
+                pt["value"] = float(payload["value"])
+                break
+        else:
+            raise ValueError(f"Automation point not found: {pid_pt}")
+        lane["points"].sort(key=lambda x: x["beat"])
+        trk.freezeState = None
+
+    elif cmd_type == "automation.deletePoint":
+        trk = _find_track(p, str(payload["trackId"]))
+        lid = str(payload["laneId"])
+        pid_pt = str(payload["pointId"])
+        lane = next((ln for ln in trk.automationLanes if ln.get("id") == lid), None)
+        if lane is None:
+            raise ValueError(f"Automation lane not found: {lid}")
+        lane["points"] = [pt for pt in (lane.get("points") or []) if pt.get("id") != pid_pt]
+        trk.freezeState = None
+
+    elif cmd_type == "automation.removeLane":
+        trk = _find_track(p, str(payload["trackId"]))
+        lid = str(payload["laneId"])
+        trk.automationLanes = [ln for ln in trk.automationLanes if ln.get("id") != lid]
+        trk.freezeState = None
 
     elif cmd_type == "track.addTakeLane":
         trk = _find_track(p, str(payload["trackId"]))
