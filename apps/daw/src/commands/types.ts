@@ -1,4 +1,14 @@
-import type { Asset, ChordEvent, Clip, MidiNote, TakeLane, TimeSignature, Track } from "../project/types";
+import type {
+  Asset,
+  AutomationLane,
+  ChordEvent,
+  Clip,
+  EffectSlot,
+  MidiNote,
+  TakeLane,
+  TimeSignature,
+  Track,
+} from "../project/types";
 
 export type ProjectCommand =
   | { type: "project.rename"; payload: { name: string } }
@@ -27,7 +37,91 @@ export type ProjectCommand =
   | { type: "track.setPan"; payload: { trackId: string; pan: number } }
   | { type: "track.setMute"; payload: { trackId: string; mute: boolean } }
   | { type: "track.setSolo"; payload: { trackId: string; solo: boolean } }
-  | { type: "track.setInstrument"; payload: { trackId: string; instrumentRef: string | null } }
+  | {
+      type: "track.setInstrument";
+      payload: {
+        trackId: string;
+        instrumentRef: string | null;
+        preset?: string | null;
+        parameters?: Record<string, unknown>;
+      };
+    }
+  | {
+      type: "instrument.setPreset";
+      payload: { trackId: string; preset: string | null; parameters?: Record<string, unknown> };
+    }
+  | {
+      type: "instrument.setParams";
+      payload: {
+        trackId: string;
+        parameters: Record<string, unknown>;
+        articulation?: string;
+        samplerConfig?: Record<string, unknown>;
+        drumRackConfig?: Record<string, unknown>;
+      };
+    }
+  | {
+      type: "fx.add";
+      payload: {
+        trackId?: string;
+        busId?: string;
+        target?: "track" | "bus" | "master";
+        slot: EffectSlot;
+        index?: number;
+      };
+    }
+  | {
+      type: "fx.remove";
+      payload: { trackId?: string; busId?: string; target?: "track" | "bus" | "master"; fxId: string };
+    }
+  | {
+      type: "fx.move";
+      payload: {
+        trackId?: string;
+        busId?: string;
+        target?: "track" | "bus" | "master";
+        fromIndex: number;
+        toIndex: number;
+      };
+    }
+  | {
+      type: "fx.setParams";
+      payload: {
+        trackId?: string;
+        busId?: string;
+        target?: "track" | "bus" | "master";
+        fxId: string;
+        parameters?: Record<string, unknown>;
+        preset?: string | null;
+        wetDry?: number;
+        sidechainTrackId?: string | null;
+      };
+    }
+  | {
+      type: "fx.setBypass";
+      payload: {
+        trackId?: string;
+        busId?: string;
+        target?: "track" | "bus" | "master";
+        fxId: string;
+        bypass: boolean;
+      };
+    }
+  | {
+      type: "bus.add";
+      payload: { id?: string; name: string; kind?: "return" | "group"; effects?: EffectSlot[] };
+    }
+  | { type: "bus.remove"; payload: { busId: string } }
+  | { type: "bus.setGain"; payload: { busId: string; gainDb: number } }
+  | { type: "bus.setMute"; payload: { busId: string; mute: boolean } }
+  | { type: "bus.setSolo"; payload: { busId: string; solo: boolean } }
+  | {
+      type: "send.set";
+      payload: { trackId: string; busId: string; levelDb: number; preFader?: boolean; enabled?: boolean };
+    }
+  | { type: "send.remove"; payload: { trackId: string; busId: string } }
+  | { type: "automation.upsertLane"; payload: { trackId: string; lane: AutomationLane } }
+  | { type: "automation.removeLane"; payload: { trackId: string; laneId: string } }
   | { type: "track.addTakeLane"; payload: { trackId: string; lane: TakeLane } }
   | { type: "track.renameTakeLane"; payload: { trackId: string; laneId: string; name: string } }
   | { type: "track.removeTakeLane"; payload: { trackId: string; laneId: string } }

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -8,14 +8,20 @@ import {
   Globe,
   Link2,
   Music,
+  Play,
   Plus,
   RefreshCw,
   Search,
+  Sliders,
+  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
+import { makeClientId } from "../commands/executor";
 import { useDaw } from "../commands/store";
 import { useI18n } from "../i18n";
+import { dawApi } from "../project/api";
+import type { FxCatalogEntry, InstrumentCatalogEntry } from "../project/types";
 
 type BrowserCategory = "projects" | "references" | "audio" | "samples" | "instruments" | "effects";
 
@@ -25,6 +31,15 @@ interface ProjectBrowserProps {
   onOpenNewModal: () => void;
   onOpenReferenceTab: () => void;
   onOpenRefUrlModal: () => void;
+  onOpenDeviceRack?: () => void;
+}
+
+function engineBadgeLabel(engine: string): { label: string; color: string } {
+  if (engine === "pro_soundfont" || engine === "fluidsynth_sf3") return { label: "SF3", color: "#6db88a" };
+  if (engine === "pro_synth") return { label: "SYNTH", color: "#d9b468" };
+  if (engine === "pro_drum_rack" || engine === "drum_rack") return { label: "RACK", color: "#c9856b" };
+  if (engine === "pro_sampler" || engine === "sampler") return { label: "SAMP", color: "#7ba7c9" };
+  return { label: "PREV", color: "#9ba3b4" };
 }
 
 export function ProjectBrowser({
@@ -33,10 +48,13 @@ export function ProjectBrowser({
   onOpenNewModal,
   onOpenReferenceTab,
   onOpenRefUrlModal,
+  onOpenDeviceRack,
 }: ProjectBrowserProps) {
-  const { t } = useI18n();
+  const { locale, t } = useI18n();
   const {
     project,
+    selectedTrack,
+    setSelection,
     recentProjects,
     libraryItems,
     assetStates,
@@ -50,6 +68,8 @@ export function ProjectBrowser({
     addAssetToTimeline,
     retryAssetLoad,
     relinkAssetFile,
+    dispatch,
+    showToast,
   } = useDaw();
 
   const [category, setCategory] = useState<BrowserCategory>("audio");
@@ -57,7 +77,31 @@ export function ProjectBrowser({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const refFileInputRef = useRef<HTMLInputElement | null>(null);
   const relinkInputRef = useRef<HTMLInputElement | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const [relinkTargetId, setRelinkTargetId] = useState<string | null>(null);
+  const [instruments, setInstruments] = useState<InstrumentCatalogEntry[]>([]);
+  const [fxCatalog, setFxCatalog] = useState<FxCatalogEntry[]>([]);
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void dawApi
+      .getInstrumentCatalog()
+      .then((res) => {
+        if (alive) setInstruments(res.instruments ?? []);
+      })
+      .catch(() => undefined);
+    void dawApi
+      .getFxCatalog()
+      .then((res) => {
+        if (alive) setFxCatalog(res.effects ?? []);
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      previewAudioRef.current?.pause();
+    };
+  }, []);
 
   const q = query.trim().toLowerCase();
 
@@ -79,6 +123,26 @@ export function ProjectBrowser({
 
   const filteredProjects = recentProjects.filter((p) => !q || p.name.toLowerCase().includes(q));
 
+  const filteredInstruments = instruments.filter((inst) => {
+    if (!q) return true;
+    return (
+      inst.name.toLowerCase().includes(q) ||
+      (inst.nameKo ?? "").toLowerCase().includes(q) ||
+      inst.category.toLowerCase().includes(q) ||
+      inst.id.toLowerCase().includes(q)
+    );
+  });
+
+  const filteredFx = fxCatalog.filter((fx) => {
+    if (!q) return true;
+    return (
+      fx.name.toLowerCase().includes(q) ||
+      (fx.nameKo ?? "").toLowerCase().includes(q) ||
+      fx.category.toLowerCase().includes(q) ||
+      fx.type.toLowerCase().includes(q)
+    );
+  });
+
   const handleFilePicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -87,6 +151,93 @@ export function ProjectBrowser({
       await importFile(file, kindHint, true);
     }
     e.target.value = "";
+  };
+
+  const handlePreviewInstrument = async (inst: InstrumentCatalogEntry) => {
+    if (previewingId === inst.id) return;
+    setPreviewingId(inst.id);
+    try {
+      const defaultPreset = inst.presetList?.[0]?.id ?? null;
+      const blob = await dawApi.previewInstrumentBlob({
+        instrumentRef: inst.id,
+        presetId: defaultPreset,
+      });
+      const url = URL.createObjectURL(blob);
+      previewAudioRef.current?.pause();
+      const audio = new Audio(url);
+      previewAudioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setPreviewingId((cur) => (cur === inst.id ? null : cur));
+      };
+      await audio.play();
+    } catch (err) {
+      showToast((err as Error).message, "error");
+      setPreviewingId(null);
+    }
+  };
+
+  const handleAssignInstrument = (inst: InstrumentCatalogEntry) => {
+    if (!project) return;
+    const defaultPreset = inst.presetList?.[0]?.id ?? null;
+    let targetTrackId = selectedTrack?.type === "midi" ? selectedTrack.id : null;
+
+    if (!targetTrackId) {
+      const existingMidi = project.tracks.find((tr) => tr.type === "midi");
+      if (existingMidi && !selectedTrack) {
+        targetTrackId = existingMidi.id;
+      } else {
+        targetTrackId = makeClientId("trk");
+        dispatch({
+          type: "track.add",
+          payload: {
+            id: targetTrackId,
+            name: locale === "ko" ? inst.nameKo || inst.name : inst.name,
+            type: "midi",
+          },
+        });
+      }
+    }
+
+    dispatch({
+      type: "track.setInstrument",
+      payload: {
+        trackId: targetTrackId,
+        instrumentRef: inst.id,
+        preset: defaultPreset,
+      },
+    });
+    setSelection((prev) => ({ ...prev, selectedTrackId: targetTrackId }));
+    onOpenDeviceRack?.();
+    showToast(`${locale === "ko" ? inst.nameKo || inst.name : inst.name} 적용됨`);
+  };
+
+  const handleAddFx = (fx: FxCatalogEntry) => {
+    if (!project) return;
+    const targetTrack = selectedTrack ?? project.tracks[0];
+    if (!targetTrack) {
+      showToast(t("browser.selectTrackHint"), "error");
+      return;
+    }
+    dispatch({
+      type: "fx.add",
+      payload: {
+        trackId: targetTrack.id,
+        slot: {
+          id: makeClientId("fx"),
+          type: fx.type,
+          name: locale === "ko" ? fx.nameKo || fx.name : fx.name,
+          nameKo: fx.nameKo,
+          enabled: true,
+          bypass: false,
+          wetDry: 1.0,
+          parameters: { ...(fx.defaultParams ?? {}) },
+        },
+      },
+    });
+    setSelection((prev) => ({ ...prev, selectedTrackId: targetTrack.id }));
+    onOpenDeviceRack?.();
+    showToast(`${targetTrack.name} ← ${locale === "ko" ? fx.nameKo || fx.name : fx.name}`);
   };
 
   return (
@@ -197,16 +348,18 @@ export function ProjectBrowser({
         <button
           className={`browser-nav-item ${category === "instruments" ? "active" : ""}`}
           onClick={() => setCategory("instruments")}
+          data-testid="nav-instruments"
         >
           <span>{t("browser.instruments")}</span>
-          <span className="tag-badge">P05</span>
+          <span className="tag-badge">{instruments.length || "—"}</span>
         </button>
         <button
           className={`browser-nav-item ${category === "effects" ? "active" : ""}`}
           onClick={() => setCategory("effects")}
+          data-testid="nav-effects"
         >
           <span>{t("browser.effects")}</span>
-          <span className="tag-badge">P05</span>
+          <span className="tag-badge">{fxCatalog.length || "—"}</span>
         </button>
       </nav>
 
@@ -242,14 +395,105 @@ export function ProjectBrowser({
         </>
       )}
 
-      {/* Instruments / Effects honest Phase 05 notice */}
-      {(category === "instruments" || category === "effects") && (
-        <div style={{ padding: 12, color: "var(--text-muted)", fontSize: 11, lineHeight: 1.5 }}>
-          <div style={{ color: "var(--text-secondary)", fontWeight: 600, marginBottom: 6 }}>
-            {category === "instruments" ? t("browser.instrumentsTitle") : t("browser.effectsTitle")}
+      {/* Phase 05 Real Instrument Library (FluidSynth SF3 · Pro Synth · Drum Rack · Sampler) */}
+      {category === "instruments" && (
+        <>
+          <div className="browser-section-title">
+            <span>{t("browser.instrumentsTitle")}</span>
+            <span className="mono">{filteredInstruments.length}</span>
           </div>
-          {category === "instruments" ? t("browser.instrumentsDesc") : t("browser.effectsDesc")}
-        </div>
+          <div className="browser-list" data-testid="instrument-browser-list">
+            {filteredInstruments.map((inst) => {
+              const badge = engineBadgeLabel(inst.engineType);
+              const isAssigned = selectedTrack?.instrumentRef === inst.id;
+              return (
+                <div
+                  key={inst.id}
+                  className={`browser-item ${isAssigned ? "active" : ""}`}
+                  onDoubleClick={() => handleAssignInstrument(inst)}
+                  title={`${inst.name} (${inst.engineType}) · ${inst.license ?? ""}`}
+                  data-testid={`browser-inst-${inst.id}`}
+                >
+                  <Sparkles size={11} color={badge.color} style={{ flexShrink: 0 }} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="browser-item-name" style={{ fontWeight: isAssigned ? 600 : 400 }}>
+                      {locale === "ko" ? inst.nameKo || inst.name : inst.name}
+                    </div>
+                    <div style={{ fontSize: 9, color: "var(--text-muted)", display: "flex", gap: 4 }}>
+                      <span style={{ color: badge.color, fontWeight: 700 }}>{badge.label}</span>
+                      <span>{inst.presetList?.length ?? 0} presets</span>
+                    </div>
+                  </div>
+                  <button
+                    className="icon-btn"
+                    title={t("browser.previewBtn")}
+                    data-testid={`btn-preview-inst-${inst.id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handlePreviewInstrument(inst);
+                    }}
+                  >
+                    <Play size={10} color={previewingId === inst.id ? "var(--accent-playhead)" : undefined} />
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title={t("browser.assignTrack")}
+                    data-testid={`btn-assign-inst-${inst.id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAssignInstrument(inst);
+                    }}
+                  >
+                    <Plus size={11} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Phase 05 Real FX Library (Pedalboard C++ DSP · Convolution IR · External Sidechain · Tube Amp) */}
+      {category === "effects" && (
+        <>
+          <div className="browser-section-title">
+            <span>{t("browser.effectsTitle")}</span>
+            <span className="mono">{filteredFx.length}</span>
+          </div>
+          <div style={{ padding: "2px 10px 4px", fontSize: 9.5, color: "var(--text-muted)" }}>
+            {selectedTrack ? t("browser.targetTrack", { name: selectedTrack.name }) : t("browser.selectTrackHint")}
+          </div>
+          <div className="browser-list" data-testid="fx-browser-list">
+            {filteredFx.map((fx) => (
+              <div
+                key={fx.type}
+                className="browser-item"
+                onDoubleClick={() => handleAddFx(fx)}
+                title={`${fx.name} · ${fx.engine}`}
+                data-testid={`browser-fx-${fx.type}`}
+              >
+                <Sliders size={11} color="#85c49b" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="browser-item-name">
+                    {locale === "ko" ? fx.nameKo || fx.name : fx.name}
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--text-muted)" }}>{fx.category}</div>
+                </div>
+                <button
+                  className="icon-btn"
+                  title={t("browser.addFxToTrack")}
+                  data-testid={`btn-add-fx-${fx.type}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddFx(fx);
+                  }}
+                >
+                  <Plus size={11} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Dedicated References View (separate from Export tracks!) */}

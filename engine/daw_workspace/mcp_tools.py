@@ -920,3 +920,220 @@ def get_reference_abc_score(
         production_mode=mode if mode in ("reconstruct", "reference_compose", "reinterpret") else "reference_compose",
     )
     return {"projectId": pid, "referenceId": rid, "abcScore": abc_res}
+
+
+# --- Phase 05 Professional Instruments, FX, Routing, Automation, Freeze & Sound Design MCP Tools ---
+
+def list_pro_instruments() -> dict[str, Any]:
+    from engine.instruments import get_instrument_catalog, probe_fluidsynth_engine
+
+    return {"instruments": get_instrument_catalog(), "fluidsynth": probe_fluidsynth_engine()}
+
+
+def scan_host_plugins(probe_external: bool = True) -> dict[str, Any]:
+    from engine.instruments import scan_host_plugins as _scan
+
+    return _scan(probe_external=probe_external)
+
+
+def list_fx_catalog() -> dict[str, Any]:
+    from engine.fx import list_fx_catalog as _fx_cat
+
+    return {"effects": _fx_cat()}
+
+
+def assign_instrument_preset(
+    track_id: str,
+    instrument_ref: str,
+    preset: str | None = None,
+    parameters: dict[str, Any] | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"trackId": track_id, "instrumentRef": instrument_ref}
+    if preset is not None:
+        payload["preset"] = preset
+    if parameters:
+        payload["parameters"] = parameters
+    return _direct_edit(
+        "track.setInstrument",
+        payload,
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Assign instrument {instrument_ref}" + (f" ({preset})" if preset else ""),
+    )
+
+
+def add_track_fx(
+    track_id: str,
+    fx_type: str,
+    preset: str | None = None,
+    parameters: dict[str, Any] | None = None,
+    sidechain_track_id: str | None = None,
+    wet_dry: float | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"trackId": track_id, "type": fx_type}
+    if preset:
+        payload["preset"] = preset
+    if parameters:
+        payload["parameters"] = parameters
+    if sidechain_track_id:
+        payload["sidechainTrackId"] = sidechain_track_id
+    if wet_dry is not None:
+        payload["wetDry"] = wet_dry
+    return _direct_edit(
+        "fx.add",
+        payload,
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Add FX {fx_type} to track {track_id}",
+    )
+
+
+def update_track_fx(
+    track_id: str,
+    fx_id: str,
+    parameters: dict[str, Any] | None = None,
+    bypass: bool | None = None,
+    wet_dry: float | None = None,
+    sidechain_track_id: str | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    if bypass is not None and not parameters and wet_dry is None and sidechain_track_id is None:
+        return _direct_edit(
+            "fx.setBypass",
+            {"trackId": track_id, "fxId": fx_id, "bypass": bypass},
+            project_id,
+            expected_revision,
+            stage_only,
+            f"Toggle FX {fx_id} bypass={bypass}",
+        )
+    payload: dict[str, Any] = {"trackId": track_id, "fxId": fx_id, "parameters": parameters or {}}
+    if wet_dry is not None:
+        payload["wetDry"] = wet_dry
+    if sidechain_track_id is not None:
+        payload["sidechainTrackId"] = sidechain_track_id
+    return _direct_edit(
+        "fx.setParams",
+        payload,
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Update FX {fx_id} parameters",
+    )
+
+
+def add_bus(
+    name: str,
+    kind: str = "return",
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    return _direct_edit(
+        "bus.add",
+        {"name": name, "kind": kind},
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Add {kind} bus '{name}'",
+    )
+
+
+def set_track_send(
+    track_id: str,
+    bus_id: str,
+    level_db: float = -10.0,
+    pre_fader: bool = False,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    return _direct_edit(
+        "send.set",
+        {"trackId": track_id, "busId": bus_id, "levelDb": level_db, "preFader": pre_fader},
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Set send {track_id} -> {bus_id} ({level_db} dB)",
+    )
+
+
+def upsert_automation_lane(
+    track_id: str,
+    target_type: str,
+    parameter_id: str,
+    points: list[dict[str, Any]],
+    target_id: str | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    return _direct_edit(
+        "automation.upsertLane",
+        {
+            "trackId": track_id,
+            "lane": {
+                "targetType": target_type,
+                "targetId": target_id,
+                "parameterId": parameter_id,
+                "enabled": True,
+                "points": points,
+            },
+        },
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Automate {target_type}.{parameter_id} ({len(points)} pts)",
+    )
+
+
+def freeze_track_audio(track_id: str, project_id: str | None = None) -> dict[str, Any]:
+    from engine.fx import freeze_track
+
+    pid = _resolve_project_id(project_id)
+    res = freeze_track(pid, track_id)
+    return {"projectId": pid, "trackId": track_id, "frozen": res["frozen"], "fromCache": res["fromCache"], "freezeState": res["freezeState"]}
+
+
+def unfreeze_track_audio(track_id: str, project_id: str | None = None) -> dict[str, Any]:
+    from engine.fx import unfreeze_track
+
+    pid = _resolve_project_id(project_id)
+    res = unfreeze_track(pid, track_id)
+    return {"projectId": pid, "trackId": track_id, "frozen": res["frozen"]}
+
+
+def diagnose_track_audio(track_id: str, project_id: str | None = None) -> dict[str, Any]:
+    from engine.sound_design import diagnose_track_audio as _diag
+
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    return _diag(proj, track_id)
+
+
+def create_hybrid_native_layer(
+    golden_reference_id: str = "v72-magnetic-afterhours",
+    layer_roles: list[str] | None = None,
+    bars: int = 8,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.generation.golden_references import create_hybrid_session
+
+    pid = _resolve_project_id(project_id)
+    res = create_hybrid_session(pid, golden_reference_id=golden_reference_id, layer_roles=layer_roles, bars=bars)
+    return {
+        "projectId": pid,
+        "mode": res["mode"],
+        "nativeTrackId": res["nativeTrackId"],
+        "layeredTrackIds": res["layeredTrackIds"],
+        "nativeAudioPreservedUntouched": res["nativeAudioPreservedUntouched"],
+    }

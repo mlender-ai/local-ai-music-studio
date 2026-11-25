@@ -1,51 +1,65 @@
 # STATUS.md — Current Development Status
 
 **Last Updated:** 2026-11-25  
-**Active Phase:** **Phase 03.2 · Advanced Reference Intelligence (Music Transcription · Reference Reconstruction · Reference-Conditioned Composition)** — **Complete & Verified on Real Audio & Live Browser QA**  
-**Integration Branch:** `develop/ai-native-daw` (unmerged pending user verification)  
-**Stacked Task Branches (all open & unmerged pending user review):**
+**Active Phase:** **Phase 03.2.1 + Phase 05 — Reference Fidelity · Professional Instruments · Professional FX · Native Audio Recovery · AI Sound Design** — **Complete & Verified on Real Audio & Live Browser QA**  
+**Integration Branch:** `develop/ai-native-daw` (unmerged pending user review)  
+**Stacked Task Branches (all pushed, open & unmerged pending user review):**
 1. `feat/daw-workspace-phase-01` (PR #15 → `develop/ai-native-daw`)
 2. `fix/daw-phase-01-1-stabilization` (PR #16 → `feat/daw-workspace-phase-01`)
 3. `feat/daw-korean-localization` (PR #17 → `fix/daw-phase-01-1-stabilization`)
 4. `feat/daw-reference-intelligence` (PR #18 → `feat/daw-korean-localization`)
 5. `feat/daw-agent-bridge` (PR #19 → `feat/daw-reference-intelligence`)
 6. `feat/daw-ai-composition-phase-03` (PR #20 → `feat/daw-agent-bridge`)
-7. `fix/daw-phase-03-engine-integration` (PR #21 → `feat/daw-ai-composition-phase-03`) — **Phase 03.1 Engine Recovery + GATE 2 Safe Take Apply**
-8. `feat/daw-phase-04-arrangement` (PR #22 → `fix/daw-phase-03-engine-integration`) — **Phase 04 Selective Arrangement, Musical Variation, Take Lanes & Contextual Preview**
-9. `feat/daw-advanced-reference-intelligence` (PR #23 → `feat/daw-phase-04-arrangement`) — **Phase 03.2 Advanced Reference Intelligence**
+7. `fix/daw-phase-03-engine-integration` (PR #21 → `feat/daw-ai-composition-phase-03`)
+8. `feat/daw-phase-04-arrangement` (PR #22 → `fix/daw-phase-03-engine-integration`)
+9. `feat/daw-advanced-reference-intelligence` (PR #23 → `feat/daw-phase-04-arrangement`)
+10. **`feat/daw-reference-fidelity` (PR #24 → `feat/daw-advanced-reference-intelligence`) — GATE 1 Reference Fidelity**
+11. **`fix/daw-native-audio-runtime` (PR #25 → `feat/daw-reference-fidelity`) — GATE 2 Native Audio Lineage & Vocal Leakage Gate**
+12. **`feat/daw-professional-instruments` (PR #26 → `fix/daw-native-audio-runtime`) — GATE 3 Professional Instruments (FluidSynth SF3 · Pro Synth · Drum Rack · Sampler · AU/VST3 Scanner)**
+13. **`feat/daw-professional-fx` (PR #27 → `feat/daw-professional-instruments`) — GATE 4 Professional FX (Pedalboard EQ · Compressor · External Sidechain · Convolution IR Reverb · Guitar Amp + Cab IR · Automation · Track Freeze)**
+14. **`feat/daw-phase05-integration` (PR #28 → `feat/daw-professional-fx`) — GATE 5–7 Device Rack UI · Instrument/FX Browsers · Mixer Return Buses · AI Sound Design · 81 MCP Tools · Real Music Production QA**
 
-## Completed in Phase 03.2
+## Completed in Phase 03.2.1 + Phase 05
 
-- [x] **Real Local Transcription & Stem Separation Engines Installed & Live-Verified on Apple M1 (16 GiB RAM):**
-  - **Spotify Basic Pitch `0.4.0` + ONNX Runtime (`nmp.onnx`, Apache-2.0):** Runs without TensorFlow or FFmpeg; verified live on studio Bass, Guitar/Keys, and 96s V7.2 master (`2.20s`, `312 MB RSS`).
-  - **Demucs `4.1.0` + PyTorch MPS (`htdemucs`, MIT):** Runs via clean `soundfile` + MPS subprocess runner (`engine/generation/adapters/_demucs_runner.py`, zero FFmpeg required) under `run_cancellable_guarded()` with content-addressed stem caching.
-  - **Honest Audit of Additional Models:** `SheetSage2` (`CC BY-NC 4.0` non-commercial license + ~3 GiB `MERT-v2`), `YourMT3+`, and `All-In-One` remain honestly labeled `uninstalled` in Shared Runtime Registry while `sheetsage_adapter.py` builds validated YuE2 Instrumental ABC scores passing `check_resting_voice()`.
-- [x] **Unified Sequential Transcription Package (`engine/transcription/`):**
-  - `basic_pitch_transcriber.py`: Polyphonic MIDI transcription with pitch bends, quantization + microtiming offset preservation, monophonic Bass cleaner, and Lead Melody topline extraction.
-  - `drum_transcriber.py`: Multi-band Kick (`36`), Snare (`38`), Closed Hat (`42`), Open Hat (`46`), Percussion (`45`) groove extractor preserving BOTH raw & quantized MIDI, swing ratio, syncopation score, 16-step accents, fill bars, and 2-bar groove templates.
-  - `chord_tracker.py`: Sub-bar (2-beat slice) Viterbi-smoothed chord & bass-inversion analyzer across 84 chord templates + symbol parser.
-  - `pipeline.py`: Sequential Apple Silicon transcription pipeline (`transcribe_reference_audio`), stem-enriched Arrangement Map (`activeStems`/`enteredStems`/`exitedStems`), **Reference Blueprint v2** (`blueprintVersion: "2.0.0"`), **10-feature Reference Feature Lock Matrix** (`free | reference | locked | unsupported`), and **Mode A Reconstruct** (`reconstruct_reference_to_project`) with 1-click Undo.
-- [x] **Editable Timeline Chord Track (Schema `1.4.0`):**
-  - Added `ChordEvent`, `project.chordTrack`, `project.chordTrackLocked`, and shared commands `chord.setTrack`, `chord.upsert`, `chord.delete`, `chord.setLocked` mirrored in Python & TypeScript.
-  - Rendered pixel-aligned 22px **Timeline Chord Track** right beneath Section Markers supporting sub-bar chord changes, click-to-edit inline symbols, and lock toggle (`🔒`).
-- [x] **Real Reference-Conditioned Composition & Post-Generation 5-State Feature Verification:**
-  - Upgraded `reference_context.py`, `director.py`, and `midi_composer.py` to consume sub-bar `chordTimeline`, `drumGroovePattern`, `bassGroovePattern`, and locked `project.chordTrack` while generating fresh melodies in Mode B (`reference_compose`) & Mode C (`reinterpret`).
-  - Upgraded `yue2_adapter.py` to auto-wire validated Blueprint v2 instrumental ABC scores.
-  - Implemented real post-generation verification (`_verify_consumed_reference_features` in `local_composer_adapter.py`) measuring exact note-level `chordMatchRatio` and `grooveHitMatchRatio` while strictly keeping unconsumed MIDI features (`stereoWidthTarget`, `spectralCentroidTargetHz`) `consumed: false, verified: false`.
-- [x] **REST API, Korean Natural-Language Routing & 68 MCP Tools:**
-  - Added 7 REST endpoints (`/transcribe`, `/stems/{role}/audio`, `/locks`, `/reconstruct`, `/abc`, `GET/PUT /chords`) and Korean NL routing for transcription, chord import, reconstruction, and feature-locked composition.
-  - Expanded `app/mcp_server.py` from 61 to **68 MCP tools** (`9 music.*` + `59 daw.*`).
-- [x] **Live QA Bug Fixes Caught & Verified:**
-  - Fixed macOS transient VM pressure false-kill in `process_guard.py` (now requires 3 consecutive sustained readings + `rss > 2 GiB`, and never swallows `RuntimeError`).
-  - Fixed `halfDoubleRelation` object formatting in `ReferenceAnalysisPanel.tsx` (`half-time (63.9↔128) · pulse 128`, zero `[object Object]`).
+- [x] **GATE 1 — Reference Fidelity & Blueprint v3 (`PR #24`):**
+  - Full-length `analysisCoverage` (`coveragePct`, `isComplete`, `truncated`), `actualBeatGrid` vs `fixedBpmGrid`, and `tempoStability`.
+  - 15-quality Viterbi Chord Tracker (`Major`, `Minor`, `Dom7`, `Maj7`, `Min7`, `Sus2`, `Sus4`, `Add9`, `Dim`, `m7b5`, `Aug`, `6`, `9/maj9/m9`, `5`, Slash inversions) with 1-beat adaptive passing chords, top-3 ranked candidates, and `chord.split`/`chord.merge`.
+  - Full-length 11-class Drum Event Schema (`isGhostNote`, zero 1200-hit truncation) + bar-by-bar `variationMap` (`fillBars`, `breakdownBars`, `cymbalReentryBars`).
+  - Acoustic `SoundProfile` + `SpatialProfile` (Welch PSD, roughness, direct/ambient, M/S width, starting-point hints + honesty disclaimer), full-length `bassPerformance`, honest 5-category instrumentation (`other` strictly `Mixed Harmonic Content`).
+  - Eliminated 2-bar loop collapse in `LOCKED` drum/bass modes, fixed sub-bar chord voicing across Keys/Guitar/Pad, added Multi-Reference `featureSourceMap` + conflict detection, and strict per-bar Precision/Recall/F1/Timing/Duration verification.
+- [x] **GATE 2 — Native Audio Recovery & Vocal Leakage Gate (`PR #25`):**
+  - V7.2 Golden Native Reference lineage (`v72-magnetic-afterhours`, 128 BPM F minor, seed 1185, validated `V72_MAGNETIC_AFTERHOURS_ABC`), `/api/generation/golden-references`, and `/api/projects/{id}/hybrid/layer` enforcing `native_audio_original` protection.
+  - Upgraded `screen_vocal_leakage()` with multi-window Demucs-isolated `vocals` stem screening while preserving strict 3-state `PASS / REJECT / UNCERTAIN` honesty.
+  - Added `THIRD_PARTY_NOTICES.md` with open-source licenses, SHA-256 checksums, and commercial-use audit.
+- [x] **GATE 3 — Professional Instruments (`PR #26`):**
+  - **FluidSynth `2.6.3` + MIT `MuseScore_General.sf3`** across 13 multi-sampled P0/P1 instrument families (Acoustic/Rock/Jazz/Electronic Drums, Electric/Upright/Synth Bass, Grand Piano, Rhodes/DX EP, Organ, Clean/Jazz/Overdrive/Distortion Guitar, Strings, Vibraphone, Warm Pad, Brass).
+  - **Pro Hybrid Synth (`pro-synth-analog`, `pro-synth-fm`):** Band-limited Saw/Square/Supersaw (up to 7-voice unison) + Moog-style `pedalboard.LadderFilter`.
+  - **Studio Drum Rack (`pro-drum-rack`):** Per-pad Round-Robin variation + **true Open/Closed Hi-Hat Choke Groups** (42 physically chokes 46 within 8 ms) across 5 studio kits.
+  - **Studio Sampler (`pro-sampler`):** Multi-zone/sliced WAV sampler + spectral-flux transient slicer.
+  - **Crash-Isolated Host Plugin Scanner (`/api/plugins/scan`):** Subprocess-isolated AU/VST3 probe + `/usr/bin/auval -a`.
+- [x] **GATE 4 — Professional FX, Automation & Track Freeze (`PR #27`, Schema `1.5.0`):**
+  - 6-band Spotify Pedalboard Parametric EQ (cascaded 12 dB/oct HPF/LPF) + exact analytical RBJ curve (`/api/fx/eq-curve`).
+  - Studio Compressor + real block-level GR dB meter, **True External-Track Sidechain Compressor** (strictly driven by external track envelope — `0.0 dB` when silent), Limiter, Noise Gate, Transient Shaper.
+  - 6-mode Convolution IR Reverb (`pedalboard.Convolution`, L2-normalized IRs), Tempo-synced Stereo/Ping-Pong Delay, Chorus, Phaser, Flanger, Tremolo, Analog Tape Saturation, Bitcrush, Distortion, PitchShift, Resonant Ladder Filter.
+  - Multi-stage Tube Guitar Amp + 3-band Tone Stack + Speaker Cabinet IRs (`1x12_open`, `2x12_british`, `4x12_modern`, `direct_di`).
+  - Overlap-add 24 dB/oct automated filter sweeps, deterministic `stateHash` Track Freeze/Unfreeze, and full 3-Pass Studio Audio Graph renderer.
+- [x] **GATE 5–7 — Device Rack UI, AI Sound Design, 81 MCP Tools & Real Music Production QA (`PR #28`):**
+  - Populated Left Browser **`가상악기`** (24 instruments with `SF3 / SYNTH / RACK / SAMP / PREV` badges & live WAV audition) and **`이펙트`** (18 Pedalboard DSP processors).
+  - Built Bottom Dock **`Device Rack`** matching dark studio layout: Instrument card (preset, 4 live sliders, articulation, WAV audition, Freeze), Parametric EQ live analytical RBJ SVG curve, Compressor transfer curve & external sidechain selector, Room Reverb depth visual, Sends strip, Quick Cutoff Automation, and Acoustic Track Diagnosis.
+  - Upgraded **`믹서`** with FX count & Freeze badges, Send mini-sliders, Return Bus strips (`+ 버스`), and sticky unclipped `MASTER` strip.
+  - Wired bit-exact Frozen Studio WAV playback into `audioEngine.ts` + 3-pass Server Studio WAV export (`/api/projects/{id}/export/studio-wav`).
+  - Built AI Producer Sound Design Advisor (`engine/sound_design/advisor.py`) handling Requests A–E via real acoustic diagnosis, undoable staged proposals, and Before/After acoustic delta comparison (`/compare-sound`).
+  - Expanded MCP server from 68 to **81 tools** (`9 music.*` + `72 daw.*`).
 
 ## Verification Status
 
-- **Python tests (`pytest -q`):** `69 passed` (all legacy + Phase 01/02/03/03.1/04 suites + real-audio Phase 03.2 **TEST A–E** + V7.2 real studio excerpt transcription + 68 MCP tools).
-- **Frontend tests & build:** `13 passed` (Vitest, including `chord.*` commands & `ko.json`/`en.json` 1:1 key parity) + clean `tsc -b && vite build`.
-- **Live Browser QA (`http://127.0.0.1:8796`):** Verified at **`1440×900`** and **`1280×800`** with **`0` console errors**, **`0` failed HTTP requests**, **`0` horizontal overflow**, and **`0` `[object Object]`** across real `v72_groove_8s.wav` precision transcription (`Demucs 4 stems` + `Basic Pitch` + `Chords`), inline chord editing, Timeline Chord Track import & lock, Mode B Reference Compose with 5-state Feature Verification badges, Mode A Session Reconstruct, and Runtime Registry honesty check. Screenshots saved in `docs/screenshots/phase-032-*.png`.
+- **Backend & Real Music Production Suite (`pytest`):** **`93 passed`** (`0 failed`) across all legacy + Phases 01–04 + Gate 1 (`18`), Gate 2 (`10`), Gate 3 (`11`), Gate 4 (`9`), and Gate 7 Real Music Production Tests A–E (`5`).
+- **Frontend (`vitest` + `vite build`):** **`14 passed`** (including Phase 05 `fx.*`/`bus.*`/`send.*`/`automation.*` commands & 100% `ko.json`/`en.json` key parity) + clean `tsc -b && vite build`.
+- **Live Browser QA (`http://127.0.0.1:8796`):** Verified at **`1440×900`** and **`1280×800`** with **`0` console errors**, **`0` page errors**, **`0` HTTP >= 400 errors**, **`0` occluded controls**, and clean `KO ↔ EN ↔ KO` switching across Instrument/FX Browsers, Device Rack (with live curved EQ SVG), Mixer sticky `MASTER` + Return Buses, and Korean AI Producer staged Sound Design proposals. Verified screenshots saved in `docs/screenshots/phase-05-*.png`.
 
 ## Honest Host Limitations & Deferred Phases
 
-- **Neural Full-Audio Generation (`YuE2` / `ACE-Step`):** Still genuinely uninstalled on this Mac (adapters, exact V7.2 CLI flags, YuE2 Blueprint v2 ABC auto-wiring, and `check_resting_voice()` gates are ready).
-- **Deferred:** Phase 05 (FX Rack / EQ / Comp / Reverb / AU / VST3 / REAPER host), Phase 06 (AI Mixing & Mastering), Phase 07 (Vocal synthesis & lyrics).
+- **Neural Full-Audio Generation (`YuE2` / `ACE-Step`):** Genuinely uninstalled on this Mac (`uninstalled` in Shared Runtime Registry); V7.2 Golden Reference lineage, Hybrid MIDI layering (`native_audio_original` protection), and Demucs multi-window Vocal Leakage Gate are active and verified.
+- **Third-Party AU/VST3 Plugins:** Logic-exclusive Apple instruments (Alchemy, Sculpture, etc.) are unavailable outside Logic Pro; crash-isolated AU/VST3 scanner probes genuinely installed system plugins without faking unavailable hosts.
+- **Sound/Spatial Profile:** Acoustic starting-point hints from measured Welch PSD/M-S/reverb tail — never claims reverse-engineered commercial mix plugin settings.
+- **Deferred:** Phase 06 (AI Mixing & Mastering Automation), Phase 07 (Vocal Synthesis & Lyrics).

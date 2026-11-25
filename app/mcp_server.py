@@ -633,6 +633,142 @@ def daw_get_reference_abc_score(
     return daw_mcp.get_reference_abc_score(reference_id, mode, project_id)
 
 
+# --- AI-Native DAW Phase 05 Professional Instruments, FX, Routing, Automation & Sound Design MCP Tools ---
+
+@server.tool(name="daw.list_pro_instruments", annotations=READ)
+def daw_list_pro_instruments() -> dict:
+    """List Instrument Registry v2 (FluidSynth SF3 multi-sampled instruments, Pro Analog/FM Synths, Sampler, Drum Rack & preview voices)."""
+    return daw_mcp.list_pro_instruments()
+
+
+@server.tool(name="daw.scan_host_plugins", annotations=READ)
+def daw_scan_host_plugins(probe_external: bool = True) -> dict:
+    """Scan macOS CoreAudio AUs and user-installed AU/VST3/CLAP plugins safely in an isolated subprocess."""
+    return daw_mcp.scan_host_plugins(probe_external)
+
+
+@server.tool(name="daw.list_fx_catalog", annotations=READ)
+def daw_list_fx_catalog() -> dict:
+    """List all 18 real DSP FX processors (Parametric EQ, Compressor, External Sidechain, Convolution Reverb, Delay, Tube Amp + Cab IR, etc.)."""
+    return daw_mcp.list_fx_catalog()
+
+
+@server.tool(name="daw.assign_instrument_preset", annotations=WRITE)
+def daw_assign_instrument_preset(
+    track_id: str,
+    instrument_ref: str,
+    preset: str | None = None,
+    parameters: dict | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Assign a professional virtual instrument, preset & parameters to a MIDI track without altering its MIDI notes."""
+    return daw_mcp.assign_instrument_preset(track_id, instrument_ref, preset, parameters, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.add_track_fx", annotations=WRITE)
+def daw_add_track_fx(
+    track_id: str,
+    fx_type: str,
+    preset: str | None = None,
+    parameters: dict | None = None,
+    sidechain_track_id: str | None = None,
+    wet_dry: float | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Insert a real Pedalboard/Convolution/Sidechain/Amp FX processor into a track's Device Rack."""
+    return daw_mcp.add_track_fx(track_id, fx_type, preset, parameters, sidechain_track_id, wet_dry, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.update_track_fx", annotations=WRITE)
+def daw_update_track_fx(
+    track_id: str,
+    fx_id: str,
+    parameters: dict | None = None,
+    bypass: bool | None = None,
+    wet_dry: float | None = None,
+    sidechain_track_id: str | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Update parameters, bypass, wet/dry, or external sidechain source of an existing track FX slot."""
+    return daw_mcp.update_track_fx(track_id, fx_id, parameters, bypass, wet_dry, sidechain_track_id, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.add_bus", annotations=WRITE)
+def daw_add_bus(
+    name: str,
+    kind: str = "return",
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Create a shared Return or Group Bus (e.g. Room Reverb, Hall Reverb, Delay Bus, Drum Bus)."""
+    return daw_mcp.add_bus(name, kind, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.set_track_send", annotations=WRITE)
+def daw_set_track_send(
+    track_id: str,
+    bus_id: str,
+    level_db: float = -10.0,
+    pre_fader: bool = False,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Configure a track's Pre-Fader or Post-Fader Send level into a Return/Group Bus."""
+    return daw_mcp.set_track_send(track_id, bus_id, level_db, pre_fader, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.upsert_automation_lane", annotations=WRITE)
+def daw_upsert_automation_lane(
+    track_id: str,
+    target_type: str,
+    parameter_id: str,
+    points: list[dict],
+    target_id: str | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict:
+    """Create or update a time-varying Automation Lane (volume, pan, filter cutoffHz, delay wetDry, send levelDb)."""
+    return daw_mcp.upsert_automation_lane(track_id, target_type, parameter_id, points, target_id, project_id, expected_revision, stage_only)
+
+
+@server.tool(name="daw.freeze_track", annotations=WRITE)
+def daw_freeze_track(track_id: str, project_id: str | None = None) -> dict:
+    """Freeze a track's Pro Instrument + Insert FX + Automation into a deterministic 48 kHz Stereo studio WAV cache."""
+    return daw_mcp.freeze_track_audio(track_id, project_id)
+
+
+@server.tool(name="daw.unfreeze_track", annotations=WRITE)
+def daw_unfreeze_track(track_id: str, project_id: str | None = None) -> dict:
+    """Unfreeze a track so MIDI, instruments, and FX can be edited freely."""
+    return daw_mcp.unfreeze_track_audio(track_id, project_id)
+
+
+@server.tool(name="daw.diagnose_track_audio", annotations=READ)
+def daw_diagnose_track_audio(track_id: str, project_id: str | None = None) -> dict:
+    """Measure real track frequency balance, low-mid mud ratio, spectral centroid, loudness & stereo width before sound design."""
+    return daw_mcp.diagnose_track_audio(track_id, project_id)
+
+
+@server.tool(name="daw.create_hybrid_native_layer", annotations=WRITE)
+def daw_create_hybrid_native_layer(
+    golden_reference_id: str = "v72-magnetic-afterhours",
+    layer_roles: list[str] | None = None,
+    bars: int = 8,
+    project_id: str | None = None,
+) -> dict:
+    """Hybrid Production Mode: keep original Native Audio untouched (Section 15) and layer editable MIDI tracks cleanly on top."""
+    return daw_mcp.create_hybrid_native_layer(golden_reference_id, layer_roles, bars, project_id)
+
+
 def main():
     server.run(transport="stdio")
 

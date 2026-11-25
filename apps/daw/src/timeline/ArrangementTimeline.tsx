@@ -205,9 +205,10 @@ type DragState =
 
 interface ArrangementTimelineProps {
   onOpenClipInEditor: (clip: Clip) => void;
+  onOpenDeviceRack?: () => void;
 }
 
-export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineProps) {
+export function ArrangementTimeline({ onOpenClipInEditor, onOpenDeviceRack }: ArrangementTimelineProps) {
   const { t } = useI18n();
   const {
     project,
@@ -837,6 +838,12 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                               {inst.name}
                             </option>
                           ))}
+                          {track.instrumentRef &&
+                            !STUDIO_INSTRUMENTS.some((i) => i.id === track.instrumentRef) && (
+                              <option value={track.instrumentRef}>
+                                {track.instrumentRef}
+                              </option>
+                            )}
                         </select>
                       ) : (
                         <span className="track-type-label">
@@ -887,12 +894,36 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                       >
                         S
                       </button>
+                      <button
+                        className="ms-btn"
+                        style={{
+                          width: "auto",
+                          padding: "0 4px",
+                          fontSize: 8.5,
+                          color:
+                            (track.effects?.length ?? 0) > 0 || track.freezeState?.frozen
+                              ? "#9fd4b2"
+                              : "var(--text-muted)",
+                          borderColor:
+                            (track.effects?.length ?? 0) > 0 ? "rgba(133,196,155,0.45)" : undefined,
+                        }}
+                        title={`Device Rack (${(track.effects ?? []).length} FX${track.freezeState?.frozen ? " · Frozen" : ""})`}
+                        data-testid={`track-fx-btn-${track.id}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelection((prev) => ({ ...prev, selectedTrackId: track.id }));
+                          onOpenDeviceRack?.();
+                        }}
+                      >
+                        {track.freezeState?.frozen ? "❄" : "FX"}
+                        {(track.effects?.length ?? 0) > 0 ? track.effects!.length : ""}
+                      </button>
 
                       {/* Volume Slider */}
                       <input
                         type="range"
                         className="mini-slider"
-                        style={{ width: 72 }}
+                        style={{ width: 52 }}
                         min={-60}
                         max={6}
                         step={0.5}

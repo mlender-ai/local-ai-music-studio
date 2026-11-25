@@ -155,7 +155,200 @@ export function executeCommand(project: Project, cmd: ProjectCommand): Project {
     }
 
     case "track.setInstrument": {
-      findTrack(p, cmd.payload.trackId).instrumentRef = cmd.payload.instrumentRef;
+      const trk = findTrack(p, cmd.payload.trackId);
+      trk.instrumentRef = cmd.payload.instrumentRef;
+      if (cmd.payload.preset !== undefined || cmd.payload.parameters !== undefined) {
+        const prevCfg = (trk.instrumentConfig ?? {}) as Record<string, unknown>;
+        const prevParams = (prevCfg.parameters ?? {}) as Record<string, unknown>;
+        trk.instrumentConfig = {
+          ...prevCfg,
+          ...(cmd.payload.preset !== undefined ? { preset: cmd.payload.preset } : {}),
+          ...(cmd.payload.parameters ? { parameters: { ...prevParams, ...cmd.payload.parameters } } : {}),
+        };
+      }
+      trk.freezeState = null;
+      break;
+    }
+
+    case "instrument.setPreset": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      const prevCfg = (trk.instrumentConfig ?? {}) as Record<string, unknown>;
+      const prevParams = (prevCfg.parameters ?? {}) as Record<string, unknown>;
+      trk.instrumentConfig = {
+        ...prevCfg,
+        preset: cmd.payload.preset,
+        ...(cmd.payload.parameters ? { parameters: { ...prevParams, ...cmd.payload.parameters } } : {}),
+      };
+      trk.freezeState = null;
+      break;
+    }
+
+    case "instrument.setParams": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      const prevCfg = (trk.instrumentConfig ?? {}) as Record<string, unknown>;
+      const prevParams = (prevCfg.parameters ?? {}) as Record<string, unknown>;
+      trk.instrumentConfig = {
+        ...prevCfg,
+        parameters: { ...prevParams, ...cmd.payload.parameters },
+        ...(cmd.payload.articulation !== undefined ? { articulation: cmd.payload.articulation } : {}),
+        ...(cmd.payload.samplerConfig ? { samplerConfig: { ...(prevCfg.samplerConfig as Record<string, unknown> | undefined), ...cmd.payload.samplerConfig } } : {}),
+        ...(cmd.payload.drumRackConfig ? { drumRackConfig: { ...(prevCfg.drumRackConfig as Record<string, unknown> | undefined), ...cmd.payload.drumRackConfig } } : {}),
+      };
+      trk.freezeState = null;
+      break;
+    }
+
+    case "fx.add":
+    case "fx.remove":
+    case "fx.move":
+    case "fx.setParams":
+    case "fx.setBypass": {
+      const target = cmd.payload.target ?? (cmd.payload.busId ? "bus" : "track");
+      let fxList: Track["effects"];
+      let ownerTrack: Track | null = null;
+      if (target === "master") {
+        p.masterEffects = p.masterEffects ?? [];
+        fxList = p.masterEffects;
+      } else if (target === "bus" && cmd.payload.busId) {
+        const bus = (p.buses ?? []).find((b) => b.id === cmd.payload.busId);
+        if (!bus) throw new Error(`Bus not found: ${cmd.payload.busId}`);
+        bus.effects = bus.effects ?? [];
+        fxList = bus.effects;
+      } else {
+        ownerTrack = findTrack(p, cmd.payload.trackId ?? "");
+        ownerTrack.effects = ownerTrack.effects ?? [];
+        fxList = ownerTrack.effects;
+      }
+
+      if (cmd.type === "fx.add") {
+        const slot = { ...cmd.payload.slot, id: cmd.payload.slot.id || makeClientId("fx") };
+        if (typeof cmd.payload.index === "number" && cmd.payload.index >= 0 && cmd.payload.index <= fxList.length) {
+          fxList.splice(cmd.payload.index, 0, slot);
+        } else {
+          fxList.push(slot);
+        }
+      } else if (cmd.type === "fx.remove") {
+        const idx = fxList.findIndex((f) => f.id === cmd.payload.fxId);
+        if (idx >= 0) fxList.splice(idx, 1);
+      } else if (cmd.type === "fx.move") {
+        const { fromIndex, toIndex } = cmd.payload;
+        if (fromIndex >= 0 && fromIndex < fxList.length && toIndex >= 0 && toIndex < fxList.length) {
+          const [moved] = fxList.splice(fromIndex, 1);
+          fxList.splice(toIndex, 0, moved);
+        }
+      } else if (cmd.type === "fx.setParams") {
+        const slot = fxList.find((f) => f.id === cmd.payload.fxId);
+        if (slot) {
+          if (cmd.payload.parameters) {
+            slot.parameters = { ...(slot.parameters ?? {}), ...cmd.payload.parameters };
+          }
+          if (cmd.payload.preset !== undefined) slot.preset = cmd.payload.preset;
+          if (cmd.payload.wetDry !== undefined) {
+            slot.wetDry = Math.max(0, Math.min(1, cmd.payload.wetDry));
+            slot.parameters = { ...(slot.parameters ?? {}), wetDry: slot.wetDry };
+          }
+          if (cmd.payload.sidechainTrackId !== undefined) {
+            slot.sidechainTrackId = cmd.payload.sidechainTrackId;
+          }
+        }
+      } else if (cmd.type === "fx.setBypass") {
+        const slot = fxList.find((f) => f.id === cmd.payload.fxId);
+        if (slot) slot.bypass = cmd.payload.bypass;
+      }
+      if (ownerTrack) ownerTrack.freezeState = null;
+      break;
+    }
+
+    case "bus.add": {
+      p.buses = p.buses ?? [];
+      const bid = cmd.payload.id || makeClientId("bus");
+      p.buses = [
+        ...p.buses.filter((b) => b.id !== bid),
+        {
+          id: bid,
+          name: cmd.payload.name,
+          kind: cmd.payload.kind ?? "return",
+          gainDb: 0,
+          pan: 0,
+          mute: false,
+          solo: false,
+          effects: cmd.payload.effects ?? [],
+        },
+      ];
+      break;
+    }
+
+    case "bus.remove": {
+      const bid = cmd.payload.busId;
+      p.buses = (p.buses ?? []).filter((b) => b.id !== bid);
+      for (const trk of p.tracks) {
+        trk.sends = (trk.sends ?? []).filter((s) => s.busId !== bid);
+        if (trk.outputBusId === bid) trk.outputBusId = "master";
+      }
+      break;
+    }
+
+    case "bus.setGain": {
+      const bus = (p.buses ?? []).find((b) => b.id === cmd.payload.busId);
+      if (bus) bus.gainDb = Math.max(-60, Math.min(6, cmd.payload.gainDb));
+      break;
+    }
+
+    case "bus.setMute": {
+      const bus = (p.buses ?? []).find((b) => b.id === cmd.payload.busId);
+      if (bus) bus.mute = cmd.payload.mute;
+      break;
+    }
+
+    case "bus.setSolo": {
+      const bus = (p.buses ?? []).find((b) => b.id === cmd.payload.busId);
+      if (bus) bus.solo = cmd.payload.solo;
+      break;
+    }
+
+    case "send.set": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      trk.sends = trk.sends ?? [];
+      const ex = trk.sends.find((s) => s.busId === cmd.payload.busId);
+      const lvl = Math.max(-60, Math.min(6, cmd.payload.levelDb));
+      if (ex) {
+        ex.levelDb = lvl;
+        if (cmd.payload.preFader !== undefined) ex.preFader = cmd.payload.preFader;
+        if (cmd.payload.enabled !== undefined) ex.enabled = cmd.payload.enabled;
+      } else {
+        trk.sends.push({
+          id: makeClientId("snd"),
+          busId: cmd.payload.busId,
+          levelDb: lvl,
+          preFader: cmd.payload.preFader ?? false,
+          enabled: cmd.payload.enabled ?? true,
+        });
+      }
+      break;
+    }
+
+    case "send.remove": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      trk.sends = (trk.sends ?? []).filter((s) => s.busId !== cmd.payload.busId);
+      break;
+    }
+
+    case "automation.upsertLane": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      const lane = {
+        ...cmd.payload.lane,
+        id: cmd.payload.lane.id || makeClientId("auto"),
+        points: [...(cmd.payload.lane.points ?? [])].sort((a, b) => a.beat - b.beat),
+      };
+      trk.automationLanes = [...(trk.automationLanes ?? []).filter((l) => l.id !== lane.id), lane];
+      trk.freezeState = null;
+      break;
+    }
+
+    case "automation.removeLane": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      trk.automationLanes = (trk.automationLanes ?? []).filter((l) => l.id !== cmd.payload.laneId);
+      trk.freezeState = null;
       break;
     }
 

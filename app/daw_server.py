@@ -922,6 +922,59 @@ def api_unfreeze_track(project_id: str, track_id: str) -> dict[str, Any]:
     return res
 
 
+@app.post("/api/projects/{project_id}/tracks/{track_id}/diagnose")
+def api_diagnose_track(project_id: str, track_id: str) -> dict[str, Any]:
+    from engine.sound_design import diagnose_track_audio
+
+    proj = store.load_project(project_id)
+    return diagnose_track_audio(proj, track_id)
+
+
+class ServerExportBody(BaseModel):
+    useLoopRange: bool = False
+
+
+@app.post("/api/projects/{project_id}/export/studio-wav")
+def api_server_export_wav(project_id: str, body: ServerExportBody):
+    from fastapi.responses import Response
+    from engine.daw_workspace import loudness as daw_loudness
+    from engine.daw_workspace.renderer import export_project_wav
+    import soundfile as sf
+
+    proj = store.load_project(project_id)
+    safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in proj.name).strip("_") or "mix"
+    filename = f"{safe_name}_studio_48k.wav"
+    start_b = proj.loopRegion.startBeats if (body.useLoopRange and proj.loopRegion.enabled) else 0.0
+    end_b = proj.loopRegion.endBeats if (body.useLoopRange and proj.loopRegion.enabled) else proj.lengthBeats
+    meta = export_project_wav(proj, filename=filename, start_beats=start_b, end_beats=end_b)
+    out_path = store.project_dir(project_id) / meta["relativePath"]
+    pcm, sr = sf.read(str(out_path), dtype="float32")
+    lufs = float(daw_loudness.measure_loudness(pcm, sr).get("integratedLufs", -60.0))
+    wav_bytes = out_path.read_bytes()
+    return Response(
+        content=wav_bytes,
+        media_type="audio/wav",
+        headers={
+            "X-Export-Filename": meta["filename"],
+            "X-Export-Duration-Sec": f"{float(meta.get('durationSec', 0.0)):.3f}",
+            "X-Export-Peak-Dbfs": f"{float(meta.get('peakDbfs', -96.0)):.2f}",
+            "X-Export-Lufs": f"{lufs:.2f}",
+        },
+    )
+
+
+@app.post("/api/projects/{project_id}/proposals/{proposal_id}/compare-sound")
+def api_compare_proposal_sound(project_id: str, proposal_id: str) -> dict[str, Any]:
+    from engine.sound_design import compare_before_after_proposal
+
+    proj = store.load_project(project_id)
+    props = proposals.list_proposals(project_id)
+    prop = next((p for p in props if p.get("id") == proposal_id), None)
+    if prop is None:
+        raise FileNotFoundError(f"Proposal not found: {proposal_id}")
+    return compare_before_after_proposal(proj, list(prop.get("operations") or []))
+
+
 class SamplerSliceBody(BaseModel):
     assetId: str = Field(min_length=1)
     sensitivity: float = Field(default=0.55, ge=0.1, le=0.95)

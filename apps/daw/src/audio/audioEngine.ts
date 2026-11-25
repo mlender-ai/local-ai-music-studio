@@ -617,6 +617,32 @@ export class RealtimeAudioEngine {
 
     for (const track of project.tracks) {
       const nodes = this.ensureTrackNode(track);
+
+      // Phase 05: Bit-exact Frozen Studio WAV playback (FluidSynth + Pedalboard FX + Automation)
+      if (track.freezeState?.frozen && track.freezeState.assetId) {
+        const frozenBuf = this.audioBuffers.get(`${project.id}:${track.freezeState.assetId}`);
+        if (frozenBuf && songStartSec < frozenBuf.duration) {
+          const freezeKey = `frozen:${track.id}:${track.freezeState.assetId}:${cycleIndex}`;
+          if (!this.scheduledAudioClipKeys.has(freezeKey)) {
+            this.scheduledAudioClipKeys.add(freezeKey);
+            const limitSec = Math.min(boundaryLimitSec, frozenBuf.duration);
+            const playDur = Math.max(0, limitSec - songStartSec);
+            if (playDur > 0.005) {
+              const src = this.ctx.createBufferSource();
+              src.buffer = frozenBuf;
+              src.connect(nodes.input);
+              src.start(audioStartTime, songStartSec, playDur);
+              this.activeSources.add(src);
+              src.onended = () => {
+                this.activeSources.delete(src);
+                src.disconnect();
+              };
+            }
+          }
+          continue;
+        }
+      }
+
       for (const clip of track.clips) {
         if (clip.type === "audio" && clip.assetId) {
           const buf = this.audioBuffers.get(`${project.id}:${clip.assetId}`);
