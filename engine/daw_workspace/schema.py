@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.4.0"
+SCHEMA_VERSION = "1.5.0"
 DEFAULT_PPQ = 480
 DEFAULT_SAMPLE_RATE = 48000
 
@@ -132,7 +132,12 @@ class Track(DawModel):
     stemLabel: str | None = None
     stemMeta: dict[str, Any] | None = None
     instrumentRef: str | None = None
+    instrumentConfig: dict[str, Any] = Field(default_factory=dict)
     effects: list[dict[str, Any]] = Field(default_factory=list)
+    sends: list[dict[str, Any]] = Field(default_factory=list)
+    automationLanes: list[dict[str, Any]] = Field(default_factory=list)
+    freezeState: dict[str, Any] | None = None
+    outputBusId: str = "master"
     takeLanes: list[dict[str, Any]] = Field(default_factory=list)
     clips: list[Clip] = Field(default_factory=list)
 
@@ -172,6 +177,8 @@ class Project(DawModel):
     chordTrackLocked: bool = False
     assets: list[Asset] = Field(default_factory=list)
     tracks: list[Track] = Field(default_factory=list)
+    buses: list[dict[str, Any]] = Field(default_factory=list)
+    masterEffects: list[dict[str, Any]] = Field(default_factory=list)
     references: list[dict[str, Any]] = Field(default_factory=list)
     compositionPlans: list[dict[str, Any]] = Field(default_factory=list)
     takes: list[dict[str, Any]] = Field(default_factory=list)
