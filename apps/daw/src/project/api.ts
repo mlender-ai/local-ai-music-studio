@@ -1,5 +1,6 @@
 import type {
   AnalysisJobStatus,
+  ArrangementEditPlan,
   Asset,
   ChangeProposal,
   CompositionPlan,
@@ -14,6 +15,7 @@ import type {
   ProviderSummary,
   ReferenceComparisonResult,
   ReferenceItem,
+  RuntimeRegistryInfo,
   SelectionContext,
   Take,
   WaveformData,
@@ -361,6 +363,10 @@ export const dawApi = {
     return apiFetch("/api/generation/engines");
   },
 
+  getRuntimeRegistry(): Promise<RuntimeRegistryInfo> {
+    return apiFetch("/api/runtime");
+  },
+
   createCompositionPlan(
     projectId: string,
     body: {
@@ -371,6 +377,7 @@ export const dawApi = {
       selectedInfluences?: string[];
       selection?: SelectionContext;
       providerId?: string;
+      enginePreference?: string;
     }
   ): Promise<{ plan: CompositionPlan; projectRevision: number }> {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/composition/plan`, {
@@ -394,7 +401,14 @@ export const dawApi = {
       seed?: number;
       sync?: boolean;
     }
-  ): Promise<{ job: GenerationJobStatus; take?: Take }> {
+  ): Promise<{
+    job?: GenerationJobStatus;
+    take?: Take;
+    engineUnavailable?: boolean;
+    requestedEngine?: string;
+    errorKo?: string;
+    errorEn?: string;
+  }> {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/generation/jobs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -410,25 +424,51 @@ export const dawApi = {
     return apiFetch(`/api/generation/jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST" });
   },
 
+  retryGenerationJob(jobId: string): Promise<{ job: GenerationJobStatus }> {
+    return apiFetch(`/api/generation/jobs/${encodeURIComponent(jobId)}/retry`, { method: "POST" });
+  },
+
   listTakes(projectId: string): Promise<{ takes: Take[] }> {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/takes`);
   },
 
-  takeAudioUrl(projectId: string, takeId: string): string {
-    return `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/audio`;
+  takeAudioUrl(
+    projectId: string,
+    takeId: string,
+    variant: "solo" | "in_context" | "original_context" = "solo"
+  ): string {
+    const q = variant !== "solo" ? `?variant=${encodeURIComponent(variant)}` : "";
+    return `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/audio${q}`;
   },
 
   applyTake(
     projectId: string,
     takeId: string,
     body: {
-      applyMode: "new_tracks" | "selected_range" | "new_project" | "keep_take";
+      applyMode:
+        | "add"
+        | "new_tracks"
+        | "replace_range"
+        | "selected_range"
+        | "alternative_take"
+        | "extend"
+        | "new_project"
+        | "keep_take";
       targetTrackId?: string | null;
       startBeats?: number;
       addSectionMarkers?: boolean;
+      replaceSections?: boolean;
       expectedRevision?: number;
+      forceReapply?: boolean;
     }
-  ): Promise<{ applied: boolean; take: Take; project: Project; revision?: number; createdNewProject?: boolean }> {
+  ): Promise<{
+    applied: boolean;
+    applyMode?: string;
+    take: Take;
+    project: Project;
+    revision?: number;
+    createdNewProject?: boolean;
+  }> {
     return apiFetch(
       `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/apply`,
       {
@@ -444,5 +484,121 @@ export const dawApi = {
       `/api/projects/${encodeURIComponent(projectId)}/takes/${encodeURIComponent(takeId)}/reject`,
       { method: "POST" }
     );
+  },
+
+  // --- Phase 04: Selective Arrangement, Variations, Take Lanes, Audio Reverse & Music Memory ---
+
+  createArrangementPlan(
+    projectId: string,
+    body: {
+      instruction: string;
+      selection?: SelectionContext;
+      intensity?: "subtle" | "moderate" | "creative";
+      targetTrackId?: string | null;
+      startBeats?: number;
+      endBeats?: number;
+      providerId?: string;
+    }
+  ): Promise<{ plan: ArrangementEditPlan; projectRevision: number }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/arrangement/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  executeArrangementPlan(
+    projectId: string,
+    body: {
+      plan?: ArrangementEditPlan;
+      instruction?: string;
+      selection?: SelectionContext;
+      intensity?: "subtle" | "moderate" | "creative";
+      targetTrackId?: string | null;
+      startBeats?: number;
+      endBeats?: number;
+      seed?: number;
+    }
+  ): Promise<{
+    applied?: boolean;
+    operation?: string;
+    messageKo?: string;
+    plan?: ArrangementEditPlan;
+    take?: Take;
+    contextualPreview?: Record<string, unknown>;
+    project?: Project;
+    revision?: number;
+  }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/arrangement/execute`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  },
+
+  promoteTakeLane(
+    projectId: string,
+    trackId: string,
+    laneId: string,
+    body?: { startBeats?: number; endBeats?: number }
+  ): Promise<{ promoted: boolean; laneId: string; insertedClipIds: string[]; project: Project; revision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/take-lanes/${encodeURIComponent(laneId)}/promote`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body ?? {}),
+      }
+    );
+  },
+
+  restoreOriginalTakeLane(
+    projectId: string,
+    trackId: string,
+    laneId?: string
+  ): Promise<{ promoted: boolean; project: Project; revision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/take-lanes/restore-original`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ laneId }),
+      }
+    );
+  },
+
+  renameTakeLane(
+    projectId: string,
+    trackId: string,
+    laneId: string,
+    name: string
+  ): Promise<{ renamed: boolean; project: Project; revision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/take-lanes/${encodeURIComponent(laneId)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      }
+    );
+  },
+
+  reverseAudioClip(
+    projectId: string,
+    clipId: string,
+    expectedRevision?: number
+  ): Promise<{ reversed: boolean; newAsset: Asset; project: Project; revision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/clips/${encodeURIComponent(clipId)}/reverse`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expectedRevision }),
+      }
+    );
+  },
+
+  getMusicMemory(projectId: string): Promise<{ projectId: string; musicMemory: Record<string, unknown> }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/memory`);
   },
 };

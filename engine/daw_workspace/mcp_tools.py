@@ -4,6 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from engine.arrangement import (
+    ArrangementEditPlan,
+    create_arrangement_edit_plan as _build_arrangement_plan,
+    create_reversed_clip_asset as _reverse_clip_asset,
+    ensure_music_memory as _ensure_music_memory,
+    execute_arrangement_edit_plan as _exec_arrangement_plan,
+    promote_take_lane as _promote_take_lane,
+    restore_original_lane as _restore_original_lane,
+)
 from engine.composition import create_composition_plan as _build_plan
 from engine.composition.schemas import CompositionPlan
 from engine.generation import (
@@ -38,18 +47,18 @@ def _resolve_project_id(project_id: str | None) -> str:
 def get_capabilities() -> dict[str, Any]:
     return {
         "product": "AI-Native DAW",
-        "phase": "03",
-        "schemaVersion": "1.2.0",
+        "phase": "04",
+        "schemaVersion": "1.3.0",
         "supported": {
             "projectReadWrite": True,
             "revisionConflictGuard": True,
             "stagedChangeProposals": True,
             "mcpDefaultSafeStaging": True,
             "undoRedo": True,
-            "trackEdit": ["add", "remove", "rename", "reorder", "gain", "pan", "mute", "solo", "setInstrument"],
-            "clipEdit": ["add", "move", "trim", "split", "duplicate", "delete", "gain", "loop"],
+            "trackEdit": ["add", "remove", "rename", "reorder", "gain", "pan", "mute", "solo", "setInstrument", "takeLanes"],
+            "clipEdit": ["add", "move", "trim", "split", "duplicate", "delete", "gain", "loop", "fades", "reverse"],
             "midiEdit": ["addNote", "moveNote", "resizeNote", "setVelocity", "deleteNote"],
-            "sectionMarkers": ["add", "rename", "remove"],
+            "sectionMarkers": ["add", "rename", "remove", "extend"],
             "referenceIntelligence": [
                 "import_audio_video",
                 "url_metadata_probe",
@@ -68,18 +77,27 @@ def get_capabilities() -> dict[str, Any]:
                 "transactional_take_apply",
                 "six_voice_multi_timbre_instruments",
             ],
+            "aiArrangement": [
+                "selective_bar_variation",
+                "midi_drum_hook_bass_harmony_variation",
+                "non_destructive_audio_reverse_and_fades",
+                "audio_seam_validation",
+                "timeline_take_lanes_and_selective_comping",
+                "in_context_and_original_ab_preview",
+                "project_music_memory",
+            ],
             "stereoWavExport": True,
         },
         "unsupported": {
-            "aiArrangementBarRegeneration": "Planned for Phase 04",
             "fxRackEqCompReverb": "Planned for Phase 05",
             "externalPluginsAuVst3": "Planned for Phase 05",
             "aiMixingMastering": "Planned for Phase 06",
-            "vocalSynthesisAndLyrics": "Planned for Phase 07 (Instrumental-only policy in Phase 03)",
+            "vocalSynthesisAndLyrics": "Planned for Phase 07 (Instrumental-only policy in Phase 03/04)",
             "audioTimeStretchWarp": "Planned for later phase",
         },
         "providers": get_provider_summary(),
         "generationEngines": detect_generation_engines(),
+        "runtimeRegistry": get_runtime_registry(),
         "instruments": _list_instruments(),
         "reaperBridge": reaper.detect_reaper(),
     }
@@ -602,3 +620,97 @@ def list_instruments() -> dict[str, Any]:
 
 def get_runtime_status() -> dict[str, Any]:
     return get_runtime_registry()
+
+
+# --- Phase 04: Selective Arrangement, Musical Variation, Take Comping, Audio Reverse & Music Memory MCP Tools ---
+
+def create_arrangement_edit_plan(
+    instruction: str,
+    intensity: str | None = None,
+    target_track_id: str | None = None,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    project_id: str | None = None,
+    provider_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    sess = session.get_active_session()
+    sel = sess.get("selection") if sess.get("projectId") == pid else None
+    plan = _build_arrangement_plan(
+        project=proj,
+        instruction=instruction,
+        selection=sel,
+        intensity=intensity,
+        target_track_id=target_track_id,
+        start_beats=start_beats,
+        end_beats=end_beats,
+        provider_id=provider_id,
+    )
+    return {"projectId": pid, "revision": proj.revision, "plan": plan.model_dump()}
+
+
+def generate_variation(
+    instruction: str | None = None,
+    plan: dict[str, Any] | None = None,
+    intensity: str | None = None,
+    target_track_id: str | None = None,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    seed: int = 42,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    if plan:
+        arr_plan = ArrangementEditPlan.model_validate(plan)
+    else:
+        if not instruction:
+            raise ValueError("Either instruction or plan is required")
+        sess = session.get_active_session()
+        sel = sess.get("selection") if sess.get("projectId") == pid else None
+        arr_plan = _build_arrangement_plan(
+            project=proj,
+            instruction=instruction,
+            selection=sel,
+            intensity=intensity,
+            target_track_id=target_track_id,
+            start_beats=start_beats,
+            end_beats=end_beats,
+        )
+    return _exec_arrangement_plan(pid, arr_plan, seed=seed)
+
+
+def promote_take_lane(
+    track_id: str,
+    lane_id: str,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    return _promote_take_lane(pid, track_id, lane_id, comp_start_beats=start_beats, comp_end_beats=end_beats)
+
+
+def restore_original_take_lane(
+    track_id: str,
+    lane_id: str | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    return _restore_original_lane(pid, track_id, lane_id=lane_id)
+
+
+def reverse_audio_clip(
+    clip_id: str,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    return _reverse_clip_asset(pid, clip_id, expected_revision=expected_revision)
+
+
+def get_music_memory(project_id: str | None = None) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    return {"projectId": pid, "revision": proj.revision, "musicMemory": _ensure_music_memory(proj)}

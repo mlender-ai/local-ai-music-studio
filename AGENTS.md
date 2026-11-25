@@ -12,24 +12,30 @@ Transform `local-ai-music-studio` into **AI-Native DAW** — a local-first macOS
 
 ## 2. Current Phase
 
-- **Active Phase:** Phase 01 — Workspace Foundation (`docs/phases/PHASE_01.md`)
+- **Active Phase:** Phase 03.1 + Phase 04 — Engine Recovery · AI Arrangement · Musical Variation · Take Comping (`docs/phases/PHASE_04.md`)
 - **Integration Branch:** `develop/ai-native-daw`
-- **Task Branch:** `feat/daw-workspace-phase-01`
+- **Latest Stacked Task Branch:** `feat/daw-phase-04-arrangement` (stacked on `fix/daw-phase-03-engine-integration` PR #21)
 - Read `docs/STATUS.md` for live progress and `docs/HANDOFF.md` for the latest handoff context.
 
 ## 3. Repository Map
 
 | Path | Role |
 |---|---|
-| `apps/daw/` | React + TypeScript + Vite DAW frontend (Timeline, Audio Engine, Piano Roll, Mixer, Commands) |
-| `engine/daw_workspace/` | Phase 01 Python DAW backend (Project persistence, asset store, waveform cache, MIDI SMF parser, offline WAV renderer, shared command executor) |
-| `app/daw_server.py` | FastAPI DAW HTTP server (`127.0.0.1:8796`, serves API + built frontend) |
+| `apps/daw/` | React + TypeScript + Vite DAW frontend (Timeline + Take Lanes, Audio Engine, Clip Editor Fades/Reverse, Piano Roll, Mixer, AI Producer, Commands) |
+| `engine/daw_workspace/` | Python DAW backend (Project persistence v1.3.0, asset store, waveform cache, MIDI SMF parser, BS.1770-4 loudness, offline WAV renderer with fades, shared command executor, staged proposals, MCP tools) |
+| `engine/runtime/` | Shared Runtime Registry (`~/.config/ai-native-daw/runtime.json`) with honest 6-state engine lifecycle (`uninstalled` → `verified`) |
+| `engine/providers/` | AI Producer Provider Registry (verified isolated local Claude Code CLI `--tools ""`, Built-in Music Director, MCP Bridge, Ollama/Codex/Env API probes) |
+| `engine/composition/` | Composition Director, Reference Context Binding, Motif MIDI Composer, Musical Validation, Sample Catalog |
+| `engine/generation/` | Single-worker Generation Job Manager, Process-Group Guard (`SIGTERM → SIGKILL`, 10 GiB RSS cap), Safe Take Apply, YuE2/ACE-Step/Demucs/Local adapters |
+| `engine/arrangement/` | Phase 04 Selective Arrangement, `EditScope`/`ArrangementEditPlan`, MIDI Musical Variations, Non-Destructive Audio Reverse & Seam Validation, Contextual A/B Previews, Timeline Take Lanes & Selective Comping, Project Music Memory |
+| `engine/instruments/` | 6-voice multi-timbre studio synth voices mirrored in Web Audio |
+| `app/daw_server.py` | FastAPI DAW HTTP + SSE server (`127.0.0.1:8796`, serves API + built frontend) |
 | `engine/` | Existing Local AI Music Studio engine (ACE-Step generation, DSP chain, SQLite version store, jobs, rendering). Do not break. |
 | `app/player/` | Existing A/B player (`127.0.0.1:8795`). Preserve compatibility. |
-| `app/mcp_server.py` | Existing FastMCP server. Future phases will expose DAW commands here. |
+| `app/mcp_server.py` | FastMCP STDIO server exposing 61 tools (`9 music.*` + `52 daw.*`) |
 | `scripts/start_daw.sh` | Single-command launcher for DAW backend + frontend |
 | `scripts/seed_daw_demos.py` | Seeds Demo Project A (V7.2 Magnetic Afterhours) and Demo Project B (Multitrack Session) locally |
-| `docs/` | Shared product, design, architecture, project format, roadmap, status, handoff, and ADRs |
+| `docs/` | Shared product, design, architecture, project format, roadmap, status, handoff, phase specs, and screenshots |
 
 ## 4. Development Commands
 
@@ -88,4 +94,4 @@ Keep `AGENTS.md` and `docs/STATUS.md` concise. Read only the detailed specs rele
 - System boundaries: `docs/ARCHITECTURE.md`
 - Project schema & units: `docs/PROJECT_FORMAT.md`
 - Dev setup & QA: `docs/DEVELOPMENT.md`
-- Current phase checklist: `docs/phases/PHASE_01.md`
+- Current phase checklist: `docs/phases/PHASE_04.md`

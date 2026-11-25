@@ -641,10 +641,24 @@ export class RealtimeAudioEngine {
           src.buffer = buf;
 
           const clipGain = this.ctx.createGain();
+          const clipStartSec = beatsToSeconds(clip.timelineStartBeats, project.bpm);
+          const clipEndSec = clipStartSec + beatsToSeconds(clip.durationBeats, project.bpm);
+          const rawFi = Math.max(0.003, beatsToSeconds(clip.fadeInBeats ?? 0, project.bpm));
+          const rawFo = Math.max(0.004, beatsToSeconds(clip.fadeOutBeats ?? 0, project.bpm));
+          const atClipStart = seg.songStartSec <= clipStartSec + 0.005;
+          const atClipEnd = seg.songStartSec + seg.playDurSec >= clipEndSec - 0.005;
+          let fiSec = atClipStart ? rawFi : 0.003;
+          let foSec = atClipEnd ? rawFo : 0.004;
+          if (fiSec + foSec > seg.playDurSec) {
+            const sc = seg.playDurSec / Math.max(0.001, fiSec + foSec);
+            fiSec *= sc;
+            foSec *= sc;
+          }
           clipGain.gain.setValueAtTime(0.0001, when);
-          clipGain.gain.linearRampToValueAtTime(seg.clipGainLinear, when + 0.003);
-          if (seg.playDurSec > 0.008) {
-            clipGain.gain.setValueAtTime(seg.clipGainLinear, when + seg.playDurSec - 0.004);
+          clipGain.gain.linearRampToValueAtTime(seg.clipGainLinear, when + Math.max(0.003, fiSec));
+          if (seg.playDurSec > fiSec + 0.004) {
+            const fadeOutStart = Math.max(when + fiSec, when + seg.playDurSec - Math.max(0.004, foSec));
+            clipGain.gain.setValueAtTime(seg.clipGainLinear, fadeOutStart);
             clipGain.gain.linearRampToValueAtTime(0.0001, when + seg.playDurSec);
           }
 

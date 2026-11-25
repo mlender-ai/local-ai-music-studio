@@ -16,6 +16,17 @@ from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from engine import paths as engine_paths
+from engine.arrangement import (
+    ArrangementEditPlan,
+    create_arrangement_edit_plan,
+    create_reversed_clip_asset,
+    ensure_music_memory,
+    execute_arrangement_edit_plan,
+    promote_take_lane,
+    rename_take_lane,
+    restore_original_lane,
+    update_project_music_memory,
+)
 from engine.composition import create_composition_plan, list_library_catalog
 from engine.composition.schemas import CompositionPlan
 from engine.daw_workspace import analysis, commands, mcp_tools, proposals, reaper, references, renderer, session, store
@@ -110,7 +121,7 @@ def health() -> dict[str, Any]:
     return {
         "status": "ok",
         "product": "AI-Native DAW",
-        "phase": "03",
+        "phase": "04",
         "port": 8796,
         "reaper": reaper.detect_reaper(),
         "uiBuilt": (DIST_DIR / "index.html").is_file(),
@@ -511,6 +522,20 @@ def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[
             "messageKo": f"변경 제안이 생성되었습니다: {prop['summary']}. 확인 후 '적용'을 눌러 반영하세요.",
             "messageEn": f"Change proposal staged: {prop['summary']}. Click Apply to commit.",
         }
+    if routed.get("action") == "arrangement_edit_plan":
+        arr_plan = create_arrangement_edit_plan(
+            project=proj,
+            instruction=body.instruction,
+            selection=body.selection,
+        )
+        return {
+            "supported": True,
+            "action": "arrangement_edit_plan_created",
+            "arrangementPlan": arr_plan.model_dump(),
+            "projectRevision": proj.revision,
+            "messageKo": arr_plan.summaryKo,
+            "messageEn": arr_plan.summaryEn,
+        }
     if routed.get("action") == "composition_plan":
         plan = create_composition_plan(
             project=proj,
@@ -703,9 +728,9 @@ def api_get_take(project_id: str, take_id: str) -> dict[str, Any]:
 
 
 @app.get("/api/projects/{project_id}/takes/{take_id}/audio")
-def api_get_take_audio(project_id: str, take_id: str):
-    take, abs_path = resolve_take_preview_audio(project_id, take_id)
-    return FileResponse(abs_path, media_type="audio/wav", filename=f"{take_id}_preview.wav")
+def api_get_take_audio(project_id: str, take_id: str, variant: str = "solo"):
+    take, abs_path = resolve_take_preview_audio(project_id, take_id, variant=variant)
+    return FileResponse(abs_path, media_type="audio/wav", filename=f"{take_id}_{variant}.wav")
 
 
 @app.post("/api/projects/{project_id}/takes/{take_id}/apply")
@@ -738,6 +763,138 @@ def api_separate_stems(project_id: str, body: SeparateStemsBody) -> dict[str, An
         model_name=body.modelName,
         sync=body.sync,
     )
+
+
+# --- Phase 04: Selective Arrangement, Musical Variation, Take Lanes, Audio Reverse & Music Memory ---
+
+class ArrangementPlanBody(BaseModel):
+    instruction: str = Field(min_length=1, max_length=1500)
+    selection: dict[str, Any] | None = None
+    intensity: str | None = None
+    targetTrackId: str | None = None
+    startBeats: float | None = None
+    endBeats: float | None = None
+    providerId: str | None = None
+
+
+class ArrangementExecuteBody(BaseModel):
+    plan: dict[str, Any] | None = None
+    instruction: str | None = None
+    selection: dict[str, Any] | None = None
+    intensity: str | None = None
+    targetTrackId: str | None = None
+    startBeats: float | None = None
+    endBeats: float | None = None
+    seed: int = 42
+
+
+class PromoteTakeLaneBody(BaseModel):
+    startBeats: float | None = None
+    endBeats: float | None = None
+
+
+class RestoreOriginalLaneBody(BaseModel):
+    laneId: str | None = None
+
+
+class ReverseClipBody(BaseModel):
+    expectedRevision: int | None = None
+
+
+class PatchMemoryBody(BaseModel):
+    patch: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/api/projects/{project_id}/arrangement/plan")
+def api_create_arrangement_plan(project_id: str, body: ArrangementPlanBody) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    plan = create_arrangement_edit_plan(
+        project=proj,
+        instruction=body.instruction,
+        selection=body.selection,
+        intensity=body.intensity,
+        target_track_id=body.targetTrackId,
+        start_beats=body.startBeats,
+        end_beats=body.endBeats,
+        provider_id=body.providerId,
+    )
+    return {"plan": plan.model_dump(), "projectRevision": proj.revision}
+
+
+@app.post("/api/projects/{project_id}/arrangement/execute")
+def api_execute_arrangement_plan(project_id: str, body: ArrangementExecuteBody) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    if body.plan:
+        plan = ArrangementEditPlan.model_validate(body.plan)
+        if body.intensity in ("subtle", "moderate", "creative"):
+            plan.intensity = body.intensity  # type: ignore[assignment]
+    else:
+        if not body.instruction:
+            raise ValueError("Either plan or instruction is required")
+        plan = create_arrangement_edit_plan(
+            project=proj,
+            instruction=body.instruction,
+            selection=body.selection,
+            intensity=body.intensity,
+            target_track_id=body.targetTrackId,
+            start_beats=body.startBeats,
+            end_beats=body.endBeats,
+        )
+    return execute_arrangement_edit_plan(project_id, plan, seed=body.seed)
+
+
+@app.post("/api/projects/{project_id}/tracks/{track_id}/take-lanes/{lane_id}/promote")
+def api_promote_take_lane(
+    project_id: str,
+    track_id: str,
+    lane_id: str,
+    body: PromoteTakeLaneBody | None = None,
+) -> dict[str, Any]:
+    b = body or PromoteTakeLaneBody()
+    return promote_take_lane(
+        project_id,
+        track_id,
+        lane_id,
+        comp_start_beats=b.startBeats,
+        comp_end_beats=b.endBeats,
+    )
+
+
+@app.post("/api/projects/{project_id}/tracks/{track_id}/take-lanes/restore-original")
+def api_restore_original_lane(
+    project_id: str,
+    track_id: str,
+    body: RestoreOriginalLaneBody | None = None,
+) -> dict[str, Any]:
+    b = body or RestoreOriginalLaneBody()
+    return restore_original_lane(project_id, track_id, lane_id=b.laneId)
+
+
+@app.patch("/api/projects/{project_id}/tracks/{track_id}/take-lanes/{lane_id}")
+def api_rename_take_lane(project_id: str, track_id: str, lane_id: str, body: RenameBody) -> dict[str, Any]:
+    return rename_take_lane(project_id, track_id, lane_id, body.name)
+
+
+@app.post("/api/projects/{project_id}/clips/{clip_id}/reverse")
+def api_reverse_clip(
+    project_id: str,
+    clip_id: str,
+    body: ReverseClipBody | None = None,
+) -> dict[str, Any]:
+    b = body or ReverseClipBody()
+    return create_reversed_clip_asset(project_id, clip_id, expected_revision=b.expectedRevision)
+
+
+@app.get("/api/projects/{project_id}/memory")
+def api_get_music_memory(project_id: str) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    return {"projectId": project_id, "musicMemory": ensure_music_memory(proj)}
+
+
+@app.patch("/api/projects/{project_id}/memory")
+def api_patch_music_memory(project_id: str, body: PatchMemoryBody) -> dict[str, Any]:
+    mem = update_project_music_memory(project_id, patch=body.patch)
+    return {"projectId": project_id, "musicMemory": mem}
 
 
 @app.get("/api/events")

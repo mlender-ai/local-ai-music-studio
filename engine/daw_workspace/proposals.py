@@ -299,7 +299,61 @@ def interpret_producer_instruction(
                 "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition (full music, instrument sessions, loops/MIDI), reference analysis, track/clip/MIDI edits, and section markers.",
             }
 
-    # 0. Phase 03 AI Composition / Hook / Loop / Instrument Session creation
+    # 0A. Phase 04 Selective Arrangement, Musical Variation, Fill-in, Strip/Extend, Reverse/Fade
+    arrangement_triggers = (
+        "변주",
+        "필인",
+        "필 인",
+        "후반부만",
+        "뒷부분만",
+        "메인 멜로디는 유지",
+        "앞부분은 유지",
+        "인상적으로 바꿔",
+        "다양하게 바꿔",
+        "바꿔줘",
+        "바꿔 줘",
+        "펑키하게",
+        "만 남겨",
+        "만 남기",
+        "더 늘려",
+        "연장해",
+        "리버스",
+        "거꾸로",
+        "페이드",
+        "크로스페이드",
+        "리듬만",
+        "벨로시티만",
+        "강약만",
+        "보이싱",
+        "레이어 추가",
+        "레이어를 추가",
+        "vary",
+        "variation",
+        "turnaround",
+        "drum fill",
+        "funkier",
+        "extend",
+        "only leave",
+        "leave only",
+        "reverse",
+        "crossfade",
+        "rhythm only",
+        "velocity only",
+        "add layer",
+    )
+    is_arrangement_req = any(k in low for k in arrangement_triggers) and not any(
+        k in low for k in ("볼륨", "volume", "게인", "gain", "뮤트", "mute", "솔로", "solo", "복제", "duplicate")
+    )
+    if is_arrangement_req:
+        return {
+            "supported": True,
+            "action": "arrangement_edit_plan",
+            "instruction": text,
+            "messageKo": "선택 구간 편곡 및 음악적 변주 계획(Arrangement Edit Plan)을 설계합니다.",
+            "messageEn": "Designing a scope-bounded Arrangement Edit Plan.",
+        }
+
+    # 0B. Phase 03 AI Composition / Hook / Loop / Instrument Session creation
     is_composition_req = (
         any(k in low for k in ("작곡", "만들어줘", "만들어 줘", "생성해줘", "생성해 줘", "compose", "generate", "create a", "make a", "write a"))
         and not is_section_req

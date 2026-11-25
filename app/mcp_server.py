@@ -446,6 +446,79 @@ def daw_get_runtime_status() -> dict:
     return daw_mcp.get_runtime_status()
 
 
+# --- AI-Native DAW Phase 04 Selective Arrangement, Variation & Take Comping MCP Tools ---
+
+@server.tool(name="daw.create_arrangement_edit_plan", annotations=READ)
+def daw_create_arrangement_edit_plan(
+    instruction: str,
+    intensity: str | None = None,
+    target_track_id: str | None = None,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    project_id: str | None = None,
+    provider_id: str | None = None,
+) -> dict:
+    """Inspect real MIDI/clip context and build a scope-bounded ArrangementEditPlan (with preserved tracks & bars)."""
+    return daw_mcp.create_arrangement_edit_plan(
+        instruction, intensity, target_track_id, start_beats, end_beats, project_id, provider_id
+    )
+
+
+@server.tool(name="daw.generate_variation", annotations=WRITE)
+def daw_generate_variation(
+    instruction: str | None = None,
+    plan: dict | None = None,
+    intensity: str | None = None,
+    target_track_id: str | None = None,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    seed: int = 42,
+    project_id: str | None = None,
+) -> dict:
+    """Generate a non-destructive selective musical Variation Take (with Solo, In-Context & Original A/B previews) or structural edit."""
+    return daw_mcp.generate_variation(
+        instruction, plan, intensity, target_track_id, start_beats, end_beats, seed, project_id
+    )
+
+
+@server.tool(name="daw.promote_take_lane", annotations=WRITE)
+def daw_promote_take_lane(
+    track_id: str,
+    lane_id: str,
+    start_beats: float | None = None,
+    end_beats: float | None = None,
+    project_id: str | None = None,
+) -> dict:
+    """Promote an entire Take Lane or a selective bar sub-range (comping) onto the Track main lane with automatic Original backup."""
+    return daw_mcp.promote_take_lane(track_id, lane_id, start_beats, end_beats, project_id)
+
+
+@server.tool(name="daw.restore_original_take_lane", annotations=WRITE)
+def daw_restore_original_take_lane(
+    track_id: str,
+    lane_id: str | None = None,
+    project_id: str | None = None,
+) -> dict:
+    """Restore a Track's Original Backup Take Lane onto the main timeline with 1-click Undo."""
+    return daw_mcp.restore_original_take_lane(track_id, lane_id, project_id)
+
+
+@server.tool(name="daw.reverse_audio_clip", annotations=WRITE)
+def daw_reverse_audio_clip(
+    clip_id: str,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+) -> dict:
+    """Non-destructively reverse an audio clip by creating a new immutable reversed WAV asset while preserving the original."""
+    return daw_mcp.reverse_audio_clip(clip_id, project_id, expected_revision)
+
+
+@server.tool(name="daw.get_music_memory", annotations=READ)
+def daw_get_music_memory(project_id: str | None = None) -> dict:
+    """Read compact Project Music Memory (genre, key, chords, instrument roles, liked/rejected takes, recent conversation turns)."""
+    return daw_mcp.get_music_memory(project_id)
+
+
 def main():
     server.run(transport="stdio")
 
