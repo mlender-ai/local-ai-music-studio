@@ -177,20 +177,26 @@ def screen_vocal_leakage(
     sr: int,
     *,
     source_kind: str = "neural_audio",  # "neural_audio" | "deterministic_midi_synth"
+    vocals_stem_audio: np.ndarray | None = None,
+    vocals_stem_sr: int | None = None,
+    audio_path: Path | None = None,
+    use_demucs: bool = False,
 ) -> dict[str, Any]:
-    """Honest 3-state vocal-leakage screen (`PASS`, `REJECT`, `UNCERTAIN`) per Phase 03.1 Section 3.2.
+    """Honest 3-state vocal-leakage screen (`PASS`, `REJECT`, `UNCERTAIN`) per Phase 03.1 + GATE 2.
 
+    Upgrades in GATE 2:
+    - Supports Demucs-isolated `vocals` stem multi-window screening (4s windows, 2s hop) measuring real
+      isolated vocal-stem RMS dBFS, vocal-to-mix RMS ratio, and 3–8 Hz syllabic modulation!
     - Never treats center-band energy alone as definitive vocal-free proof on neural audio!
-    - Checks 4-second windows (2s hop) across the entire audio for:
-      1. Center-channel formant energy concentration (300–3400 Hz)
-      2. Vocal vibrato / syllabic amplitude modulation (3–8 Hz envelope modulation depth)
-      3. Harmonic-to-noise vocal band signature
-    - For neural audio WITHOUT full Demucs + PANNs + Whisper verification stack installed:
+    - For neural audio WITH Demucs vocal stem:
+      - Any window with vocal RMS > -28 dBFS and ratio > 0.12 (or strong syllabic modulation > 0.25 with RMS > -32 dBFS) -> `REJECT`
+      - All windows silent (`maxVocalRmsDbfs < -40 dBFS` and `maxVocalToMixRatio < 0.05`) -> `PASS` (`demucs_isolated_vocal_stem_screen`)
+      - Borderline ambient bleed -> `UNCERTAIN` (never auto-approved!)
+    - For neural audio WITHOUT Demucs / PANNs / Whisper:
       - Extreme corroborated vocal signature -> `REJECT`
-      - Otherwise -> `UNCERTAIN` (cannot claim full V7.2 multi-model `PASS` without PANNs/Whisper/Demucs!)
-      - Never auto-approves `REJECT` or `UNCERTAIN` as verified vocal-free!
-    - For deterministic built-in instrumental MIDI synthesis (zero vocal oscillators/samples):
-      - Returns `PASS` with explicit `method: "deterministic_non_vocal_synth"` provenance.
+      - Otherwise -> `UNCERTAIN` (never auto-approved!)
+    - For deterministic built-in instrumental MIDI/SoundFont/Synth rendering (zero vocal oscillators/samples):
+      - Returns `PASS` (`deterministic_non_vocal_synth`).
     """
     if len(audio) < max(1, sr // 4):
         return {
@@ -205,6 +211,21 @@ def screen_vocal_leakage(
     stereo = audio if audio.ndim == 2 and audio.shape[1] >= 2 else np.stack([audio, audio], axis=1)
     mid = 0.5 * (stereo[:, 0].astype(np.float64) + stereo[:, 1].astype(np.float64))
     side = 0.5 * (stereo[:, 0].astype(np.float64) - stereo[:, 1].astype(np.float64))
+
+    # Optional Demucs vocal stem extraction when audio_path + use_demucs requested
+    demucs_vocal_arr = vocals_stem_audio
+    demucs_vocal_sr = vocals_stem_sr or sr
+    if demucs_vocal_arr is None and use_demucs and audio_path is not None and audio_path.is_file():
+        try:
+            from engine.generation.adapters.stem_separator import probe_demucs, separate_stems_demucs
+
+            if probe_demucs().get("available"):
+                stems = separate_stems_demucs(audio_path, audio_path.parent / "vocal_qa_stems", use_cache=True)
+                v_item = next((s for s in stems if s.get("role") == "vocals"), None)
+                if v_item and Path(v_item["wavPath"]).is_file():
+                    demucs_vocal_arr, demucs_vocal_sr = sf.read(str(v_item["wavPath"]), dtype="float32", always_2d=True)
+        except Exception:
+            demucs_vocal_arr = None
 
     win_len = min(len(mid), 4 * sr)
     hop = max(sr, 2 * sr)
@@ -237,7 +258,6 @@ def screen_vocal_leakage(
                 sos = signal.butter(2, [320.0, 3200.0], btype="bandpass", fs=sr, output="sos")
                 vb = signal.sosfilt(sos, seg_m)
                 env = np.abs(vb)
-                # Downsample envelope to ~100 Hz
                 dec = max(1, sr // 100)
                 env_ds = env[::dec]
                 env_ds = env_ds - np.mean(env_ds)
@@ -270,7 +290,78 @@ def screen_vocal_leakage(
             "vocalBandCenterRatio": round(max_center_ratio, 3),
             "syllabicModulationPeak": round(max_mod_score, 3),
             "flaggedWindows": [],
-            "note": "비보컬 결정론적 악기 신스 합성 출력(보컬 모델 미사용)입니다.",
+            "note": "비보컬 결정론적 악기/사운드폰트 합성 출력(보컬 모델 미사용)입니다.",
+        }
+
+    # Demucs-isolated vocal stem multi-window screening!
+    if demucs_vocal_arr is not None and len(demucs_vocal_arr) >= max(1, demucs_vocal_sr // 4):
+        v_mono = demucs_vocal_arr.mean(axis=1).astype(np.float64) if demucs_vocal_arr.ndim == 2 else demucs_vocal_arr.astype(np.float64)
+        mix_rms_all = float(np.sqrt(np.mean(mid * mid))) + 1e-9
+        v_win = min(len(v_mono), 4 * demucs_vocal_sr)
+        v_hop = max(demucs_vocal_sr, 2 * demucs_vocal_sr)
+        v_starts = list(range(0, max(1, len(v_mono) - v_win + 1), v_hop)) or [0]
+        max_v_db = -120.0
+        max_v_ratio = 0.0
+        demucs_flagged: list[dict[str, Any]] = []
+        for vst in v_starts:
+            vseg = v_mono[vst : vst + v_win]
+            v_rms = float(np.sqrt(np.mean(vseg * vseg)))
+            v_db = 20.0 * float(np.log10(max(v_rms, 1e-9)))
+            v_ratio = v_rms / mix_rms_all
+            max_v_db = max(max_v_db, v_db)
+            max_v_ratio = max(max_v_ratio, v_ratio)
+            if (v_db > -28.0 and v_ratio > 0.12) or (v_db > -32.0 and v_ratio > 0.08 and max_mod_score > 0.24):
+                demucs_flagged.append(
+                    {
+                        "startSec": round(vst / demucs_vocal_sr, 2),
+                        "endSec": round((vst + len(vseg)) / demucs_vocal_sr, 2),
+                        "vocalStemRmsDbfs": round(v_db, 2),
+                        "vocalToMixRatio": round(v_ratio, 3),
+                    }
+                )
+        if demucs_flagged or flagged_windows:
+            return {
+                "checked": True,
+                "status": "REJECT",
+                "suspectedVocal": True,
+                "autoApprovedInstrumental": False,
+                "method": "demucs_isolated_vocal_stem_screen",
+                "windowsChecked": len(v_starts),
+                "maxVocalStemRmsDbfs": round(max_v_db, 2),
+                "maxVocalToMixRatio": round(max_v_ratio, 3),
+                "vocalBandCenterRatio": round(max_center_ratio, 3),
+                "syllabicModulationPeak": round(max_mod_score, 3),
+                "flaggedWindows": demucs_flagged or flagged_windows,
+                "note": f"Demucs 분리 보컬 스템에서 유의미한 보컬/허밍 에너지 감지(최대 {max_v_db:.1f} dBFS) — 무보컬 승인 거부(REJECT).",
+            }
+        if max_v_db < -40.0 and max_v_ratio < 0.05:
+            return {
+                "checked": True,
+                "status": "PASS",
+                "suspectedVocal": False,
+                "autoApprovedInstrumental": True,
+                "method": "demucs_isolated_vocal_stem_screen",
+                "windowsChecked": len(v_starts),
+                "maxVocalStemRmsDbfs": round(max_v_db, 2),
+                "maxVocalToMixRatio": round(max_v_ratio, 3),
+                "vocalBandCenterRatio": round(max_center_ratio, 3),
+                "syllabicModulationPeak": round(max_mod_score, 3),
+                "flaggedWindows": [],
+                "note": f"Demucs 분리 보컬 스템 전 구간 정숙 확인(최대 {max_v_db:.1f} dBFS, 비율 {max_v_ratio:.3f}) — 무보컬 통과(PASS).",
+            }
+        return {
+            "checked": True,
+            "status": "UNCERTAIN",
+            "suspectedVocal": False,
+            "autoApprovedInstrumental": False,
+            "method": "demucs_isolated_vocal_stem_screen",
+            "windowsChecked": len(v_starts),
+            "maxVocalStemRmsDbfs": round(max_v_db, 2),
+            "maxVocalToMixRatio": round(max_v_ratio, 3),
+            "vocalBandCenterRatio": round(max_center_ratio, 3),
+            "syllabicModulationPeak": round(max_mod_score, 3),
+            "flaggedWindows": [],
+            "note": f"Demucs 보컬 스템 잔여 블리드 경계 구간(최대 {max_v_db:.1f} dBFS) — 수동 청취 확인 필요(UNCERTAIN).",
         }
 
     reg = get_runtime_registry()
@@ -300,7 +391,7 @@ def screen_vocal_leakage(
             "vocalBandCenterRatio": round(max_center_ratio, 3),
             "syllabicModulationPeak": round(max_mod_score, 3),
             "flaggedWindows": [],
-            "note": "DSP 1차 검사에서 명백한 보컬은 미감지이나, PANNs/Whisper/Demucs 다중 검증 모델이 미설치되어 UNCERTAIN(수동 청취 확인 필요)으로 분류합니다.",
+            "note": "DSP 1차 검사에서 명백한 보컬은 미감지이나, Demucs 보컬 스템 분리 또는 PANNs/Whisper 검증이 미실행되어 UNCERTAIN(수동 청취 확인 필요)으로 분류합니다.",
         }
 
     return {
