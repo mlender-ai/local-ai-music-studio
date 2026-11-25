@@ -159,6 +159,45 @@ export function executeCommand(project: Project, cmd: ProjectCommand): Project {
       break;
     }
 
+    case "track.addTakeLane": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      const lane = {
+        ...cmd.payload.lane,
+        id: cmd.payload.lane.id || makeClientId("lane"),
+        createdAt: cmd.payload.lane.createdAt ?? new Date().toISOString(),
+      };
+      const existing = trk.takeLanes ?? [];
+      trk.takeLanes = [...existing.filter((ln) => ln.id !== lane.id), lane];
+      break;
+    }
+
+    case "track.renameTakeLane": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      const trimmed = cmd.payload.name.trim();
+      if (!trimmed) throw new Error("Take lane name cannot be empty");
+      const ln = (trk.takeLanes ?? []).find((item) => item.id === cmd.payload.laneId);
+      if (!ln) throw new Error(`Take lane not found: ${cmd.payload.laneId}`);
+      ln.name = trimmed;
+      break;
+    }
+
+    case "track.removeTakeLane": {
+      const trk = findTrack(p, cmd.payload.trackId);
+      trk.takeLanes = (trk.takeLanes ?? []).filter((item) => item.id !== cmd.payload.laneId);
+      break;
+    }
+
+    case "clip.setFades": {
+      const { clip } = findClip(p, cmd.payload.clipId);
+      if (cmd.payload.fadeInBeats !== undefined) {
+        clip.fadeInBeats = Math.max(0, Math.min(64, cmd.payload.fadeInBeats));
+      }
+      if (cmd.payload.fadeOutBeats !== undefined) {
+        clip.fadeOutBeats = Math.max(0, Math.min(64, cmd.payload.fadeOutBeats));
+      }
+      break;
+    }
+
     case "clip.add": {
       const trk = findTrack(p, cmd.payload.trackId);
       trk.clips.push(cmd.payload.clip);

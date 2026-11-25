@@ -1,4 +1,4 @@
-# PROJECT_FORMAT.md — AI-Native DAW Project Data Model (v1.2.0)
+# PROJECT_FORMAT.md — AI-Native DAW Project Data Model (v1.3.0)
 
 ## Directory Layout
 
@@ -6,14 +6,18 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 
 ```text
 <project_id>/
-├── project.json              # Canonical versioned project state (atomic write, schema v1.2.0)
+├── project.json              # Canonical versioned project state (atomic write, schema v1.3.0)
 ├── project.autosave.json     # Latest periodic autosave snapshot
 ├── assets/
 │   ├── audio/                # Immutable audio files (<asset_id>_<sanitized_name>.<ext>)
 │   ├── midi/                 # Immutable Standard MIDI Files (.mid)
 │   └── references/           # Reference audio/video tracks (excluded from WAV export)
 ├── takes/
-│   └── <take_id>/            # Generated Take preview WAV (-16 LUFS metadata), .mid parts & analysis cache
+│   └── <take_id>/
+│       ├── preview.wav                 # Solo level-matched preview WAV
+│       ├── preview_in_context.wav      # Phase 04 In-Context mix preview WAV (-16 LUFS)
+│       ├── preview_original_context.wav# Phase 04 Original Context A/B preview WAV (-16 LUFS)
+│       └── *.mid                       # Editable MIDI part artifacts
 ├── cache/
 │   ├── waveforms/            # Cached real PCM peak envelopes (<sha256>.json)
 │   ├── analysis/             # Cached v3.0.0 acoustic analysis results
@@ -24,9 +28,9 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 
 **Invariants:**
 - Never embed Base64 audio inside `project.json`.
-- Original assets under `assets/` are immutable; deleting a track or clip never deletes the underlying asset file.
+- Original assets under `assets/` are immutable; deleting a track/clip or reversing an audio clip never alters or deletes the original asset file.
 - Every project save checks `revision` (optimistic locking, HTTP `409 REVISION_CONFLICT` on mismatch) and uses temp file + `fsync` + `os.replace()`.
-- Automatic migration upgrades `1.0.0` and `1.1.0` projects into `1.2.0` cleanly on load (`revision`, `references`, `compositionPlans`, `takes`).
+- Automatic migration upgrades `1.0.0`, `1.1.0`, and `1.2.0` projects into `1.3.0` cleanly on load (`revision`, `references`, `compositionPlans`, `takes`, `musicMemory`, `track.takeLanes`, `track.stemMeta`, `clip.fadeInBeats`, `clip.fadeOutBeats`, `clip.reversed`).
 
 ## Explicit Time & Unit Conventions
 
@@ -42,20 +46,22 @@ Each project is a self-contained, portable folder under `outputs/daw/projects/<p
 | `integratedLufs` | `number` (float) | Standard ITU-R BS.1770-4 gated loudness |
 | `truePeakDbtp` | `number` (float) | 4× polyphase oversampled True Peak in dBTP |
 
-## Schema `1.2.0` Top-Level Additions
+## Schema `1.3.0` Additions (Phase 03.1 + Phase 04)
 
-- `revision: int` — Monotonic optimistic-locking revision number (added in `1.1.0`).
-- `references: list[ReferenceItem]` — Reference tracks, v3.0.0 acoustic analysis, and `ReferenceBlueprint` (added in `1.1.0`, excluded from final WAV export).
-- `compositionPlans: list[CompositionPlan]` — Structured pre-generation musical plans (`musicalIdentity`, `signatureMotif`, `harmonyAndGroove`, `instrumentRoles`, `arrangement`, `variations`, `climax`, `generationStrategy`, `referenceBinding`, `providerProvenance`) (added in `1.2.0`).
-- `takes: list[Take]` — Generated audio/MIDI take history with `provenance`, `qualityReport` (BS.1770-4 + MIDI validation + Reference comparison + Vocal screening), `levelMatchedGainDb`, `plannedSections` vs `detectedSections`, and `status` (`ready | applied | kept | rejected`) (added in `1.2.0`).
+- `project.musicMemory: dict` — Compact Project Music Memory (`genre`, `bpm`, `key`, `chords`, `mainHookSummary`, `referenceIds`, `instrumentRoles`, `likedTakes`, `rejectedTakes`, `conversationTurns`, `lastTargetTrackId`, `lastBarRange`, `lastTakeId`).
+- `track.takeLanes: list[TakeLane]` — Per-track non-destructive alternative Take Lanes (`id`, `name`, `takeId`, `startBeats`, `endBeats`, `clip` / `clips`, `isOriginalBackup`, `active`, `createdAt`). Inactive lanes are strictly excluded from playback and WAV export (zero double-summing).
+- `track.stemMeta: dict | null` — Provenance metadata for Demucs stem tracks (`sourceTrackId`, `parentSourceAssetId`, `separationModel`, `separationJobId`).
+- `clip.fadeInBeats: float`, `clip.fadeOutBeats: float` — Non-destructive beat-synced linear fade-in / fade-out envelopes mirrored identically across Web Audio realtime, OfflineAudioContext export, and Python offline WAV export.
+- `clip.reversed: bool` — Tracks whether the clip currently points to a non-destructively reversed immutable WAV asset.
+- `take.baseRevision`, `take.baseTrackFingerprints`, `take.targetRangeBeats` — Concurrent-edit protection metadata enabling safe merges when unrelated tracks change during AI generation.
 
 ### Track Types & Multi-Timbre `instrumentRef`
 - `"audio"`: Imported WAV/MP3/FLAC/OGG, full mixes, loops, textures.
-- `"stem"`: Separated stems (visibly distinguished from independent recordings).
+- `"stem"`: Separated stems (visibly distinguished from independent recordings, with `stemMeta` provenance).
 - `"midi"`: Note events routed to `instrumentRef` across both Web Audio playback and Python offline WAV export:
   - `"drum-kit-electronic"` — GM-mapped electronic drum kit
-  - `"bass-fm-sub"` — FM sub-bass
-  - `"synth-fm-hook"` — Stereo detuned melodic hook/lead synth
+  - `"bass-fm-sub"` / `"analog-sub-bass"` — Sub-bass voices
+  - `"synth-fm-hook"` / `"fm-pluck-lead"` — Melodic hook/lead synth voices
   - `"keys-electric-ep"` — Warm electric piano (EP)
   - `"guitar-clean-pluck"` — Clean plucked guitar
   - `"pad-warm-analog"` — Slow-attack stereo analog pad

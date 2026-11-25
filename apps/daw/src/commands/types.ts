@@ -1,4 +1,4 @@
-import type { Asset, Clip, MidiNote, TimeSignature, Track } from "../project/types";
+import type { Asset, Clip, MidiNote, TakeLane, TimeSignature, Track } from "../project/types";
 
 export type ProjectCommand =
   | { type: "project.rename"; payload: { name: string } }
@@ -28,6 +28,10 @@ export type ProjectCommand =
   | { type: "track.setMute"; payload: { trackId: string; mute: boolean } }
   | { type: "track.setSolo"; payload: { trackId: string; solo: boolean } }
   | { type: "track.setInstrument"; payload: { trackId: string; instrumentRef: string | null } }
+  | { type: "track.addTakeLane"; payload: { trackId: string; lane: TakeLane } }
+  | { type: "track.renameTakeLane"; payload: { trackId: string; laneId: string; name: string } }
+  | { type: "track.removeTakeLane"; payload: { trackId: string; laneId: string } }
+  | { type: "clip.setFades"; payload: { clipId: string; fadeInBeats?: number; fadeOutBeats?: number } }
   | { type: "clip.add"; payload: { trackId: string; clip: Clip } }
   | {
       type: "clip.move";

@@ -277,4 +277,42 @@ describe("Phase 01.2 Korean Localization & IME safety", () => {
     });
     expect(updated.tracks[1].instrumentRef).toBe("synth-fm-hook");
   });
+
+  it("supports Phase 04 track Take Lanes and non-destructive clip.setFades commands", () => {
+    let proj = makeSampleProject();
+    proj = executeCommand(proj, {
+      type: "track.addTakeLane",
+      payload: {
+        trackId: "trk_m",
+        lane: {
+          id: "lane_var_1",
+          name: "Hook Variation 1",
+          startBeats: 4,
+          endBeats: 12,
+          active: false,
+        },
+      },
+    });
+    expect(proj.tracks[1].takeLanes).toHaveLength(1);
+    expect(proj.tracks[1].takeLanes![0].name).toBe("Hook Variation 1");
+
+    proj = executeCommand(proj, {
+      type: "track.renameTakeLane",
+      payload: { trackId: "trk_m", laneId: "lane_var_1", name: "Hook Lift B" },
+    });
+    expect(proj.tracks[1].takeLanes![0].name).toBe("Hook Lift B");
+
+    proj = executeCommand(proj, {
+      type: "clip.setFades",
+      payload: { clipId: "clp_a", fadeInBeats: 0.75, fadeOutBeats: 1.25 },
+    });
+    expect(proj.tracks[0].clips[0].fadeInBeats).toBeCloseTo(0.75, 5);
+    expect(proj.tracks[0].clips[0].fadeOutBeats).toBeCloseTo(1.25, 5);
+
+    proj = executeCommand(proj, {
+      type: "track.removeTakeLane",
+      payload: { trackId: "trk_m", laneId: "lane_var_1" },
+    });
+    expect(proj.tracks[1].takeLanes).toHaveLength(0);
+  });
 });

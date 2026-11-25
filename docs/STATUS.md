@@ -1,44 +1,49 @@
 # STATUS.md — Current Development Status
 
-**Last Updated:** 2026-11-24  
-**Active Phase:** **Phase 03 · AI Composition Engine** — **Complete & Ready for Review**  
+**Last Updated:** 2026-11-25  
+**Active Phase:** **Phase 03.1 + Phase 04 · Engine Recovery · AI Arrangement · Musical Variation · Take Comping** — **Complete & Ready for User Review (with Honest Host Neural Runtime Disclosure)**  
 **Integration Branch:** `develop/ai-native-daw` (unmerged pending user verification)  
-**Stacked Task Branches:**
+**Stacked Task Branches (all open & unmerged pending user review):**
 1. `feat/daw-workspace-phase-01` (PR #15 → `develop/ai-native-daw`)
 2. `fix/daw-phase-01-1-stabilization` (PR #16 → `feat/daw-workspace-phase-01`)
 3. `feat/daw-korean-localization` (PR #17 → `fix/daw-phase-01-1-stabilization`)
 4. `feat/daw-reference-intelligence` (PR #18 → `feat/daw-korean-localization`)
 5. `feat/daw-agent-bridge` (PR #19 → `feat/daw-reference-intelligence`)
-6. `feat/daw-ai-composition-phase-03` (PR → `feat/daw-agent-bridge`)
+6. `feat/daw-ai-composition-phase-03` (PR #20 → `feat/daw-agent-bridge`)
+7. `fix/daw-phase-03-engine-integration` (PR #21 → `feat/daw-ai-composition-phase-03`) — **Phase 03.1 Engine Recovery + GATE 2 Safe Take Apply**
+8. `feat/daw-phase-04-arrangement` (PR #22 → `fix/daw-phase-03-engine-integration`) — **Phase 04 Selective Arrangement, Musical Variation, Take Lanes & Contextual Preview**
 
-## Completed in Phase 03
+## Completed in Phase 03.1 + Phase 04
 
-- [x] **Phase 03-A — Reference Intelligence & Bridge Hardening:**
-  - Standard **ITU-R BS.1770-4** Integrated LUFS, Short-Term Loudness/LRA, and 4× polyphase oversampled True Peak (`engine/daw_workspace/loudness.py`), verified against EBU Tech 3341 calibration (`-23.0 dBFS` 1 kHz stereo sine → `-23.04 LUFS`).
-  - Octave-aware half-time / double-time BPM comparison (`resolve_octave_tempo_relation`, e.g., `127.9` vs `64.0 BPM` recognized as compatible half-time).
-  - Bass-register root weighting in harmony analysis, strict separation of `harmonicRepetitionScore` vs `melodicMotifStatus: "not_transcribed_in_dsp_mode"`, and explicit `unconfirmed` (`미확인`) instrument badges for `< 35%` HPSS confidence.
-  - All 9 MCP edit tools now safely default to `stage_only=True`; frontend SSE auto-recovers latest project revision & pending proposals after reconnect; verified real separate-process STDIO MCP client (`tests/test_mcp_subprocess.py`).
-- [x] **Phase 03-B — AI Producer Provider Adapter & Conversational UI:**
-  - Honest local/CLI/MCP/API provider detection (`engine/providers/`): Built-in Music Composition Director (ready offline), External MCP Agent Bridge (ready), Ollama (`127.0.0.1:11434` live probe), Claude CLI, Codex CLI, and env-only user-configured external API (`DAW_LLM_BASE_URL` / `DAW_LLM_API_KEY`, never sent to browser or Git).
-  - Upgraded `AIProducerPanel.tsx` into a 3-tab conversational music producer (`작곡 · 대화`, `Take`, `엔진 · 상세`), moving developer JSON / Command Payload / Revision into a collapsible section.
-- [x] **Phase 03-C — Composition Director & Reference-Guided Composition:**
-  - Structured `CompositionPlan` (`MusicalIdentity`, `SignatureMotif`, `Harmony & Groove`, `InstrumentRoles`, genre-adaptive `Arrangement`, `Variations`, `Climax`, `GenerationStrategy`) with traceable `ReferenceBinding` (`appliedFeatures` vs `unmappedFeatures`).
-  - Motif-based MIDI Composer (`engine/composition/midi_composer.py`) generating Drums, Bass, Synth Hook (Motif A → A' → B → Cadence), Keys, Guitar, and Pad with SMF `.mid` export and musical validation (`engine/composition/validation.py`).
-- [x] **Phase 03-D & 03-E — Multi-Timbre Instruments, Generation Adapters, Stems & Library:**
-  - **6 Studio Multi-Timbre Instrument Voices** mirrored identically across Python offline WAV export (`engine/instruments/synth_engine.py`) and Web Audio realtime/offline playback (`apps/daw/src/audio/instruments.ts`): `drum-kit-electronic`, `bass-fm-sub`, `synth-fm-hook`, `keys-electric-ep`, `guitar-clean-pluck`, `pad-warm-analog` (+ `basic-poly-synth`), selectable directly in MIDI Track Headers and Piano Roll.
-  - Honest native adapters for **YuE2** (`yue2_adapter.py` with `check_resting_voice` ABC vocal screening + vocal-leakage screen + 10 GiB memory guard), **ACE-Step** (`acestep_adapter.py`), **Demucs** (`stem_separator.py` preserving muted Original Mix), and **Local Multitrack Composer** (`local_composer_adapter.py`, explicitly labeled — never masquerading as YuE2).
-  - Sample & Loop Library Intelligence (`engine/composition/library.py`) with cached BPM, Key, LUFS, role, license, and octave-aware tempo compatibility against project BPM.
-- [x] **Phase 03-F & 03-G — Takes, Level-Matched Preview, Quality Reports & 54 MCP Tools:**
-  - Single-worker Apple Silicon–safe `GenerationJobManager` (`engine/generation/daw_jobs.py`) with granular stages, logs, cancellation, SSE sync, `-16 LUFS` level-matched preview audition, `Planned` vs `Detected` sections, and transactional Undoable Take Apply (`new_tracks`, `selected_range`, `new_project`, `keep_take`, `reject`).
-  - Schema migrated cleanly to `1.2.0` (`compositionPlans[]`, `takes[]`); `app/mcp_server.py` registers **54 MCP tools** (9 legacy `music.*` + 28 Phase 02 `daw.*` + 17 Phase 03 `daw.*`).
+- [x] **GATE 0 — Real Host Environment Audit:** Confirmed via Spotlight & filesystem scan that `yue-synth`, `yue-plan`, `.gguf` weights, ACE-Step checkpoints, `demucs`, `ffmpeg`, and `REAPER.app` are genuinely absent on this Mac (not misconfigured). Multi-GiB caches were NOT blindly re-downloaded.
+- [x] **GATE 1 — Real AI Producer Provider Recovery & Shared Runtime Registry:**
+  - Discovered and live-verified native macOS **Claude Code `2.1.330`** inside Claude Desktop's official bundle (`loggedIn: true`), invoked in strict isolated music-authoring mode (`--tools "" --no-session-persistence --output-format json`) with zero terminal/code-editing access.
+  - Built 4-state Provider Registry (`uninstalled` / `detected` / `authenticated` / `verified` + honest `ready_for_client` for MCP) and 6-state Shared Runtime Registry (`~/.config/ai-native-daw/runtime.json`, `GET /api/runtime`, `POST /api/runtime/config`, `daw.get_runtime_status`).
+  - Upgraded `yue2_adapter.py` to exact V7.2 `v4_study.py` CLI flags (`--model`, `--vae`, `--request`, `--max-seq 8192`, `--out`, `--score`), strict preflight `check_resting_voice()`, 3-state vocal screening (`PASS / REJECT / UNCERTAIN`), true process-group cancellation (`SIGTERM → SIGKILL` + `fcntl.flock` + 10 GiB RSS guard, **TEST F**), and strict **No Silent Substitution** when Neural Audio is requested while uninstalled.
+- [x] **GATE 2 — Safe Take Apply & Concurrent-Edit Protection:**
+  - Fixed all 4 Phase 03 `apply_take()` bugs: `replace_range` carves out `[startBeats, endBeats]` cleanly with zero clip overlap and auto-saves an `Original (Backup)` Take Lane; never overwrites track `instrumentRef`; stem separation mutes ONLY `sourceTrackId` (**TEST D**); never wipes custom sections unless `replaceSections=true`.
+  - Concurrent-edit merge preserves unrelated user edits made while AI generation was running (**TEST E**), plus duplicate-apply guard and `POST /api/generation/jobs/{id}/retry`.
+- [x] **GATE 3 — Selective Arrangement & Musical MIDI Variation (`engine/arrangement/`):**
+  - `EditScope` & `ArrangementEditPlan` reading actual MIDI notes & adjacent bar context (`extract_midi_notes_in_range`), supporting `subtle / moderate / creative` intensity, `preserveFirstHalf`, `preservePitch`, `preserveHarmony`, `addTurnaroundFill`, `extend_section`, `strip_to_tracks`, `rhythm_only`, `velocity_only`, and `add_layer`.
+  - Verified **TEST B** (Drums bars 5–8 variation + turnaround fill, bars 1–4 & 9–12 bit-for-bit preserved, Bass/Synth untouched, 1-click Undo) and **TEST C** (Synth Hook first-half motif locked, second-half lift & cadence).
+- [x] **GATE 4 — Non-Destructive Audio Arrangement, Fades & Seam Validation:**
+  - Non-destructive `POST /api/projects/{id}/clips/{clip_id}/reverse` creating immutable reversed WAV assets while keeping original assets intact.
+  - Sample-accurate `fadeInBeats` / `fadeOutBeats` mirrored across Python offline WAV renderer (`engine/daw_workspace/renderer.py`), Web Audio realtime (`audioEngine.ts`), Web Audio offline export (`offlineRenderer.ts`), and Clip Editor waveform envelope + controls.
+  - Real `validate_audio_seam()` diagnostics (sample discontinuity click/pop check, RMS level delta, L/R phase correlation, beat alignment error, recommended crossfade).
+- [x] **GATE 5 — Timeline Take Lanes, Selective Comping & Contextual A/B Preview:**
+  - Renders `-16 LUFS` level-matched **Solo (`preview.wav`)**, **In-Context (`preview_in_context.wav`)**, and **Original Context (`preview_original_context.wav`)** served at `/api/projects/{id}/takes/{take_id}/audio?variant=...`.
+  - Collapsible per-track **Timeline Take Lanes** (`ArrangementTimeline.tsx`) with inline rename, full-lane Promote (`채택`), selective sub-range Comping (`startBeats..endBeats`), automatic `Original (Backup)` creation, `원본 복원`, and verified zero double-play of inactive lanes.
+- [x] **GATE 6 — Conversational Continuity, Project Music Memory & 61 MCP Tools:**
+  - Compact `project.musicMemory` (schema `1.3.0`) + Korean contextual reference resolver (`resolve_contextual_reference`) preferring populated MIDI tracks for MIDI variations.
+  - Expanded `app/mcp_server.py` to **61 MCP tools** (`9 music.*` + `52 daw.*`).
 
 ## Verification Status
 
-- **Python tests (`pytest -q`):** `51 passed` (31 legacy + Phase 01/01.1/02 + Phase 03-A BS.1770-4/V7.2 + separate-process STDIO MCP + Phase 03 Tests A, B, C, YuE2/Demucs honesty & library).
-- **Frontend tests & build:** `11 passed` (Vitest) + clean `tsc -b && vite build`.
-- **Live Browser QA (`http://127.0.0.1:8796`):** Verified Korean conversational prompt → `CompositionPlan` → Take generation → `새 트랙 추가` → Piano Roll MIDI inspection & instrument switching → honest `엔진 · 상세` tab → clean `1440×900` & `1280×800` layouts with `0` console/HTTP errors.
+- **Python tests (`pytest -q`):** `64 passed` (all legacy tests + Phase 01/02/03/03.1 + Phase 04 Tests B, C, D, E, F, Audio Reverse/Fades/Seam Validation, Conversational Continuity, Music Memory, Track Resolution regression, and 61 MCP tools).
+- **Frontend tests & build:** `12 passed` (Vitest, including `ko.json`/`en.json` 1:1 key parity, Take Lanes & Fades commands) + clean `tsc -b && vite build`.
+- **Live Browser QA (`http://127.0.0.1:8796`):** Verified at **`1440×900`** and **`1280×800`** with **`0` console errors**, **`0` failed HTTP requests**, **`0` horizontal overflow**, and **`0` control clipping** across live Claude Code authoring, No Silent Substitution banner, Drum 5–8 bar variation, Solo/In-Context/Original A/B preview controls, Timeline Take Lanes expand/promote/`Original (Backup)`, and Clip Editor Fade/Reverse controls. Screenshots saved in `docs/screenshots/phase-04-*.png`.
 
 ## Honest Host Limitations & Deferred Phases
 
-- **Local host binaries/weights not installed on this Mac:** `.runtime/v4/yue2cpp/build/yue-synth` (YuE2 native binary), `.runtime/models/checkpoints/` (ACE-Step), `demucs`, `ollama`, `claude` CLI, `codex` CLI. All adapters detect and report `available: false` honestly and never fabricate neural audio or fake stems.
-- **Deferred:** Phase 04 (Bar-level AI arrangement regeneration), Phase 05 (FX Rack / EQ / Comp / Reverb / AU / VST3 / REAPER host), Phase 06 (AI Mixing & Mastering), Phase 07 (Vocal synthesis & lyrics).
+- **GATE 1 Neural Audio (`TEST A` — Native YuE2 Audio Generation): PENDING LOCAL MODEL INSTALLATION.** On this Mac, `yue-synth`, `yue-plan`, `YuE2-3B-Q8_0.gguf`, `YuE2-Vae-F32.gguf`, ACE-Step checkpoints, and `demucs` are genuinely uninstalled. Per Sections 20 & 22, we NEVER fabricate neural audio or silently substitute local MIDI. All adapters, exact V7.2 CLI flags, preflight gates, memory/process-group guards, and `~/.config/ai-native-daw/runtime.json` wiring are complete and verified via isolated tests; once local binaries/weights are installed on a target machine, `TEST A` can execute immediately.
+- **Deferred:** Phase 05 (FX Rack / EQ / Comp / Reverb / AU / VST3 / REAPER host), Phase 06 (AI Mixing & Mastering), Phase 07 (Vocal synthesis & lyrics).

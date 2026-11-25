@@ -38,7 +38,23 @@ export interface Clip {
   loopLengthSec: number | null;
   loopLengthBeats: number | null;
   gainDb: number;
+  fadeInBeats?: number;
+  fadeOutBeats?: number;
+  reversed?: boolean;
   notes: MidiNote[];
+}
+
+export interface TakeLane {
+  id: string;
+  name: string;
+  takeId?: string | null;
+  startBeats: number;
+  endBeats: number;
+  clip?: Clip | null;
+  clips?: Clip[];
+  isOriginalBackup?: boolean;
+  active?: boolean;
+  createdAt?: string;
 }
 
 export interface Track {
@@ -51,9 +67,11 @@ export interface Track {
   mute: boolean;
   solo: boolean;
   stemLabel?: string | null;
+  stemMeta?: Record<string, unknown> | null;
   instrumentRef: string | null;
   effects: Record<string, unknown>[];
   clips: Clip[];
+  takeLanes?: TakeLane[];
 }
 
 export interface Asset {
@@ -262,6 +280,7 @@ export interface Project {
   references: ReferenceItem[];
   compositionPlans?: CompositionPlan[];
   takes?: Take[];
+  musicMemory?: Record<string, unknown>;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -271,8 +290,12 @@ export interface ProviderInfo {
   id: string;
   name: string;
   kind: string;
+  providerState?: "uninstalled" | "detected" | "authenticated" | "verified" | "ready_for_client";
+  status?: "uninstalled" | "detected" | "authenticated" | "verified" | "ready_for_client";
   available: boolean;
   connected: boolean;
+  authenticated?: boolean;
+  verified?: boolean;
   costModel: string;
   requiresApproval: boolean;
   models: string[];
@@ -280,6 +303,69 @@ export interface ProviderInfo {
   capabilities: string[];
   statusNoteKo: string;
   statusNoteEn: string;
+}
+
+export interface RuntimeEngineEntry {
+  id: string;
+  name: string;
+  kind: string;
+  state: "uninstalled" | "binary_found" | "model_found" | "ready" | "verified" | "failed";
+  available: boolean;
+  verified: boolean;
+  statusNoteKo: string;
+  statusNoteEn: string;
+}
+
+export interface RuntimeRegistryInfo {
+  configPath: string;
+  neuralAudioReady: boolean;
+  editableMidiReady: boolean;
+  stemSeparationReady: boolean;
+  engines: RuntimeEngineEntry[];
+}
+
+export interface ArrangementEditScope {
+  projectId: string;
+  baseRevision: number;
+  targetTrackIds: string[];
+  targetClipIds: string[];
+  startBeats: number;
+  endBeats: number;
+  startBar: number;
+  endBarInclusive: number;
+  selectionType: "range" | "clip" | "section" | "track";
+  requestedOperation: string;
+  preservedTrackIds: string[];
+  preservedSections: string[];
+  harmonicContext: Record<string, unknown>;
+  adjacentContext: Record<string, unknown>;
+}
+
+export interface ArrangementEditPlan {
+  id: string;
+  createdAt: string;
+  instruction: string;
+  operation:
+    | "replace_range"
+    | "alternative_take"
+    | "add_layer"
+    | "strip_to_tracks"
+    | "extend_section"
+    | "audio_reverse"
+    | "audio_fade";
+  variationKind: string;
+  intensity: "subtle" | "moderate" | "creative";
+  scope: ArrangementEditScope;
+  preservePitch: boolean;
+  preserveHarmony: boolean;
+  preserveFirstHalf: boolean;
+  addTurnaroundFill: boolean;
+  keepTrackIds: string[];
+  extendBars: number;
+  changes: string[];
+  providerProvenance: Record<string, unknown>;
+  summaryKo: string;
+  summaryEn: string;
 }
 
 export interface ProviderSummary {
@@ -404,13 +490,14 @@ export interface Take {
   jobId: string;
   planId?: string | null;
   title: string;
-  mode: "full_music" | "instrument_session" | "loop_midi" | "stem_separation";
+  mode: "full_music" | "instrument_session" | "loop_midi" | "stem_separation" | "midi_variation";
   status: "ready" | "applied" | "rejected" | "kept";
   previewRelativePath?: string | null;
   previewDurationSec: number;
   previewIntegratedLufs?: number | null;
   levelMatchedGainDb: number;
   targetTrackId?: string | null;
+  targetRangeBeats?: { startBeats: number; endBeats: number } | null;
   preserveExistingTracks: boolean;
   plannedSections: PlannedSection[];
   detectedSections: ReferenceSection[];
@@ -512,6 +599,7 @@ export interface ProducerInstructResponse {
   action: string;
   proposal?: ChangeProposal;
   plan?: CompositionPlan;
+  arrangementPlan?: ArrangementEditPlan;
   projectRevision?: number;
   referenceId?: string;
   messageKo?: string;

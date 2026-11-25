@@ -2,17 +2,25 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
+  Check,
+  ChevronDown,
+  ChevronRight,
   Copy,
   Flag,
+  Layers,
   Magnet,
+  Play,
   Plus,
   Repeat,
+  RotateCcw,
   Scissors,
   Trash2,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { audioEngine } from "../audio/audioEngine";
 import { STUDIO_INSTRUMENTS } from "../audio/instruments";
+import { dawApi } from "../project/api";
 import { useDaw } from "../commands/store";
 import { isImeComposing, useI18n } from "../i18n";
 import {
@@ -27,6 +35,7 @@ import type { Clip, Track, WaveformData } from "../project/types";
 import { makeClientId } from "../commands/executor";
 
 const TRACK_ROW_H = 76;
+const TAKE_LANE_H = 34;
 const SECTION_H = 24;
 const RULER_H = 24;
 
@@ -215,6 +224,9 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
     commitTransaction,
     seek,
     showToast,
+    promoteTakeLane,
+    restoreOriginalTakeLane,
+    renameTakeLane,
   } = useDaw();
 
   const headersScrollRef = useRef<HTMLDivElement | null>(null);
@@ -224,11 +236,21 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
   const [renamingTrackVal, setRenamingTrackVal] = useState("");
   const [renamingSectionId, setRenamingSectionId] = useState<string | null>(null);
   const [renamingSectionVal, setRenamingSectionVal] = useState("");
+  const [expandedTakeTracks, setExpandedTakeTracks] = useState<Record<string, boolean>>({});
+  const [renamingLaneKey, setRenamingLaneKey] = useState<string | null>(null);
+  const [renamingLaneVal, setRenamingLaneVal] = useState("");
 
   const bpb = project ? beatsPerBar(project.timeSignature) : 4;
   const totalBeats = project ? Math.max(project.lengthBeats, 64) : 64;
   const timelineWidth = Math.max(900, Math.ceil(totalBeats * pixelsPerBeat) + 120);
-  const lanesHeight = Math.max(260, (project?.tracks.length ?? 0) * TRACK_ROW_H + 64);
+  const lanesHeight = useMemo(() => {
+    const tracks = project?.tracks ?? [];
+    const total = tracks.reduce((sum, trk) => {
+      const extra = expandedTakeTracks[trk.id] ? (trk.takeLanes?.length ?? 0) * TAKE_LANE_H : 0;
+      return sum + TRACK_ROW_H + extra;
+    }, 64);
+    return Math.max(260, total);
+  }, [project?.tracks, expandedTakeTracks]);
 
   // Sync vertical scrolling between track headers and timeline canvas
   const handleTimelineScroll = () => {
@@ -596,10 +618,12 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
               const selected = selection.selectedTrackId === track.id;
               const meter = trackMeters[track.id];
               const levelPct = meter ? Math.min(100, Math.round(Math.max(meter.peakL, meter.peakR) * 100)) : 0;
+              const takeLanes = track.takeLanes ?? [];
+              const isExpanded = Boolean(expandedTakeTracks[track.id]) && takeLanes.length > 0;
 
               return (
+                <React.Fragment key={track.id}>
                 <div
-                  key={track.id}
                   className={`track-header ${selected ? "selected" : ""}`}
                   data-testid={`track-header-${track.id}`}
                   onClick={() =>
@@ -699,7 +723,7 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 3 }}>
                       {track.type === "midi" ? (
                         <select
                           value={track.instrumentRef ?? "basic-poly-synth"}
@@ -715,7 +739,7 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                             height: 16,
                             fontSize: 9,
                             padding: "0 3px",
-                            maxWidth: 112,
+                            maxWidth: takeLanes.length > 0 ? 78 : 112,
                             background: "var(--bg-input)",
                             border: "1px solid var(--border-subtle)",
                             color: "var(--text-secondary)",
@@ -733,9 +757,27 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                           {track.type === "stem" ? "STEM · est." : track.type.toUpperCase()}
                         </span>
                       )}
-                      <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)", flexShrink: 0 }}>
-                        {formatDb(track.gainDb)} · {formatPan(track.pan)}
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        {takeLanes.length > 0 && (
+                          <button
+                            className={isExpanded ? "pill-toggle active" : ""}
+                            style={{ height: 16, padding: "0 4px", fontSize: 8.5, flexShrink: 0, gap: 2 }}
+                            data-testid={`btn-toggle-takes-${track.id}`}
+                            title="Expand / Collapse Take Lanes"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedTakeTracks((prev) => ({ ...prev, [track.id]: !prev[track.id] }));
+                            }}
+                          >
+                            {isExpanded ? <ChevronDown size={8} /> : <ChevronRight size={8} />}
+                            <Layers size={8} />
+                            {takeLanes.length}
+                          </button>
+                        )}
+                        <span className="mono" style={{ fontSize: 9, color: "var(--text-muted)", flexShrink: 0 }}>
+                          {formatDb(track.gainDb)} · {formatPan(track.pan)}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="track-controls-row">
@@ -824,6 +866,113 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                     </div>
                   </div>
                 </div>
+
+                {/* Expanded Take Lane Headers (strictly height-matched to TAKE_LANE_H!) */}
+                {isExpanded &&
+                  takeLanes.map((lane) => {
+                    const laneKey = `${track.id}:${lane.id}`;
+                    const hasSubRange =
+                      selection.timeRangeBeats &&
+                      selection.timeRangeBeats.endBeats > lane.startBeats + 0.1 &&
+                      selection.timeRangeBeats.startBeats < lane.endBeats - 0.1 &&
+                      (selection.timeRangeBeats.startBeats > lane.startBeats + 0.1 ||
+                        selection.timeRangeBeats.endBeats < lane.endBeats - 0.1);
+                    return (
+                      <div
+                        key={lane.id}
+                        data-testid={`take-lane-header-${lane.id}`}
+                        style={{
+                          height: TAKE_LANE_H,
+                          padding: "0 6px 0 12px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 4,
+                          background: lane.active ? "rgba(99, 180, 124, 0.08)" : "#15171c",
+                          borderBottom: "1px solid var(--border-subtle)",
+                          borderLeft: `3px solid ${lane.isOriginalBackup ? "#867ca8" : track.color}`,
+                          fontSize: 10,
+                        }}
+                      >
+                        <div style={{ minWidth: 0, flex: 1, display: "flex", alignItems: "center", gap: 4 }}>
+                          {renamingLaneKey === laneKey ? (
+                            <input
+                              autoFocus
+                              value={renamingLaneVal}
+                              style={{ width: "100%", height: 18, fontSize: 10, padding: "0 4px" }}
+                              onChange={(e) => setRenamingLaneVal(e.target.value)}
+                              onBlur={() => {
+                                if (renamingLaneVal.trim()) {
+                                  void renameTakeLane(track.id, lane.id, renamingLaneVal.trim());
+                                }
+                                setRenamingLaneKey(null);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!isImeComposing(e) && e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                if (!isImeComposing(e) && e.key === "Escape") setRenamingLaneKey(null);
+                              }}
+                            />
+                          ) : (
+                            <span
+                              style={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                color: lane.active ? "#cdecd7" : "var(--text-secondary)",
+                                fontWeight: lane.active ? 600 : 500,
+                                cursor: "text",
+                              }}
+                              title="Double-click to rename Take Lane"
+                              onDoubleClick={() => {
+                                setRenamingLaneKey(laneKey);
+                                setRenamingLaneVal(lane.name);
+                              }}
+                            >
+                              {lane.name}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                          {lane.isOriginalBackup ? (
+                            <button
+                              style={{ height: 18, padding: "0 5px", fontSize: 9 }}
+                              data-testid={`btn-restore-lane-${lane.id}`}
+                              onClick={() => void restoreOriginalTakeLane(track.id, lane.id)}
+                              title={t("timeline.restoreOriginal")}
+                            >
+                              <RotateCcw size={9} />
+                              {t("timeline.restoreOriginal")}
+                            </button>
+                          ) : (
+                            <>
+                              {hasSubRange && selection.timeRangeBeats && (
+                                <button
+                                  style={{ height: 18, padding: "0 4px", fontSize: 9 }}
+                                  data-testid={`btn-comp-lane-${lane.id}`}
+                                  onClick={() =>
+                                    void promoteTakeLane(track.id, lane.id, selection.timeRangeBeats!)
+                                  }
+                                  title={t("timeline.compRange")}
+                                >
+                                  Comp
+                                </button>
+                              )}
+                              <button
+                                className={lane.active ? "pill-toggle active" : ""}
+                                style={{ height: 18, padding: "0 5px", fontSize: 9 }}
+                                data-testid={`btn-promote-lane-${lane.id}`}
+                                onClick={() => void promoteTakeLane(track.id, lane.id)}
+                              >
+                                <Check size={9} />
+                                {lane.active ? t("timeline.takeLaneActive") : t("timeline.promoteTake")}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
               );
             })}
             <div style={{ height: 64 }} />
@@ -1124,12 +1273,14 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                 />
               )}
 
-              {/* Track Rows & Clips */}
+              {/* Track Rows & Clips (+ Expanded Take Lanes) */}
               {project.tracks.map((track, trackIdx) => {
                 const isTrackSel = selection.selectedTrackId === track.id;
+                const takeLanes = track.takeLanes ?? [];
+                const isExpanded = Boolean(expandedTakeTracks[track.id]) && takeLanes.length > 0;
                 return (
+                  <React.Fragment key={track.id}>
                   <div
-                    key={track.id}
                     style={{
                       height: TRACK_ROW_H,
                       position: "relative",
@@ -1303,6 +1454,80 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                       );
                     })}
                   </div>
+
+                  {/* Expanded Take Lane Timeline Bars (inactive lanes NEVER double-play!) */}
+                  {isExpanded &&
+                    takeLanes.map((lane) => {
+                      const lLeft = lane.startBeats * pixelsPerBeat;
+                      const lWidth = Math.max(44, (lane.endBeats - lane.startBeats) * pixelsPerBeat);
+                      return (
+                        <div
+                          key={lane.id}
+                          data-testid={`take-lane-row-${lane.id}`}
+                          style={{
+                            height: TAKE_LANE_H,
+                            position: "relative",
+                            borderBottom: "1px solid var(--border-subtle)",
+                            background: "rgba(18, 20, 25, 0.72)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: lLeft,
+                              width: lWidth - 1,
+                              top: 4,
+                              height: TAKE_LANE_H - 8,
+                              borderRadius: 4,
+                              background: lane.isOriginalBackup
+                                ? "rgba(134, 124, 168, 0.35)"
+                                : hexToRgba(track.color, lane.active ? 0.55 : 0.32),
+                              border: `1px ${lane.active ? "solid var(--accent-play)" : "dashed rgba(255,255,255,0.28)"}`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              padding: "0 6px",
+                              gap: 4,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 9.5,
+                                color: "#eef2f6",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {lane.name}
+                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
+                              {lane.takeId && (
+                                <button
+                                  className="icon-btn"
+                                  style={{ width: 16, height: 16 }}
+                                  title="Preview Take In-Context"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void audioEngine
+                                      .playReferencePreview(dawApi.takeAudioUrl(project.id, lane.takeId!, "in_context"))
+                                      .catch(() =>
+                                        audioEngine.playReferencePreview(
+                                          dawApi.takeAudioUrl(project.id, lane.takeId!, "solo")
+                                        )
+                                      );
+                                  }}
+                                >
+                                  <Play size={9} fill="currentColor" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })}
             </div>

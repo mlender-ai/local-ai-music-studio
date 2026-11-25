@@ -594,11 +594,17 @@ def get_take(project_id: str, take_id: str) -> dict[str, Any]:
     return found
 
 
-def resolve_take_preview_audio(project_id: str, take_id: str) -> tuple[dict[str, Any], Path]:
+def resolve_take_preview_audio(project_id: str, take_id: str, variant: str = "solo") -> tuple[dict[str, Any], Path]:
     take = get_take(project_id, take_id)
-    rel = take.get("previewRelativePath")
+    ctx_prev = (take.get("qualityReport") or {}).get("technical", {}).get("contextualPreview") or {}
+    if variant == "in_context" and ctx_prev.get("inContextRelativePath"):
+        rel = ctx_prev["inContextRelativePath"]
+    elif variant == "original_context" and ctx_prev.get("originalContextRelativePath"):
+        rel = ctx_prev["originalContextRelativePath"]
+    else:
+        rel = take.get("previewRelativePath")
     if not rel:
-        raise FileNotFoundError(f"Take {take_id} has no preview audio")
+        raise FileNotFoundError(f"Take {take_id} has no preview audio (variant={variant})")
     pdir = store.project_dir(project_id).resolve()
     abs_path = (pdir / rel).resolve()
     if not abs_path.is_relative_to(pdir) or not abs_path.is_file():

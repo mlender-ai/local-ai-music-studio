@@ -47,14 +47,31 @@ def _load_stereo_audio(path: Path, target_sr: int) -> np.ndarray:
     return data
 
 
-def _apply_edge_fades(buf: np.ndarray, sr: int, fade_ms: float = 4.0) -> np.ndarray:
-    fade_samples = min(len(buf) // 2, max(1, int(sr * fade_ms / 1000.0)))
-    if fade_samples <= 0 or len(buf) == 0:
+def _apply_clip_fades(
+    buf: np.ndarray,
+    sr: int,
+    fade_in_sec: float = 0.0,
+    fade_out_sec: float = 0.0,
+    min_edge_ms: float = 4.0,
+) -> np.ndarray:
+    """Apply explicit clip fade-in / fade-out envelopes (with minimum anti-click edge ramp)."""
+    n = len(buf)
+    if n <= 1:
         return buf
+    min_samp = max(1, int(sr * min_edge_ms / 1000.0))
+    fi_samp = max(min_samp, int(round(max(0.0, fade_in_sec) * sr)))
+    fo_samp = max(min_samp, int(round(max(0.0, fade_out_sec) * sr)))
+    if fi_samp + fo_samp > n:
+        scale = n / float(fi_samp + fo_samp)
+        fi_samp = max(1, int(fi_samp * scale))
+        fo_samp = max(1, n - fi_samp)
     out = buf.copy()
-    ramp = np.linspace(0.0, 1.0, fade_samples, dtype=np.float32)[:, None]
-    out[:fade_samples] *= ramp
-    out[-fade_samples:] *= ramp[::-1]
+    if fi_samp > 0:
+        ramp_in = np.linspace(0.0, 1.0, fi_samp, dtype=np.float32)[:, None]
+        out[:fi_samp] *= ramp_in
+    if fo_samp > 0:
+        ramp_out = np.linspace(1.0, 0.0, fo_samp, dtype=np.float32)[:, None]
+        out[-fo_samp:] *= ramp_out
     return out
 
 
@@ -165,7 +182,9 @@ def render_project_to_array(
                     if take > 0:
                         clip_pcm[:take] = src[src_offset_samp : src_offset_samp + take]
 
-                clip_pcm = _apply_edge_fades(clip_pcm, sr) * clip_gain
+                fade_in_sec = max(0.0, float(getattr(clip, "fadeInBeats", 0.0))) * sec_per_beat
+                fade_out_sec = max(0.0, float(getattr(clip, "fadeOutBeats", 0.0))) * sec_per_beat
+                clip_pcm = _apply_clip_fades(clip_pcm, sr, fade_in_sec=fade_in_sec, fade_out_sec=fade_out_sec) * clip_gain
                 dst_start = int(round(clip_start_sec * sr))
                 src_slice_start = max(0, -dst_start)
                 dst_write_start = max(0, dst_start)

@@ -21,7 +21,7 @@ import { useDaw } from "../commands/store";
 import { isImeComposing, useI18n } from "../i18n";
 import { beatsToSeconds, formatBarRange } from "../project/time";
 import { dawApi } from "../project/api";
-import type { CompositionPlan } from "../project/types";
+import type { ArrangementEditPlan, CompositionPlan } from "../project/types";
 
 interface AIProducerPanelProps {
   width: number;
@@ -35,6 +35,7 @@ interface ChatItem {
   text: string;
   ok?: boolean;
   plan?: CompositionPlan;
+  arrangementPlan?: ArrangementEditPlan;
 }
 
 const TARGET_INSTRUMENT_OPTIONS = [
@@ -63,7 +64,12 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
     submitProducerInstruction,
     providerSummary,
     generationEngines,
+    runtimeRegistry,
     activePlan,
+    activeArrangementPlan,
+    setActiveArrangementPlan,
+    engineUnavailableNotice,
+    dismissEngineUnavailableNotice,
     activeGenerationJob,
     takes,
     selectAiProvider,
@@ -72,11 +78,15 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
     cancelActiveGeneration,
     applyGeneratedTake,
     rejectGeneratedTake,
+    executeArrangementPlan,
     showToast,
   } = useDaw();
 
   const [subTab, setSubTab] = useState<"chat" | "takes" | "engines">("chat");
   const [composeMode, setComposeMode] = useState<"auto" | "full_music" | "instrument_session" | "loop_midi">("auto");
+  const [prodMode, setProdMode] = useState<"editable_midi" | "neural_audio" | "hybrid">("editable_midi");
+  const [varIntensity, setVarIntensity] = useState<"subtle" | "moderate" | "creative">("moderate");
+  const [runningVariation, setRunningVariation] = useState(false);
   const [targetInst, setTargetInst] = useState<string>("synth_hook");
   const [useRef, setUseRef] = useState<boolean>(true);
   const [draftPrompt, setDraftPrompt] = useState("");
@@ -84,17 +94,17 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
   const [chatFeed, setChatFeed] = useState<ChatItem[]>([]);
   const [showDevDetails, setShowDevDetails] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
-  const [playingTakeId, setPlayingTakeId] = useState<string | null>(null);
+  const [playingTakeKey, setPlayingTakeKey] = useState<string | null>(null);
 
   // Sync take preview button when audio stops naturally
   useEffect(() => {
-    if (!playingTakeId) return;
+    if (!playingTakeKey) return;
     const id = window.setInterval(() => {
       const st = audioEngine.getReferencePreviewState();
-      if (!st.playingUrl) setPlayingTakeId(null);
+      if (!st.playingUrl) setPlayingTakeKey(null);
     }, 150);
     return () => window.clearInterval(id);
-  }, [playingTakeId]);
+  }, [playingTakeKey]);
 
   const activeSection = useMemo(() => {
     if (!project) return null;
@@ -183,11 +193,20 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
           });
         }
       } else {
-        // Unified conversational router: handles DAW edits, reference analysis, AND composition!
+        // Unified conversational router: handles DAW edits, Phase 04 selective arrangement, reference analysis, AND composition!
         const res = await submitProducerInstruction(prompt);
         if (res) {
           const msg = locale === "ko" ? res.messageKo || res.messageEn || "" : res.messageEn || res.messageKo || "";
-          appendChat({ role: "producer", ok: res.supported, text: msg, plan: res.plan });
+          appendChat({
+            role: "producer",
+            ok: res.supported,
+            text: msg,
+            plan: res.plan,
+            arrangementPlan: res.arrangementPlan,
+          });
+          if (res.action === "arrangement_edit_plan_created" && res.arrangementPlan) {
+            setVarIntensity(res.arrangementPlan.intensity);
+          }
           if (res.action === "analyze_reference") {
             onOpenReferenceTab();
           }
@@ -198,20 +217,44 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
     }
   };
 
-  const handleGenerate = async (plan: CompositionPlan) => {
-    await startGenerationFromPlan(plan, "auto");
+  const handleGenerate = async (plan: CompositionPlan, overrideEngine?: string) => {
+    const engineChoice = overrideEngine ?? (prodMode === "neural_audio" ? "neural_audio" : "auto");
+    const started = await startGenerationFromPlan(plan, engineChoice);
+    if (started) setSubTab("takes");
   };
 
-  const handleToggleTakePreview = async (takeId: string, levelGainDb: number) => {
-    if (playingTakeId === takeId) {
+  const handleExecuteArrangement = async (plan: ArrangementEditPlan) => {
+    if (runningVariation) return;
+    setRunningVariation(true);
+    try {
+      const res = await executeArrangementPlan(plan, { intensity: varIntensity });
+      if (res?.take) {
+        setActiveArrangementPlan(null);
+        setSubTab("takes");
+      } else if (res?.applied) {
+        setActiveArrangementPlan(null);
+        appendChat({ role: "producer", ok: true, text: res.messageKo || plan.summaryKo });
+      }
+    } finally {
+      setRunningVariation(false);
+    }
+  };
+
+  const handleToggleTakePreview = async (
+    takeId: string,
+    variant: "solo" | "in_context" | "original_context",
+    levelGainDb: number
+  ) => {
+    const playKey = `${takeId}:${variant}`;
+    if (playingTakeKey === playKey) {
       audioEngine.stopReferencePreview();
-      setPlayingTakeId(null);
+      setPlayingTakeKey(null);
       return;
     }
     try {
-      const url = dawApi.takeAudioUrl(project.id, takeId);
+      const url = dawApi.takeAudioUrl(project.id, takeId, variant);
       await audioEngine.playReferencePreview(url, 0, levelGainDb);
-      setPlayingTakeId(takeId);
+      setPlayingTakeKey(playKey);
     } catch (err) {
       showToast((err as Error).message, "error");
     }
@@ -391,6 +434,27 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                 </span>
               </div>
 
+              {/* Production Mode Selector (No Silent Substitution — Section 3.1) */}
+              <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                {(
+                  [
+                    { id: "editable_midi", label: t("producer.prodModeMidi") },
+                    { id: "neural_audio", label: t("producer.prodModeNeural") },
+                    { id: "hybrid", label: t("producer.prodModeHybrid") },
+                  ] as const
+                ).map((pm) => (
+                  <button
+                    key={pm.id}
+                    className={prodMode === pm.id ? "pill-toggle active" : ""}
+                    style={{ height: 19, padding: "0 6px", fontSize: 9.5 }}
+                    onClick={() => setProdMode(pm.id)}
+                    data-testid={`prod-mode-${pm.id}`}
+                  >
+                    {pm.label}
+                  </button>
+                ))}
+              </div>
+
               {/* Generation Mode Pills */}
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                 {(
@@ -466,10 +530,41 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
               </div>
             </div>
 
+            {/* Honest Engine Unavailable Banner (Never silently substitutes MIDI for Neural Audio!) */}
+            {engineUnavailableNotice && (
+              <div
+                className="producer-card"
+                style={{ borderColor: "var(--accent-danger)", background: "rgba(217, 92, 92, 0.1)" }}
+                data-testid="engine-unavailable-banner"
+              >
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: "#f2b8b8" }}>
+                  {locale === "ko" ? engineUnavailableNotice.errorKo : engineUnavailableNotice.errorEn}
+                </div>
+                <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                  <button
+                    className="pill-toggle active"
+                    style={{ height: 22, padding: "0 8px", fontSize: 10 }}
+                    data-testid="btn-switch-editable-midi"
+                    onClick={async () => {
+                      const targetPlan = engineUnavailableNotice.plan;
+                      setProdMode("editable_midi");
+                      dismissEngineUnavailableNotice();
+                      await handleGenerate(targetPlan, "local-midi-composer");
+                    }}
+                  >
+                    {t("producer.engineUnavailableSwitch")}
+                  </button>
+                  <button style={{ height: 22, padding: "0 7px", fontSize: 10 }} onClick={dismissEngineUnavailableNotice}>
+                    <X size={10} />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Quick Musical Starters when Chat is Empty */}
-            {chatFeed.length === 0 && !activePlan && (
+            {chatFeed.length === 0 && !activePlan && !activeArrangementPlan && (
               <div className="producer-card" style={{ gap: 5 }}>
-                <div className="producer-label">Quick Composition Starters</div>
+                <div className="producer-label">Quick Composition & Arrangement</div>
                 <button
                   style={{ justifyContent: "flex-start", fontSize: 10.5, height: 26, padding: "0 8px" }}
                   onClick={() =>
@@ -482,6 +577,30 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                 >
                   <Sparkles size={11} />
                   {t("producer.quickHouse")}
+                </button>
+                <button
+                  style={{ justifyContent: "flex-start", fontSize: 10.5, height: 26, padding: "0 8px" }}
+                  onClick={() =>
+                    void handleSubmitText(
+                      "드럼 5~8마디만 좀 더 다양하게 변주해줘. 마지막에는 필인을 넣어줘."
+                    )
+                  }
+                  data-testid="btn-quick-drum-var"
+                >
+                  <Layers size={11} />
+                  {t("producer.quickDrumVar")}
+                </button>
+                <button
+                  style={{ justifyContent: "flex-start", fontSize: 10.5, height: 26, padding: "0 8px" }}
+                  onClick={() =>
+                    void handleSubmitText(
+                      "신스 훅의 메인 멜로디는 유지하면서 후반부만 좀 더 인상적으로 바꿔줘."
+                    )
+                  }
+                  data-testid="btn-quick-hook-var"
+                >
+                  <Sparkles size={11} />
+                  {t("producer.quickHookVar")}
                 </button>
                 <button
                   style={{ justifyContent: "flex-start", fontSize: 10.5, height: 26, padding: "0 8px" }}
@@ -549,6 +668,80 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
               </div>
             )}
 
+            {/* Active Phase 04 Arrangement Edit Plan Card */}
+            {activeArrangementPlan && (
+              <div
+                className="producer-card"
+                style={{ borderColor: "#7c9b86", background: "rgba(99, 180, 124, 0.08)" }}
+                data-testid="arrangement-plan-card"
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span className="producer-label" style={{ color: "#a9e1ba" }}>
+                    {t("producer.arrPlanTitle")}
+                  </span>
+                  <span className="tag-badge">{activeArrangementPlan.variationKind}</span>
+                </div>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.4 }}>
+                  {locale === "ko" ? activeArrangementPlan.summaryKo : activeArrangementPlan.summaryEn}
+                </div>
+
+                <div className="mono" style={{ fontSize: 9.5, color: "var(--text-secondary)" }}>
+                  Bars {activeArrangementPlan.scope.startBar}–{activeArrangementPlan.scope.endBarInclusive} ·{" "}
+                  op: {activeArrangementPlan.operation}
+                  {activeArrangementPlan.preserveFirstHalf ? " · 1st-half locked" : ""}
+                  {activeArrangementPlan.addTurnaroundFill ? " · +Fill" : ""}
+                </div>
+
+                {/* Variation Intensity Selector */}
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 9.5, color: "var(--text-muted)" }}>{t("producer.intensityLabel")}:</span>
+                  {(["subtle", "moderate", "creative"] as const).map((lvl) => (
+                    <button
+                      key={lvl}
+                      className={varIntensity === lvl ? "pill-toggle active" : ""}
+                      style={{ height: 18, padding: "0 6px", fontSize: 9.5 }}
+                      onClick={() => setVarIntensity(lvl)}
+                      data-testid={`intensity-pill-${lvl}`}
+                    >
+                      {lvl}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                  {activeArrangementPlan.changes.map((c, idx) => (
+                    <span key={idx} className="tag-badge">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                  <button
+                    className="btn-primary"
+                    style={{ flex: 1, height: 26, justifyContent: "center", fontSize: 11 }}
+                    disabled={runningVariation}
+                    onClick={() => void handleExecuteArrangement(activeArrangementPlan)}
+                    data-testid="btn-execute-arrangement"
+                  >
+                    <Sparkles size={11} />
+                    {["extend_section", "strip_to_tracks", "audio_reverse", "audio_fade"].includes(
+                      activeArrangementPlan.operation
+                    )
+                      ? t("producer.applyStructuralEdit")
+                      : t("producer.runVariation")}
+                  </button>
+                  <button
+                    style={{ height: 26, padding: "0 7px", fontSize: 10 }}
+                    onClick={() => setActiveArrangementPlan(null)}
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Active Composition Plan Card (Inspectable before Generate!) */}
             {activePlan && (
               <div
@@ -607,10 +800,7 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                   className="btn-primary"
                   style={{ height: 28, justifyContent: "center", fontSize: 11, marginTop: 2 }}
                   disabled={Boolean(isGenerating)}
-                  onClick={async () => {
-                    await handleGenerate(activePlan);
-                    setSubTab("takes");
-                  }}
+                  onClick={() => void handleGenerate(activePlan)}
                   data-testid="btn-generate-from-plan"
                 >
                   <Sparkles size={12} />
@@ -630,11 +820,16 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
               </div>
             ) : (
               takes.map((take) => {
-                const isPlayingThis = playingTakeId === take.id;
-                const tech = take.qualityReport?.technical ?? {};
+                const tech = (take.qualityReport?.technical ?? {}) as Record<string, unknown>;
+                const ctxPrev = (tech.contextualPreview ?? null) as Record<string, unknown> | null;
                 const lufsVal = tech.integratedLufs ?? take.previewIntegratedLufs;
                 const tpVal = tech.truePeakDbtp;
                 const isRejected = take.status === "rejected";
+                const isPlayingSolo = playingTakeKey === `${take.id}:solo`;
+                const isPlayingCtx = playingTakeKey === `${take.id}:in_context`;
+                const isPlayingOrig = playingTakeKey === `${take.id}:original_context`;
+                const isSingleOrVariation = take.mode === "midi_variation" || take.artifacts.length === 1;
+                const effTargetTrackId = take.targetTrackId ?? selectedTrack?.id ?? null;
                 return (
                   <div
                     key={take.id}
@@ -703,56 +898,127 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                       </div>
                     )}
 
-                    {/* Level-Matched (-16 LUFS) Preview + Transactional Apply Controls */}
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
-                      {take.previewRelativePath && (
+                    {/* Contextual Audition Row: Solo / In-Context / Original A/B (-16 LUFS matched) */}
+                    {take.previewRelativePath && (
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
                         <button
-                          style={{ height: 22, padding: "0 7px", fontSize: 10 }}
-                          onClick={() => void handleToggleTakePreview(take.id, take.levelMatchedGainDb)}
+                          className={isPlayingSolo ? "pill-toggle active" : ""}
+                          style={{ height: 21, padding: "0 6px", fontSize: 9.5 }}
+                          onClick={() => void handleToggleTakePreview(take.id, "solo", take.levelMatchedGainDb)}
                           data-testid={`btn-preview-take-${take.id}`}
                         >
-                          {isPlayingThis ? <Square size={9} fill="currentColor" /> : <Play size={9} fill="currentColor" />}
-                          {isPlayingThis ? t("producer.stopPreview") : t("producer.previewLevelMatched")}
+                          {isPlayingSolo ? <Square size={9} fill="currentColor" /> : <Play size={9} fill="currentColor" />}
+                          {isPlayingSolo
+                            ? t("producer.stopPreview")
+                            : ctxPrev
+                              ? t("producer.previewSolo")
+                              : t("producer.previewLevelMatched")}
                         </button>
-                      )}
-                      {!isRejected && (
-                        <>
-                          <button
-                            className="pill-toggle active"
-                            style={{ height: 22, padding: "0 7px", fontSize: 10 }}
-                            onClick={() => void applyGeneratedTake(take.id, "new_tracks")}
-                            data-testid={`btn-apply-take-new-${take.id}`}
-                          >
-                            <Plus size={10} />
-                            {t("producer.applyNewTracks")}
-                          </button>
-                          {selectedTrack && take.artifacts.length === 1 && (
+                        {ctxPrev && (
+                          <>
+                            <button
+                              className={isPlayingCtx ? "pill-toggle active" : ""}
+                              style={{ height: 21, padding: "0 6px", fontSize: 9.5 }}
+                              onClick={() =>
+                                void handleToggleTakePreview(
+                                  take.id,
+                                  "in_context",
+                                  Number(ctxPrev.inContextLevelMatchedGainDb ?? 0)
+                                )
+                              }
+                              data-testid={`btn-preview-ctx-${take.id}`}
+                            >
+                              {isPlayingCtx ? <Square size={9} fill="currentColor" /> : <Play size={9} fill="currentColor" />}
+                              {t("producer.previewInContext")}
+                            </button>
+                            <button
+                              className={isPlayingOrig ? "pill-toggle active" : ""}
+                              style={{ height: 21, padding: "0 6px", fontSize: 9.5 }}
+                              onClick={() =>
+                                void handleToggleTakePreview(
+                                  take.id,
+                                  "original_context",
+                                  Number(ctxPrev.originalLevelMatchedGainDb ?? 0)
+                                )
+                              }
+                              data-testid={`btn-preview-orig-${take.id}`}
+                            >
+                              {isPlayingOrig ? <Square size={9} fill="currentColor" /> : <Play size={9} fill="currentColor" />}
+                              {t("producer.previewOriginal")}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Explicit Transactional Apply Controls (Replace / Take Lane / Add / Extend / Reject) */}
+                    {!isRejected && (
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
+                        {isSingleOrVariation && effTargetTrackId ? (
+                          <>
+                            <button
+                              className="pill-toggle active"
+                              style={{ height: 22, padding: "0 7px", fontSize: 9.5 }}
+                              onClick={() => void applyGeneratedTake(take.id, "replace_range", effTargetTrackId)}
+                              data-testid={`btn-apply-take-replace-${take.id}`}
+                            >
+                              <Check size={10} />
+                              {t("producer.applyReplaceRange")}
+                            </button>
+                            <button
+                              style={{ height: 22, padding: "0 7px", fontSize: 9.5 }}
+                              onClick={() => void applyGeneratedTake(take.id, "alternative_take", effTargetTrackId)}
+                              data-testid={`btn-apply-take-lane-${take.id}`}
+                            >
+                              <Layers size={10} />
+                              {t("producer.applyAltTake")}
+                            </button>
+                            <button
+                              style={{ height: 22, padding: "0 6px", fontSize: 9.5 }}
+                              onClick={() => void applyGeneratedTake(take.id, "add")}
+                              data-testid={`btn-apply-take-new-${take.id}`}
+                            >
+                              <Plus size={10} />
+                              {t("producer.applyNewTracks")}
+                            </button>
+                            <button
+                              style={{ height: 22, padding: "0 6px", fontSize: 9.5 }}
+                              onClick={() => void applyGeneratedTake(take.id, "extend", effTargetTrackId)}
+                              data-testid={`btn-apply-take-extend-${take.id}`}
+                            >
+                              {t("producer.applyExtend")}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="pill-toggle active"
+                              style={{ height: 22, padding: "0 7px", fontSize: 10 }}
+                              onClick={() => void applyGeneratedTake(take.id, "new_tracks")}
+                              data-testid={`btn-apply-take-new-${take.id}`}
+                            >
+                              <Plus size={10} />
+                              {t("producer.applyNewTracks")}
+                            </button>
                             <button
                               style={{ height: 22, padding: "0 7px", fontSize: 10 }}
-                              onClick={() => void applyGeneratedTake(take.id, "selected_range", selectedTrack.id)}
-                              data-testid={`btn-apply-take-selected-${take.id}`}
+                              onClick={() => void applyGeneratedTake(take.id, "new_project")}
+                              data-testid={`btn-apply-take-newproj-${take.id}`}
                             >
-                              {t("producer.applySelectedTrack")}
+                              {t("producer.applyNewProject")}
                             </button>
-                          )}
-                          <button
-                            style={{ height: 22, padding: "0 7px", fontSize: 10 }}
-                            onClick={() => void applyGeneratedTake(take.id, "new_project")}
-                            data-testid={`btn-apply-take-newproj-${take.id}`}
-                          >
-                            {t("producer.applyNewProject")}
-                          </button>
-                          <button
-                            style={{ height: 22, padding: "0 6px", fontSize: 10 }}
-                            onClick={() => void rejectGeneratedTake(take.id)}
-                            data-testid={`btn-reject-take-${take.id}`}
-                          >
-                            <X size={10} />
-                            {t("producer.rejectTake")}
-                          </button>
-                        </>
-                      )}
-                    </div>
+                          </>
+                        )}
+                        <button
+                          style={{ height: 22, padding: "0 6px", fontSize: 10 }}
+                          onClick={() => void rejectGeneratedTake(take.id)}
+                          data-testid={`btn-reject-take-${take.id}`}
+                        >
+                          <X size={10} />
+                          {t("producer.rejectTake")}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -763,11 +1029,22 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
         {/* TAB 3: HONEST PROVIDERS, GENERATION ENGINES & COLLAPSIBLE DEVELOPER DETAILS */}
         {subTab === "engines" && (
           <>
-            {/* Providers */}
+            {/* Providers (Honest 4-State Status: Verified / Authenticated / Ready for Client / Uninstalled) */}
             <div className="producer-card" data-testid="providers-card">
               <div className="producer-label">{t("producer.providersTitle")}</div>
               {(providerSummary?.providers ?? []).map((p) => {
                 const isActive = providerSummary?.activeProviderId === p.id;
+                const pState = p.providerState ?? p.status ?? (p.available ? "ready_for_client" : "uninstalled");
+                const statusBadge =
+                  pState === "verified"
+                    ? "Verified"
+                    : pState === "authenticated"
+                      ? "Authenticated"
+                      : pState === "ready_for_client"
+                        ? "MCP Ready"
+                        : pState === "detected"
+                          ? "Detected"
+                          : "Uninstalled";
                 return (
                   <div
                     key={p.id}
@@ -783,19 +1060,32 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
                       <strong style={{ fontSize: 10.5 }}>{p.name}</strong>
-                      {p.available ? (
-                        <button
-                          className={isActive ? "pill-toggle active" : ""}
-                          style={{ height: 18, padding: "0 6px", fontSize: 9, flexShrink: 0, whiteSpace: "nowrap" }}
-                          onClick={() => void selectAiProvider(p.id)}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        <span
+                          className="tag-badge"
+                          data-testid={`provider-state-${p.id}`}
+                          style={{
+                            fontSize: 8.5,
+                            color:
+                              pState === "verified" || pState === "authenticated"
+                                ? "#a9e1ba"
+                                : pState === "ready_for_client"
+                                  ? "#9bc2d9"
+                                  : "var(--text-muted)",
+                          }}
                         >
-                          {isActive ? "Active" : "Use"}
-                        </button>
-                      ) : (
-                        <span className="tag-badge" style={{ fontSize: 9, opacity: 0.65, flexShrink: 0, whiteSpace: "nowrap" }}>
-                          Not Installed
+                          {statusBadge}
                         </span>
-                      )}
+                        {p.available && (
+                          <button
+                            className={isActive ? "pill-toggle active" : ""}
+                            style={{ height: 18, padding: "0 6px", fontSize: 9, flexShrink: 0, whiteSpace: "nowrap" }}
+                            onClick={() => void selectAiProvider(p.id)}
+                          >
+                            {isActive ? "Active" : "Use"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div style={{ fontSize: 9.5, color: "var(--text-muted)", lineHeight: 1.35 }}>
                       {locale === "ko" ? p.statusNoteKo : p.statusNoteEn}
@@ -805,39 +1095,80 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
               })}
             </div>
 
-            {/* Generation & Stem Engines */}
+            {/* 6-State Shared Runtime Registry (YuE2 / ACE-Step / Demucs / Vocal QA / MIDI Composer) */}
             <div className="producer-card" data-testid="engines-card">
-              <div className="producer-label">{t("producer.enginesTitle")}</div>
-              {generationEngines.map((eng) => (
-                <div
-                  key={eng.id}
-                  style={{
-                    padding: "5px 6px",
-                    borderRadius: 4,
-                    border: "1px solid var(--border-subtle)",
-                    background: "#15171b",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 10.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                      <Cpu size={10} />
-                      {eng.name}
-                    </span>
-                    <span
-                      className="tag-badge"
-                      style={{ color: eng.available ? "#a9e1ba" : "var(--text-muted)", fontSize: 9, flexShrink: 0, whiteSpace: "nowrap" }}
+              <div className="producer-label">{t("producer.runtimeRegistryTitle")}</div>
+              {runtimeRegistry?.engines?.length
+                ? runtimeRegistry.engines.map((eng) => (
+                    <div
+                      key={eng.id}
+                      style={{
+                        padding: "5px 6px",
+                        borderRadius: 4,
+                        border: "1px solid var(--border-subtle)",
+                        background: "#15171b",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                      }}
                     >
-                      {eng.available ? "Ready" : "Unavailable"}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 9.5, color: "var(--text-muted)", lineHeight: 1.35 }}>
-                    {locale === "ko" ? eng.statusNoteKo : eng.statusNoteEn}
-                  </div>
-                </div>
-              ))}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                          <Cpu size={10} />
+                          {eng.name}
+                        </span>
+                        <span
+                          className="tag-badge"
+                          style={{
+                            color:
+                              eng.state === "verified" || eng.state === "ready"
+                                ? "#a9e1ba"
+                                : eng.state === "binary_found" || eng.state === "model_found"
+                                  ? "#f0cf7b"
+                                  : "var(--text-muted)",
+                            fontSize: 9,
+                            flexShrink: 0,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {eng.state}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "var(--text-muted)", lineHeight: 1.35 }}>
+                        {locale === "ko" ? eng.statusNoteKo : eng.statusNoteEn}
+                      </div>
+                    </div>
+                  ))
+                : generationEngines.map((eng) => (
+                    <div
+                      key={eng.id}
+                      style={{
+                        padding: "5px 6px",
+                        borderRadius: 4,
+                        border: "1px solid var(--border-subtle)",
+                        background: "#15171b",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                          <Cpu size={10} />
+                          {eng.name}
+                        </span>
+                        <span
+                          className="tag-badge"
+                          style={{ color: eng.available ? "#a9e1ba" : "var(--text-muted)", fontSize: 9 }}
+                        >
+                          {eng.available ? "Ready" : "Unavailable"}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 9.5, color: "var(--text-muted)", lineHeight: 1.35 }}>
+                        {locale === "ko" ? eng.statusNoteKo : eng.statusNoteEn}
+                      </div>
+                    </div>
+                  ))}
             </div>
 
             {/* Collapsible Developer Details (Revision, Payload JSON, MCP, Host) */}

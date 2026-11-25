@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { Repeat, Scissors } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { ArrowLeftRight, Repeat, Scissors } from "lucide-react";
 import { useDaw } from "../commands/store";
 import { useI18n } from "../i18n";
 import {
@@ -21,7 +21,10 @@ export function ClipEditor() {
     dispatch,
     beginTransaction,
     commitTransaction,
+    reverseAudioClip,
   } = useDaw();
+
+  const [reversing, setReversing] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -99,6 +102,42 @@ export function ClipEditor() {
           const barH = Math.max(2, amp * maxAmp * 2);
           ctx.fillRect(x, midY - barH / 2, 1.8, barH);
         }
+      }
+
+      // Non-destructive Fade-in / Fade-out visual envelope curves
+      const fiBeats = Math.max(0, selectedClip.fadeInBeats ?? 0);
+      const foBeats = Math.max(0, selectedClip.fadeOutBeats ?? 0);
+      if (fiBeats > 0 && totalBeats > 0) {
+        const fiW = Math.min(w * 0.9, (fiBeats / totalBeats) * w);
+        ctx.fillStyle = "rgba(19, 21, 25, 0.55)";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(fiW, 0);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#e5b84b";
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.moveTo(0, h);
+        ctx.lineTo(fiW, 0);
+        ctx.stroke();
+      }
+      if (foBeats > 0 && totalBeats > 0) {
+        const foW = Math.min(w * 0.9, (foBeats / totalBeats) * w);
+        ctx.fillStyle = "rgba(19, 21, 25, 0.55)";
+        ctx.beginPath();
+        ctx.moveTo(w, 0);
+        ctx.lineTo(w - foW, 0);
+        ctx.lineTo(w, h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#e5b84b";
+        ctx.lineWidth = 1.25;
+        ctx.beginPath();
+        ctx.moveTo(w - foW, 0);
+        ctx.lineTo(w, h);
+        ctx.stroke();
       }
 
       // Playhead cursor if inside clip
@@ -182,32 +221,31 @@ export function ClipEditor() {
         />
       </div>
 
-      {/* Bottom Precision Inspector Bar */}
+      {/* Bottom Precision Inspector Bar (compact fit at both 1440x900 and 1280x800) */}
       <div
         style={{
           height: 36,
           minHeight: 36,
-          padding: "0 10px",
+          padding: "0 8px",
           borderTop: "1px solid var(--border-subtle)",
           background: "#16181c",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 8,
-          fontSize: 11,
+          gap: 6,
+          fontSize: 10.5,
           overflowX: "auto",
           overflowY: "hidden",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0, whiteSpace: "nowrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, whiteSpace: "nowrap" }}>
           <span className="mono" style={{ color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            {t("clipEditor.start")}{" "}
             <strong style={{ color: "var(--text-primary)" }}>
               {formatBarBeatTick(selectedClip.timelineStartBeats, project.timeSignature)}
             </strong>
           </span>
 
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
             {t("clipEditor.length")}
             <input
               type="number"
@@ -222,14 +260,14 @@ export function ClipEditor() {
                   dispatch({ type: "clip.trim", payload: { clipId: selectedClip.id, durationBeats: v } });
                 }
               }}
-              style={{ width: 62, height: 22, padding: "0 4px" }}
+              style={{ width: 46, height: 21, padding: "0 3px", fontSize: 10 }}
             />
-            <span className="mono" style={{ color: "var(--text-muted)", whiteSpace: "nowrap" }}>
-              ({t("clipEditor.barsShort", { bars: lengthBars.toFixed(1), sec: lengthSec.toFixed(1) })})
+            <span className="mono" style={{ color: "var(--text-muted)", fontSize: 9.5 }} title={t("clipEditor.barsShort", { bars: lengthBars.toFixed(1), sec: lengthSec.toFixed(1) })}>
+              {lengthBars.toFixed(1)}b
             </span>
           </label>
 
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
             {t("clipEditor.offset")}
             <input
               type="number"
@@ -244,17 +282,17 @@ export function ClipEditor() {
                   dispatch({ type: "clip.trim", payload: { clipId: selectedClip.id, sourceOffsetSec: v } });
                 }
               }}
-              style={{ width: 52, height: 22, padding: "0 4px" }}
+              style={{ width: 42, height: 21, padding: "0 3px", fontSize: 10 }}
             />
-            <span className="mono" style={{ color: "var(--text-muted)" }}>s</span>
+            <span className="mono" style={{ color: "var(--text-muted)", fontSize: 9.5 }}>s</span>
           </label>
 
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
             {t("clipEditor.gain")}
             <input
               type="range"
               className="mini-slider"
-              style={{ width: 56 }}
+              style={{ width: 42 }}
               min={-24}
               max={12}
               step={0.5}
@@ -268,24 +306,83 @@ export function ClipEditor() {
                 })
               }
             />
-            <span className="mono" style={{ minWidth: 48, color: "var(--text-primary)", whiteSpace: "nowrap" }}>
+            <span className="mono" style={{ minWidth: 38, color: "var(--text-primary)", fontSize: 10 }}>
               {formatDb(selectedClip.gainDb)}
             </span>
           </label>
 
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+            {t("clipEditor.fadeIn")}
+            <input
+              type="number"
+              className="mono"
+              step={0.25}
+              min={0}
+              max={Math.max(0, selectedClip.durationBeats)}
+              value={Number((selectedClip.fadeInBeats ?? 0).toFixed(2))}
+              data-testid="clip-fade-in-input"
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                if (Number.isFinite(v) && v >= 0) {
+                  dispatch({ type: "clip.setFades", payload: { clipId: selectedClip.id, fadeInBeats: v } });
+                }
+              }}
+              style={{ width: 38, height: 21, padding: "0 3px", fontSize: 10 }}
+            />
+          </label>
+
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 2, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+            {t("clipEditor.fadeOut")}
+            <input
+              type="number"
+              className="mono"
+              step={0.25}
+              min={0}
+              max={Math.max(0, selectedClip.durationBeats)}
+              value={Number((selectedClip.fadeOutBeats ?? 0).toFixed(2))}
+              data-testid="clip-fade-out-input"
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                if (Number.isFinite(v) && v >= 0) {
+                  dispatch({ type: "clip.setFades", payload: { clipId: selectedClip.id, fadeOutBeats: v } });
+                }
+              }}
+              style={{ width: 38, height: 21, padding: "0 3px", fontSize: 10 }}
+            />
+          </label>
+
+          <button
+            className={selectedClip.reversed ? "pill-toggle active" : ""}
+            style={{ height: 21, padding: "0 5px", fontSize: 10, whiteSpace: "nowrap" }}
+            disabled={reversing}
+            title={t("clipEditor.reverseTooltip")}
+            data-testid="btn-reverse-clip"
+            onClick={async () => {
+              setReversing(true);
+              try {
+                await reverseAudioClip(selectedClip.id);
+              } finally {
+                setReversing(false);
+              }
+            }}
+          >
+            <ArrowLeftRight size={10} />
+            {t("clipEditor.reverse")}
+          </button>
+
           <button
             className={selectedClip.loop ? "pill-toggle active" : ""}
-            style={{ height: 22, padding: "0 7px", fontSize: 11, whiteSpace: "nowrap" }}
+            style={{ height: 21, padding: "0 5px", fontSize: 10, whiteSpace: "nowrap" }}
             onClick={() =>
               dispatch({ type: "clip.setLoop", payload: { clipId: selectedClip.id, loop: !selectedClip.loop } })
             }
           >
-            <Repeat size={11} />
+            <Repeat size={10} />
             {t("transport.loop")}
           </button>
 
           <button
-            style={{ height: 22, padding: "0 7px", fontSize: 11, whiteSpace: "nowrap" }}
+            style={{ height: 21, padding: "0 5px", fontSize: 10, whiteSpace: "nowrap" }}
             disabled={!canSplit}
             title={t("timeline.splitTooltip")}
             onClick={() =>
@@ -295,19 +392,19 @@ export function ClipEditor() {
               })
             }
           >
-            <Scissors size={11} />
+            <Scissors size={10} />
             {t("timeline.split")}
           </button>
         </div>
 
         <div
           className="mono"
-          style={{ color: "var(--text-muted)", fontSize: 10, whiteSpace: "nowrap", flexShrink: 0 }}
+          style={{ color: "var(--text-muted)", fontSize: 9.5, whiteSpace: "nowrap", flexShrink: 0 }}
           title={t("clipEditor.noWarpTooltip")}
         >
           {asset && asset.sampleRate > 0
-            ? `${(asset.sampleRate / 1000).toFixed(1)} kHz · ${asset.channels === 1 ? t("clipEditor.mono") : t("clipEditor.stereo")}`
-            : "48.0 kHz"}
+            ? `${(asset.sampleRate / 1000).toFixed(0)}k · ${asset.channels === 1 ? "M" : "St"}`
+            : "48k"}
         </div>
       </div>
     </div>
