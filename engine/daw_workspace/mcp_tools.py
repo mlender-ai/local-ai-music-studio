@@ -28,6 +28,10 @@ from engine.generation import (
 from engine.instruments import list_instruments as _list_instruments
 from engine.providers import get_provider_summary
 from engine.runtime import get_runtime_registry
+from engine.transcription import (
+    build_yue2_abc_from_reference as _build_ref_abc,
+    reconstruct_reference_to_project as _reconstruct_ref,
+)
 
 from . import analysis, commands, proposals, reaper, references, session, store
 
@@ -48,7 +52,8 @@ def get_capabilities() -> dict[str, Any]:
     return {
         "product": "AI-Native DAW",
         "phase": "04",
-        "schemaVersion": "1.3.0",
+        "referencePhase": "03.2",
+        "schemaVersion": "1.4.0",
         "supported": {
             "projectReadWrite": True,
             "revisionConflictGuard": True,
@@ -59,13 +64,26 @@ def get_capabilities() -> dict[str, Any]:
             "clipEdit": ["add", "move", "trim", "split", "duplicate", "delete", "gain", "loop", "fades", "reverse"],
             "midiEdit": ["addNote", "moveNote", "resizeNote", "setVelocity", "deleteNote"],
             "sectionMarkers": ["add", "rename", "remove", "extend"],
+            "chordTrack": ["setTrack", "upsert", "delete", "setLocked"],
             "referenceIntelligence": [
                 "import_audio_video",
                 "url_metadata_probe",
                 "bs1770_4_loudness_and_true_peak",
                 "half_double_time_tempo_resolution",
-                "reference_blueprint",
+                "reference_blueprint_v2",
                 "normalized_audio_comparison",
+            ],
+            "advancedReferenceIntelligence": [
+                "demucs_mps_4stem_separation",
+                "basic_pitch_onnx_polyphonic_transcription",
+                "multiband_drum_and_microtiming_groove_extraction",
+                "sub_bar_chord_and_inversion_tracking",
+                "ten_feature_reference_lock_matrix",
+                "mode_a_reconstruct_to_editable_session",
+                "mode_b_reference_conditioned_composition",
+                "mode_c_reference_reinterpretation",
+                "yue2_instrumental_abc_score_generation",
+                "five_state_feature_consumption_verification",
             ],
             "aiComposition": [
                 "composition_plan",
@@ -414,6 +432,9 @@ def create_composition_plan(
     selected_influences: list[str] | None = None,
     project_id: str | None = None,
     provider_id: str | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",
+    use_project_chord_track: bool = False,
 ) -> dict[str, Any]:
     pid = _resolve_project_id(project_id)
     proj = store.load_project(pid)
@@ -428,6 +449,9 @@ def create_composition_plan(
         selected_influences=selected_influences,
         selection=sel,
         provider_id=provider_id,
+        feature_locks=feature_locks,
+        reference_mode=reference_mode,
+        use_project_chord_track=use_project_chord_track,
     )
     saved_plan, rev = _save_plan(pid, plan)
     return {"projectId": pid, "revision": rev, "plan": saved_plan}
@@ -452,6 +476,9 @@ def _run_generation_helper(
     seed: int | None = None,
     sync: bool = True,
     project_id: str | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",
+    use_project_chord_track: bool = False,
 ) -> dict[str, Any]:
     pid = _resolve_project_id(project_id)
     proj = store.load_project(pid)
@@ -472,6 +499,9 @@ def _run_generation_helper(
             selected_influences=selected_influences,
             selection=sel,
             engine_preference=engine_choice,
+            feature_locks=feature_locks,
+            reference_mode=reference_mode,
+            use_project_chord_track=use_project_chord_track,
         )
     return generation_jobs.start_composition_job(pid, plan, engine_choice=engine_choice, seed=seed, sync=sync)
 
@@ -485,9 +515,24 @@ def generate_music(
     seed: int | None = None,
     sync: bool = True,
     project_id: str | None = None,
+    feature_locks: dict[str, str] | None = None,
+    reference_mode: str = "reference_compose",
+    use_project_chord_track: bool = False,
 ) -> dict[str, Any]:
     return _run_generation_helper(
-        instruction, "full_music", None, plan_id, reference_ids, selected_influences, engine_choice, seed, sync, project_id
+        instruction,
+        "full_music",
+        None,
+        plan_id,
+        reference_ids,
+        selected_influences,
+        engine_choice,
+        seed,
+        sync,
+        project_id,
+        feature_locks=feature_locks,
+        reference_mode=reference_mode,
+        use_project_chord_track=use_project_chord_track,
     )
 
 
@@ -714,3 +759,164 @@ def get_music_memory(project_id: str | None = None) -> dict[str, Any]:
     pid = _resolve_project_id(project_id)
     proj = store.load_project(pid)
     return {"projectId": pid, "revision": proj.revision, "musicMemory": _ensure_music_memory(proj)}
+
+
+# --- Phase 03.2: Advanced Reference Intelligence MCP Tools ---
+
+def transcribe_reference(
+    reference_id: str | None = None,
+    use_demucs: bool = True,
+    demucs_model: str = "htdemucs",
+    sync: bool = True,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    rid = reference_id or (proj.references[0]["id"] if proj.references else None)
+    if not rid:
+        raise FileNotFoundError("No reference found in project")
+    if sync:
+        ref, rev = references.run_reference_transcription_sync(
+            pid,
+            rid,
+            use_demucs=use_demucs,
+            demucs_model=demucs_model,
+        )
+        return {"status": "completed", "projectId": pid, "revision": rev, "reference": ref}
+    return {"job": references.start_reference_transcription_job(pid, rid, use_demucs=use_demucs, demucs_model=demucs_model)}
+
+
+def get_chord_track(project_id: str | None = None) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    return {
+        "projectId": proj.id,
+        "revision": proj.revision,
+        "chordTrack": [c.model_dump() for c in proj.chordTrack],
+        "chordTrackLocked": proj.chordTrackLocked,
+    }
+
+
+def set_chord_track(
+    chords: list[dict[str, Any]],
+    locked: bool | None = None,
+    project_id: str | None = None,
+    expected_revision: int | None = None,
+    stage_only: bool = False,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"chords": chords}
+    if locked is not None:
+        payload["locked"] = locked
+    return _direct_edit(
+        "chord.setTrack",
+        payload,
+        project_id,
+        expected_revision,
+        stage_only,
+        f"Update Chord Track ({len(chords)} chords)",
+    )
+
+
+def update_reference_locks(
+    reference_id: str | None = None,
+    feature_locks: dict[str, str] | None = None,
+    chord_corrections: list[dict[str, Any]] | None = None,
+    section_renames: dict[str, str] | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    rid = reference_id or (proj.references[0]["id"] if proj.references else None)
+    if not rid:
+        raise FileNotFoundError("No reference found in project")
+    ref, rev = references.update_reference_locks_and_corrections(
+        pid,
+        rid,
+        feature_locks=feature_locks,
+        chord_corrections=chord_corrections,
+        section_renames=section_renames,
+    )
+    return {"projectId": pid, "revision": rev, "reference": ref}
+
+
+def import_reference_transcription(
+    reference_id: str | None = None,
+    import_chords: bool = True,
+    import_drums_midi: bool = False,
+    import_bass_midi: bool = False,
+    import_melody_midi: bool = False,
+    import_stems: bool = False,
+    import_sections: bool = False,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    rid = reference_id or (proj.references[0]["id"] if proj.references else None)
+    if not rid:
+        raise FileNotFoundError("No reference found in project")
+    return _reconstruct_ref(
+        pid,
+        rid,
+        import_chords=import_chords,
+        import_drums_midi=import_drums_midi,
+        import_bass_midi=import_bass_midi,
+        import_melody_midi=import_melody_midi,
+        import_stems=import_stems,
+        import_sections=import_sections,
+        apply_bpm=False,
+    )
+
+
+def reconstruct_from_reference(
+    reference_id: str | None = None,
+    import_stems: bool = False,
+    use_quantized_drums: bool = True,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    rid = reference_id or (proj.references[0]["id"] if proj.references else None)
+    if not rid:
+        raise FileNotFoundError("No reference found in project")
+    return _reconstruct_ref(
+        pid,
+        rid,
+        import_chords=True,
+        import_drums_midi=True,
+        import_bass_midi=True,
+        import_melody_midi=True,
+        import_stems=import_stems,
+        import_sections=True,
+        use_quantized_drums=use_quantized_drums,
+        apply_bpm=True,
+    )
+
+
+def get_reference_abc_score(
+    reference_id: str | None = None,
+    mode: str = "reference_compose",
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    rid = reference_id or (proj.references[0]["id"] if proj.references else None)
+    ref = next((r for r in proj.references if r.get("id") == rid), None)
+    if not ref:
+        raise FileNotFoundError("No reference found in project")
+    bp = ref.get("blueprint") or {}
+    tr = ref.get("transcription") or {}
+    chords = bp.get("chordTimeline") or tr.get("chordTimeline") or []
+    melody_notes = (bp.get("melodyEvents") or tr.get("melody") or {}).get("notes") or []
+    sections = bp.get("arrangementMap") or tr.get("arrangementMap") or []
+    key_str = str((bp.get("harmonicCharacter") or {}).get("key") or tr.get("key") or "F minor")
+    bpm = float((bp.get("tempoMap") or {}).get("bpm") or tr.get("bpm") or proj.bpm)
+    abc_res = _build_ref_abc(
+        chord_timeline=chords,
+        melody_notes=melody_notes,
+        sections=sections,
+        key_str=key_str,
+        bpm=bpm,
+        bpb=proj.timeSignature.beats_per_bar,
+        production_mode=mode if mode in ("reconstruct", "reference_compose", "reinterpret") else "reference_compose",
+    )
+    return {"projectId": pid, "referenceId": rid, "abcScore": abc_res}

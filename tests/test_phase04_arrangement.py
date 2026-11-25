@@ -500,6 +500,6 @@ def test_mcp_tool_registry_includes_all_phase04_tools(isolated_phase04):
 
     caps = mcp_tools.get_capabilities()
     assert caps["phase"] == "04"
-    assert caps["schemaVersion"] == "1.3.0"
+    assert caps["schemaVersion"] == "1.4.0"
     assert "selective_bar_variation" in caps["supported"]["aiArrangement"]
     assert "aiArrangementBarRegeneration" not in caps["unsupported"]

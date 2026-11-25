@@ -45,6 +45,10 @@ from engine.generation import (
 from engine.instruments import list_instruments
 from engine.providers import get_provider_summary, select_provider
 from engine.runtime import get_runtime_registry, save_local_runtime_overrides
+from engine.transcription import (
+    build_yue2_abc_from_reference,
+    reconstruct_reference_to_project,
+)
 
 DIST_DIR = engine_paths.ROOT / "apps" / "daw" / "dist"
 
@@ -325,6 +329,28 @@ class ReferenceCompareBody(BaseModel):
     targetId: str | None = None
 
 
+class ReferenceLocksBody(BaseModel):
+    featureLocks: dict[str, str] | None = None
+    chordCorrections: list[dict[str, Any]] | None = None
+    sectionRenames: dict[str, str] | None = None
+
+
+class ReferenceReconstructBody(BaseModel):
+    importChords: bool = True
+    importDrumsMidi: bool = True
+    importBassMidi: bool = True
+    importMelodyMidi: bool = True
+    importStems: bool = False
+    importSections: bool = True
+    useQuantizedDrums: bool = True
+    applyBpm: bool = True
+
+
+class SetChordTrackBody(BaseModel):
+    chords: list[dict[str, Any]] = Field(default_factory=list)
+    locked: bool | None = None
+
+
 @app.post("/api/projects/{project_id}/references/import")
 async def import_reference(
     project_id: str,
@@ -399,6 +425,121 @@ def compare_reference(project_id: str, ref_id: str, body: ReferenceCompareBody) 
         target_kind=body.targetKind,
         target_id=body.targetId,
     )
+
+
+# --- Phase 03.2 Advanced Reference Intelligence Endpoints ---
+
+@app.post("/api/projects/{project_id}/references/{ref_id}/transcribe")
+def transcribe_reference(
+    project_id: str,
+    ref_id: str,
+    sync: bool = False,
+    useDemucs: bool = True,
+    demucsModel: str = "htdemucs",
+) -> dict[str, Any]:
+    if sync:
+        ref, rev = references.run_reference_transcription_sync(
+            project_id,
+            ref_id,
+            use_demucs=useDemucs,
+            demucs_model=demucsModel,
+        )
+        return {"reference": ref, "projectRevision": rev, "status": "completed"}
+    job = references.start_reference_transcription_job(
+        project_id,
+        ref_id,
+        use_demucs=useDemucs,
+        demucs_model=demucsModel,
+    )
+    return {"job": job}
+
+
+@app.get("/api/projects/{project_id}/references/{ref_id}/stems/{role}/audio")
+def get_reference_stem_audio(project_id: str, ref_id: str, role: str):
+    stem_meta, abs_path = references.resolve_reference_stem_audio(project_id, ref_id, role)
+    return FileResponse(abs_path, media_type="audio/wav", filename=f"{ref_id}_{role}.wav")
+
+
+@app.patch("/api/projects/{project_id}/references/{ref_id}/locks")
+def patch_reference_locks(project_id: str, ref_id: str, body: ReferenceLocksBody) -> dict[str, Any]:
+    ref, rev = references.update_reference_locks_and_corrections(
+        project_id,
+        ref_id,
+        feature_locks=body.featureLocks,
+        chord_corrections=body.chordCorrections,
+        section_renames=body.sectionRenames,
+    )
+    return {"reference": ref, "projectRevision": rev}
+
+
+@app.post("/api/projects/{project_id}/references/{ref_id}/reconstruct")
+def reconstruct_reference(project_id: str, ref_id: str, body: ReferenceReconstructBody) -> dict[str, Any]:
+    return reconstruct_reference_to_project(
+        project_id,
+        ref_id,
+        import_chords=body.importChords,
+        import_drums_midi=body.importDrumsMidi,
+        import_bass_midi=body.importBassMidi,
+        import_melody_midi=body.importMelodyMidi,
+        import_stems=body.importStems,
+        import_sections=body.importSections,
+        use_quantized_drums=body.useQuantizedDrums,
+        apply_bpm=body.applyBpm,
+    )
+
+
+@app.get("/api/projects/{project_id}/references/{ref_id}/abc")
+def get_reference_abc(project_id: str, ref_id: str, mode: str = "reference_compose") -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    ref = next((r for r in proj.references if r.get("id") == ref_id), None)
+    if not ref:
+        raise FileNotFoundError(f"Reference not found: {ref_id}")
+    bp = ref.get("blueprint") or {}
+    tr = ref.get("transcription") or {}
+    chords = bp.get("chordTimeline") or tr.get("chordTimeline") or []
+    melody_notes = (bp.get("melodyEvents") or tr.get("melody") or {}).get("notes") or []
+    sections = bp.get("arrangementMap") or tr.get("arrangementMap") or []
+    key_str = str((bp.get("harmonicCharacter") or {}).get("key") or tr.get("key") or "F minor")
+    bpm = float((bp.get("tempoMap") or {}).get("bpm") or tr.get("bpm") or proj.bpm)
+    abc_res = build_yue2_abc_from_reference(
+        chord_timeline=chords,
+        melody_notes=melody_notes,
+        sections=sections,
+        key_str=key_str,
+        bpm=bpm,
+        bpb=proj.timeSignature.beats_per_bar,
+        production_mode=mode if mode in ("reconstruct", "reference_compose", "reinterpret") else "reference_compose",
+    )
+    return {"projectId": project_id, "referenceId": ref_id, "abcScore": abc_res}
+
+
+@app.get("/api/projects/{project_id}/chords")
+def get_project_chords(project_id: str) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    return {
+        "projectId": proj.id,
+        "revision": proj.revision,
+        "chordTrack": [c.model_dump() for c in proj.chordTrack],
+        "chordTrackLocked": proj.chordTrackLocked,
+    }
+
+
+@app.put("/api/projects/{project_id}/chords")
+def put_project_chords(project_id: str, body: SetChordTrackBody) -> dict[str, Any]:
+    proj = store.load_project(project_id)
+    proposals.record_undo_snapshot(proj)
+    payload: dict[str, Any] = {"chords": body.chords}
+    if body.locked is not None:
+        payload["locked"] = body.locked
+    updated = commands.apply_command(proj, "chord.setTrack", payload)
+    saved = store.save_project(updated, clear_autosave=False, expected_revision=proj.revision)
+    return {
+        "projectId": saved.id,
+        "revision": saved.revision,
+        "chordTrack": [c.model_dump() for c in saved.chordTrack],
+        "chordTrackLocked": saved.chordTrackLocked,
+        "project": saved.model_dump(),
+    }
 
 
 # --- Phase 02-B Agent Bridge: Session Sync, Proposals, Producer Router & Live SSE ---
@@ -536,12 +677,70 @@ def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[
             "messageKo": arr_plan.summaryKo,
             "messageEn": arr_plan.summaryEn,
         }
+    if routed.get("action") == "transcribe_reference":
+        ref_id = str(routed["referenceId"])
+        job = references.start_reference_transcription_job(project_id, ref_id)
+        return {
+            "supported": True,
+            "action": "transcription_started",
+            "referenceId": ref_id,
+            "job": job,
+            "messageKo": "레퍼런스 정밀 채보(Demucs + Basic Pitch ONNX + 코드·드럼 분석)를 시작했습니다.",
+            "messageEn": "Started precision reference transcription (Demucs + Basic Pitch ONNX + Chord/Drum analysis).",
+        }
+    if routed.get("action") == "import_reference_chords":
+        ref_id = str(routed["referenceId"])
+        res = reconstruct_reference_to_project(
+            project_id,
+            ref_id,
+            import_chords=True,
+            import_drums_midi=False,
+            import_bass_midi=False,
+            import_melody_midi=False,
+            import_stems=False,
+            import_sections=False,
+            apply_bpm=False,
+        )
+        return {
+            "supported": True,
+            "action": "reference_reconstructed",
+            "referenceId": ref_id,
+            "reconstructResult": res,
+            "project": res["project"],
+            "messageKo": f"레퍼런스 코드 진행을 타임라인 Chord Track으로 가져왔습니다 ({', '.join(res.get('importedItems', []))}).",
+            "messageEn": f"Imported reference chord progression to Timeline Chord Track ({', '.join(res.get('importedItems', []))}).",
+        }
+    if routed.get("action") == "reconstruct_reference":
+        ref_id = str(routed["referenceId"])
+        res = reconstruct_reference_to_project(
+            project_id,
+            ref_id,
+            import_chords=True,
+            import_drums_midi=True,
+            import_bass_midi=True,
+            import_melody_midi=True,
+            import_stems=False,
+            import_sections=True,
+        )
+        return {
+            "supported": True,
+            "action": "reference_reconstructed",
+            "referenceId": ref_id,
+            "reconstructResult": res,
+            "project": res["project"],
+            "messageKo": f"편집 가능한 MIDI 세션으로 재구성했습니다: {', '.join(res.get('importedItems', []))}. (1클릭 Undo 지원)",
+            "messageEn": f"Reconstructed editable MIDI session: {', '.join(res.get('importedItems', []))}. (1-click Undo supported)",
+        }
     if routed.get("action") == "composition_plan":
+        ref_id = routed.get("referenceId") or body.activeReferenceId
         plan = create_composition_plan(
             project=proj,
             instruction=body.instruction,
-            reference_ids=[body.activeReferenceId] if body.activeReferenceId else None,
+            reference_ids=[ref_id] if ref_id else None,
             selection=body.selection,
+            feature_locks=routed.get("featureLocks"),
+            reference_mode=str(routed.get("referenceMode") or "reference_compose"),
+            use_project_chord_track=bool(routed.get("useProjectChordTrack", False)),
         )
         saved_plan, rev = save_composition_plan(project_id, plan)
         return {
@@ -568,6 +767,9 @@ class CreateCompositionPlanBody(BaseModel):
     targetInstrument: str | None = None
     referenceIds: list[str] | None = None
     selectedInfluences: list[str] | None = None
+    featureLocks: dict[str, str] | None = None
+    referenceMode: str = "reference_compose"
+    useProjectChordTrack: bool = False
     selection: dict[str, Any] | None = None
     providerId: str | None = None
     enginePreference: str = "auto"
@@ -580,6 +782,9 @@ class StartGenerationBody(BaseModel):
     targetInstrument: str | None = None
     referenceIds: list[str] | None = None
     selectedInfluences: list[str] | None = None
+    featureLocks: dict[str, str] | None = None
+    referenceMode: str = "reference_compose"
+    useProjectChordTrack: bool = False
     selection: dict[str, Any] | None = None
     engine: str = "auto"
     seed: int | None = None
@@ -656,6 +861,9 @@ def api_create_composition_plan(project_id: str, body: CreateCompositionPlanBody
         selection=body.selection,
         provider_id=body.providerId,
         engine_preference=body.enginePreference,
+        feature_locks=body.featureLocks,
+        reference_mode=body.referenceMode,
+        use_project_chord_track=body.useProjectChordTrack,
     )
     saved_plan, rev = save_composition_plan(project_id, plan)
     return {"plan": saved_plan, "projectRevision": rev}
@@ -687,6 +895,9 @@ def api_start_generation_job(project_id: str, body: StartGenerationBody) -> dict
             selected_influences=body.selectedInfluences,
             selection=body.selection,
             engine_preference=body.engine,
+            feature_locks=body.featureLocks,
+            reference_mode=body.referenceMode,
+            use_project_chord_track=body.useProjectChordTrack,
         )
     return generation_jobs.start_composition_job(
         project_id=project_id,

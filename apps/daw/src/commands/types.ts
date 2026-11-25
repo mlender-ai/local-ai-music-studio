@@ -1,4 +1,4 @@
-import type { Asset, Clip, MidiNote, TakeLane, TimeSignature, Track } from "../project/types";
+import type { Asset, ChordEvent, Clip, MidiNote, TakeLane, TimeSignature, Track } from "../project/types";
 
 export type ProjectCommand =
   | { type: "project.rename"; payload: { name: string } }
@@ -65,6 +65,10 @@ export type ProjectCommand =
       payload: { id?: string; name: string; startBeats: number; endBeats: number; color?: string };
     }
   | { type: "section.rename"; payload: { sectionId: string; name: string } }
-  | { type: "section.remove"; payload: { sectionId: string } };
+  | { type: "section.remove"; payload: { sectionId: string } }
+  | { type: "chord.setTrack"; payload: { chords: ChordEvent[]; locked?: boolean } }
+  | { type: "chord.upsert"; payload: { chord: ChordEvent } }
+  | { type: "chord.delete"; payload: { chordId: string } }
+  | { type: "chord.setLocked"; payload: { locked: boolean } };
 
 export const NON_UNDOABLE_COMMANDS = new Set<string>(["transport.setLoop", "asset.register"]);

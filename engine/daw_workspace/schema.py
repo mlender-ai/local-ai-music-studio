@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.3.0"
+SCHEMA_VERSION = "1.4.0"
 DEFAULT_PPQ = 480
 DEFAULT_SAMPLE_RATE = 48000
 
@@ -64,6 +64,30 @@ class SectionMarker(DawModel):
     def validate_bounds(self) -> "SectionMarker":
         if self.endBeats <= self.startBeats:
             raise ValueError("Section endBeats must be greater than startBeats")
+        return self
+
+
+class ChordEvent(DawModel):
+    """Editable sub-bar Chord Track event (Phase 03.2 · Section 5)."""
+
+    id: str = Field(default_factory=lambda: make_id("chd"))
+    symbol: str = Field(min_length=1, max_length=32)
+    root: str = Field(default="C", max_length=8)
+    quality: str = Field(default="major", max_length=24)
+    extension: str | None = Field(default=None, max_length=16)
+    bassNote: str | None = Field(default=None, max_length=8)
+    startBeat: float = Field(ge=0.0)
+    endBeat: float = Field(gt=0.0)
+    sourceReferenceId: str | None = None
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    isEstimate: bool = False
+    userCorrected: bool = False
+    locked: bool = False
+
+    @model_validator(mode="after")
+    def validate_bounds(self) -> "ChordEvent":
+        if self.endBeat <= self.startBeat:
+            raise ValueError("ChordEvent endBeat must be greater than startBeat")
         return self
 
 
@@ -142,6 +166,8 @@ class Project(DawModel):
         default_factory=lambda: LoopRegion(enabled=False, startBeats=0.0, endBeats=16.0)
     )
     sections: list[SectionMarker] = Field(default_factory=list)
+    chordTrack: list[ChordEvent] = Field(default_factory=list)
+    chordTrackLocked: bool = False
     assets: list[Asset] = Field(default_factory=list)
     tracks: list[Track] = Field(default_factory=list)
     references: list[dict[str, Any]] = Field(default_factory=list)

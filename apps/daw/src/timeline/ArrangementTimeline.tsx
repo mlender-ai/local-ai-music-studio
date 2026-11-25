@@ -8,13 +8,16 @@ import {
   Copy,
   Flag,
   Layers,
+  Lock,
   Magnet,
+  Music2,
   Play,
   Plus,
   Repeat,
   RotateCcw,
   Scissors,
   Trash2,
+  Unlock,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -37,6 +40,7 @@ import { makeClientId } from "../commands/executor";
 const TRACK_ROW_H = 76;
 const TAKE_LANE_H = 34;
 const SECTION_H = 24;
+const CHORD_H = 22;
 const RULER_H = 24;
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -239,8 +243,13 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
   const [expandedTakeTracks, setExpandedTakeTracks] = useState<Record<string, boolean>>({});
   const [renamingLaneKey, setRenamingLaneKey] = useState<string | null>(null);
   const [renamingLaneVal, setRenamingLaneVal] = useState("");
+  const [showChordTrack, setShowChordTrack] = useState(false);
+  const [editingChordId, setEditingChordId] = useState<string | null>(null);
+  const [editingChordVal, setEditingChordVal] = useState("");
 
   const bpb = project ? beatsPerBar(project.timeSignature) : 4;
+  const chordEvents = project?.chordTrack ?? [];
+  const chordBarVisible = showChordTrack || chordEvents.length > 0;
   const totalBeats = project ? Math.max(project.lengthBeats, 64) : 64;
   const timelineWidth = Math.max(900, Math.ceil(totalBeats * pixelsPerBeat) + 120);
   const lanesHeight = useMemo(() => {
@@ -554,6 +563,17 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
             <Flag size={11} />
             {t("timeline.addSection")}
           </button>
+          <button
+            className={chordBarVisible ? "pill-toggle active" : ""}
+            style={{ height: 22, padding: "0 7px", fontSize: 11 }}
+            onClick={() => setShowChordTrack((v) => !v)}
+            title={t("timeline.chordTrackLabel")}
+            data-testid="btn-toggle-chord-track"
+          >
+            <Music2 size={11} />
+            {t("timeline.chordsToggle")}
+            {chordEvents.length > 0 ? ` (${chordEvents.length})` : ""}
+          </button>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -612,6 +632,72 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
               </button>
             </div>
           </div>
+
+          {chordBarVisible && (
+            <div
+              style={{
+                height: CHORD_H,
+                minHeight: CHORD_H,
+                padding: "0 8px",
+                background: "#15181e",
+                borderBottom: "1px solid var(--border-default)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 4,
+              }}
+              data-testid="chord-track-header"
+            >
+              <span style={{ fontSize: 9.5, fontWeight: 600, color: "#d9b468", display: "flex", alignItems: "center", gap: 4 }}>
+                <Music2 size={10} />
+                {t("timeline.chordTrackLabel")}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                <button
+                  className={project.chordTrackLocked ? "pill-toggle active" : ""}
+                  style={{ height: 16, padding: "0 5px", fontSize: 9 }}
+                  title={t("timeline.chordLockTooltip")}
+                  data-testid="btn-lock-chord-track"
+                  onClick={() =>
+                    dispatch({
+                      type: "chord.setLocked",
+                      payload: { locked: !project.chordTrackLocked },
+                    })
+                  }
+                >
+                  {project.chordTrackLocked ? <Lock size={9} /> : <Unlock size={9} />}
+                </button>
+                <button
+                  className="icon-btn"
+                  style={{ width: 16, height: 16 }}
+                  title={t("timeline.chordAddTooltip")}
+                  data-testid="btn-add-chord-event"
+                  onClick={() => {
+                    const start = snapBeats(playheadBeats, gridBeats, true);
+                    const id = makeClientId("chd");
+                    dispatch({
+                      type: "chord.upsert",
+                      payload: {
+                        chord: {
+                          id,
+                          symbol: "Fm7",
+                          startBeat: start,
+                          endBeat: start + bpb,
+                          isEstimate: false,
+                          userCorrected: true,
+                          locked: Boolean(project.chordTrackLocked),
+                        },
+                      },
+                    });
+                    setEditingChordId(id);
+                    setEditingChordVal("Fm7");
+                  }}
+                >
+                  <Plus size={10} />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="track-headers-scroll" ref={headersScrollRef}>
             {project.tracks.map((track, idx) => {
@@ -1093,6 +1179,115 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
                 })}
               </div>
 
+              {/* Phase 03.2 Editable Timeline Chord Track (Supports sub-bar chords + inline edit + lock!) */}
+              {chordBarVisible && (
+                <div
+                  style={{
+                    height: CHORD_H,
+                    position: "relative",
+                    borderBottom: "1px solid var(--border-subtle)",
+                    background: "#13161c",
+                  }}
+                  data-testid="timeline-chord-track"
+                >
+                  {chordEvents.map((ch) => {
+                    const left = ch.startBeat * pixelsPerBeat;
+                    const width = Math.max(22, (ch.endBeat - ch.startBeat) * pixelsPerBeat);
+                    const isLocked = Boolean(project.chordTrackLocked || ch.locked);
+                    return (
+                      <div
+                        key={ch.id}
+                        data-testid={`chord-event-${ch.id}`}
+                        title={`${ch.symbol} (Beats ${ch.startBeat}–${ch.endBeat}) · ${t("timeline.chordEditHint")}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingChordId(ch.id);
+                          setEditingChordVal(ch.symbol);
+                        }}
+                        style={{
+                          position: "absolute",
+                          left,
+                          width: width - 1,
+                          top: 2,
+                          height: CHORD_H - 4,
+                          borderRadius: 3,
+                          padding: "0 14px 0 5px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 3,
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          overflow: "hidden",
+                          background: isLocked
+                            ? "rgba(99, 180, 124, 0.22)"
+                            : ch.userCorrected
+                              ? "rgba(217, 180, 104, 0.22)"
+                              : "rgba(100, 142, 168, 0.20)",
+                          border: `1px ${ch.isEstimate && !ch.userCorrected ? "dashed" : "solid"} ${
+                            isLocked ? "#63b47c" : ch.userCorrected ? "#d9b468" : "#648ea8"
+                          }`,
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        {editingChordId === ch.id ? (
+                          <input
+                            autoFocus
+                            value={editingChordVal}
+                            style={{ width: "100%", height: 15, fontSize: 9.5, padding: "0 3px" }}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setEditingChordVal(e.target.value)}
+                            onBlur={() => {
+                              if (editingChordVal.trim()) {
+                                dispatch({
+                                  type: "chord.upsert",
+                                  payload: {
+                                    chord: {
+                                      ...ch,
+                                      symbol: editingChordVal.trim(),
+                                      userCorrected: true,
+                                      isEstimate: false,
+                                    },
+                                  },
+                                });
+                              }
+                              setEditingChordId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (!isImeComposing(e) && e.key === "Enter") (e.target as HTMLInputElement).blur();
+                              if (!isImeComposing(e) && e.key === "Escape") setEditingChordId(null);
+                            }}
+                            data-testid={`input-chord-event-${ch.id}`}
+                          />
+                        ) : (
+                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {ch.symbol}
+                          </span>
+                        )}
+                        <button
+                          className="icon-btn"
+                          style={{
+                            position: "absolute",
+                            right: 1,
+                            width: 13,
+                            height: 13,
+                            fontSize: 9,
+                            opacity: 0.65,
+                          }}
+                          title="Delete chord"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch({ type: "chord.delete", payload: { chordId: ch.id } });
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Bar / Beat Ruler + Draggable Loop Region */}
               <div
                 style={{
@@ -1536,7 +1731,7 @@ export function ArrangementTimeline({ onOpenClipInEditor }: ArrangementTimelineP
             <div
               style={{
                 position: "absolute",
-                top: SECTION_H,
+                top: SECTION_H + (chordBarVisible ? CHORD_H : 0),
                 bottom: 0,
                 left: playheadBeats * pixelsPerBeat,
                 width: 1.5,

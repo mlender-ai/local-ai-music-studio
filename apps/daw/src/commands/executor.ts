@@ -1,4 +1,4 @@
-import type { Clip, MidiNote, Project, Track } from "../project/types";
+import type { ChordEvent, Clip, MidiNote, Project, Track } from "../project/types";
 import type { ProjectCommand } from "./types";
 
 export const TRACK_PALETTE = [
@@ -395,6 +395,45 @@ export function executeCommand(project: Project, cmd: ProjectCommand): Project {
 
     case "section.remove": {
       p.sections = p.sections.filter((s) => s.id !== cmd.payload.sectionId);
+      break;
+    }
+
+    case "chord.setTrack": {
+      p.chordTrack = cmd.payload.chords
+        .map((c) => ({
+          ...c,
+          id: c.id || makeClientId("chd"),
+          startBeat: Math.max(0, Number(c.startBeat)),
+          endBeat: Math.max(Math.max(0, Number(c.startBeat)) + 0.25, Number(c.endBeat)),
+        }))
+        .sort((a, b) => a.startBeat - b.startBeat);
+      if (cmd.payload.locked !== undefined) {
+        p.chordTrackLocked = cmd.payload.locked;
+      }
+      break;
+    }
+
+    case "chord.upsert": {
+      const existing = p.chordTrack ?? [];
+      const incoming: ChordEvent = {
+        ...cmd.payload.chord,
+        id: cmd.payload.chord.id || makeClientId("chd"),
+        startBeat: Math.max(0, Number(cmd.payload.chord.startBeat)),
+        endBeat: Math.max(Math.max(0, Number(cmd.payload.chord.startBeat)) + 0.25, Number(cmd.payload.chord.endBeat)),
+      };
+      const idx = existing.findIndex((c) => c.id === incoming.id);
+      const next = idx >= 0 ? existing.map((c, i) => (i === idx ? incoming : c)) : [...existing, incoming];
+      p.chordTrack = next.sort((a, b) => a.startBeat - b.startBeat);
+      break;
+    }
+
+    case "chord.delete": {
+      p.chordTrack = (p.chordTrack ?? []).filter((c) => c.id !== cmd.payload.chordId);
+      break;
+    }
+
+    case "chord.setLocked": {
+      p.chordTrackLocked = Boolean(cmd.payload.locked);
       break;
     }
   }

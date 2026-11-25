@@ -315,4 +315,42 @@ describe("Phase 01.2 Korean Localization & IME safety", () => {
     });
     expect(proj.tracks[1].takeLanes).toHaveLength(0);
   });
+
+  it("supports Phase 03.2 Chord Track commands (chord.setTrack, chord.upsert, chord.setLocked, chord.delete)", () => {
+    let proj = makeSampleProject();
+    proj = executeCommand(proj, {
+      type: "chord.setTrack",
+      payload: {
+        locked: true,
+        chords: [
+          { id: "c1", symbol: "Dm7", startBeat: 0, endBeat: 4, isEstimate: false, userCorrected: true },
+          { id: "c2", symbol: "G7", startBeat: 4, endBeat: 6, isEstimate: false, userCorrected: true },
+          { id: "c3", symbol: "Cmaj7", startBeat: 6, endBeat: 8, isEstimate: false, userCorrected: true },
+        ],
+      },
+    });
+    expect(proj.chordTrack).toHaveLength(3);
+    expect(proj.chordTrackLocked).toBe(true);
+    expect(proj.chordTrack![1].endBeat).toBe(6);
+
+    proj = executeCommand(proj, {
+      type: "chord.upsert",
+      payload: {
+        chord: { id: "c2", symbol: "G13", startBeat: 4, endBeat: 6, userCorrected: true },
+      },
+    });
+    expect(proj.chordTrack!.find((c) => c.id === "c2")?.symbol).toBe("G13");
+
+    proj = executeCommand(proj, {
+      type: "chord.setLocked",
+      payload: { locked: false },
+    });
+    expect(proj.chordTrackLocked).toBe(false);
+
+    proj = executeCommand(proj, {
+      type: "chord.delete",
+      payload: { chordId: "c2" },
+    });
+    expect(proj.chordTrack).toHaveLength(2);
+  });
 });

@@ -17,6 +17,68 @@ export interface SectionMarker {
   color: string;
 }
 
+export interface ChordEvent {
+  id: string;
+  symbol: string;
+  root?: string;
+  quality?: string;
+  extension?: string;
+  bassNote?: string | null;
+  startBeat: number;
+  endBeat: number;
+  sourceReferenceId?: string | null;
+  confidence?: number;
+  isEstimate?: boolean;
+  userCorrected?: boolean;
+  locked?: boolean;
+}
+
+export type FeatureLockState = "free" | "reference" | "locked" | "unsupported";
+
+export interface ReferenceStemItem {
+  role: string;
+  name: string;
+  relativePath: string;
+  assetKind: string;
+  active: boolean;
+  rmsDbfs: number;
+  spectralCentroidHz: number;
+  attackCharacter: string;
+}
+
+export interface ReferenceTranscription {
+  transcriptionVersion: string;
+  transcribedAt: string;
+  fromCache: boolean;
+  bpm: number;
+  key: string;
+  modelsUsed: Array<{ id: string; role: string; license: string }>;
+  stemReferences: ReferenceStemItem[];
+  chordTimeline: ChordEvent[];
+  drums?: {
+    hasDrums: boolean;
+    sourceKind: string;
+    hitCounts: Record<string, number>;
+    swingRatio: number;
+    grooveFeel: string;
+    syncopationScore: number;
+    meanMicrotimingMs: number;
+    quantizedMidiNotes?: Array<Record<string, unknown>>;
+    rawMidiNotes?: Array<Record<string, unknown>>;
+  };
+  bass?: { noteCount: number; pitchMin: number | null; pitchMax: number | null; meanConfidence: number };
+  melody?: { noteCount: number; pitchMin: number | null; pitchMax: number | null; meanConfidence: number };
+  arrangementMap?: Array<ReferenceSection & { activeStems?: string[]; enteredStems?: string[]; exitedStems?: string[] }>;
+  abcScore?: {
+    abc: string;
+    validInstrumentalYuE2: boolean;
+    issues: string[];
+    generator: string;
+    productionMode: string;
+  };
+  limitationsKo?: string[];
+}
+
 export interface MidiNote {
   id: string;
   pitch: number; // 0-127
@@ -116,7 +178,7 @@ export interface ReferenceAnalysis {
     projectBpm?: number | null;
     candidates: Array<{ bpm: number; strength: number; relation?: string }>;
     halfDoubleAmbiguous: boolean;
-    halfDoubleRelation?: string | null;
+    halfDoubleRelation?: string | { lowerBpm: number; upperBpm: number; relation: string } | null;
     confidence?: number;
     meterEstimate: string;
     onsetDensityPerSec: number;
@@ -192,12 +254,22 @@ export interface ReferenceAnalysis {
 export interface ReferenceBlueprint {
   sourceAssetId: string;
   analysisVersion: string;
+  blueprintVersion?: string;
   tempo: { bpm: number | null; candidates: Array<{ bpm: number; strength: number }>; halfDoubleAmbiguous: boolean };
   meter: string;
-  harmonicCharacter: { key: string; sampleChords: string[]; harmonicShiftCount: number };
-  grooveProfile: { swingRatio: number; feel: string };
+  harmonicCharacter: { key: string; sampleChords: string[]; harmonicShiftCount: number; chordEventCount?: number; hasSubBarChanges?: boolean };
+  grooveProfile: { swingRatio: number; feel: string; syncopationScore?: number; meanMicrotimingMs?: number };
   arrangementTimeline: ReferenceSection[];
-  confidence: { tempo: number; harmony: number; overall: number };
+  arrangementMap?: Array<ReferenceSection & { activeStems?: string[]; enteredStems?: string[]; exitedStems?: string[] }>;
+  chordTimeline?: ChordEvent[];
+  drumEvents?: { transcribed?: boolean; noteCount?: number; hitCounts?: Record<string, number>; fillBars?: number[] };
+  bassEvents?: { transcribed?: boolean; noteCount?: number; pitchMin?: number | null; pitchMax?: number | null };
+  melodyEvents?: { transcribed?: boolean; noteCount?: number; pitchMin?: number | null; pitchMax?: number | null };
+  stemReferences?: ReferenceStemItem[];
+  abcScore?: { abc: string; validInstrumentalYuE2: boolean; issues: string[]; generator: string; productionMode: string };
+  featureLocks?: Record<string, FeatureLockState>;
+  featureLockSpecs?: Array<{ id: string; labelKo: string; labelEn: string; defaultState: FeatureLockState }>;
+  confidence: { tempo: number; harmony: number; overall: number; chords?: number };
   selectedInfluences: string[];
   availableInfluences: Array<{ id: string; labelKo: string; labelEn: string; selected: boolean }>;
   guidanceNote: string;
@@ -216,11 +288,14 @@ export interface ReferenceItem {
   channels: number;
   durationSec: number;
   analysisStatus: "pending" | "completed" | "audio_required";
+  transcriptionStatus?: "pending" | "completed" | null;
   noticeKo?: string | null;
   noticeEn?: string | null;
   analysis: ReferenceAnalysis | null;
+  transcription?: ReferenceTranscription | null;
   blueprint: ReferenceBlueprint | null;
   selectedInfluences: string[];
+  featureLocks?: Record<string, FeatureLockState>;
   createdAt: string;
   updatedAt: string;
 }
@@ -275,6 +350,8 @@ export interface Project {
   masterGainDb: number;
   loopRegion: LoopRegion;
   sections: SectionMarker[];
+  chordTrack?: ChordEvent[];
+  chordTrackLocked?: boolean;
   assets: Asset[];
   tracks: Track[];
   references: ReferenceItem[];
@@ -321,6 +398,7 @@ export interface RuntimeRegistryInfo {
   neuralAudioReady: boolean;
   editableMidiReady: boolean;
   stemSeparationReady: boolean;
+  transcriptionReady?: boolean;
   engines: RuntimeEngineEntry[];
 }
 
@@ -600,6 +678,9 @@ export interface ProducerInstructResponse {
   proposal?: ChangeProposal;
   plan?: CompositionPlan;
   arrangementPlan?: ArrangementEditPlan;
+  job?: AnalysisJobStatus;
+  project?: Project;
+  reconstructResult?: Record<string, unknown>;
   projectRevision?: number;
   referenceId?: string;
   messageKo?: string;

@@ -3,6 +3,7 @@ import type {
   ArrangementEditPlan,
   Asset,
   ChangeProposal,
+  ChordEvent,
   CompositionPlan,
   GenerationEngineInfo,
   GenerationJobStatus,
@@ -290,6 +291,95 @@ export const dawApi = {
     );
   },
 
+  startReferenceTranscription(
+    projectId: string,
+    refId: string,
+    opts?: { sync?: boolean; useDemucs?: boolean }
+  ): Promise<{ job?: AnalysisJobStatus; reference?: ReferenceItem; projectRevision?: number }> {
+    const sync = opts?.sync ? "true" : "false";
+    const useDemucs = opts?.useDemucs === false ? "false" : "true";
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/transcribe?sync=${sync}&useDemucs=${useDemucs}`,
+      { method: "POST" }
+    );
+  },
+
+  referenceStemAudioUrl(projectId: string, refId: string, role: string): string {
+    return `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/stems/${encodeURIComponent(role)}/audio`;
+  },
+
+  updateReferenceLocks(
+    projectId: string,
+    refId: string,
+    body: {
+      featureLocks?: Record<string, string>;
+      chordCorrections?: ChordEvent[];
+      sectionRenames?: Record<string, string>;
+    }
+  ): Promise<{ reference: ReferenceItem; projectRevision: number }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/locks`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  reconstructReference(
+    projectId: string,
+    refId: string,
+    body: {
+      importChords?: boolean;
+      importDrumsMidi?: boolean;
+      importBassMidi?: boolean;
+      importMelodyMidi?: boolean;
+      importStems?: boolean;
+      importSections?: boolean;
+      useQuantizedDrums?: boolean;
+      applyBpm?: boolean;
+    }
+  ): Promise<{
+    reconstructed: boolean;
+    importedItems: string[];
+    createdTrackIds: string[];
+    limitationsKo: string[];
+    project: Project;
+    revision: number;
+  }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/reconstruct`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+  },
+
+  getReferenceAbc(
+    projectId: string,
+    refId: string,
+    mode = "reference_compose"
+  ): Promise<{ abcScore: { abc: string; validInstrumentalYuE2: boolean; issues: string[] } }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/references/${encodeURIComponent(refId)}/abc?mode=${encodeURIComponent(mode)}`
+    );
+  },
+
+  setProjectChords(
+    projectId: string,
+    chords: ChordEvent[],
+    locked?: boolean
+  ): Promise<{ project: Project; revision: number }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/chords`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chords, locked }),
+    });
+  },
+
   syncSessionState(body: {
     sessionId: string;
     projectId: string | null;
@@ -375,6 +465,9 @@ export const dawApi = {
       targetInstrument?: string;
       referenceIds?: string[];
       selectedInfluences?: string[];
+      featureLocks?: Record<string, string>;
+      referenceMode?: "reconstruct" | "reference_compose" | "reinterpret";
+      useProjectChordTrack?: boolean;
       selection?: SelectionContext;
       providerId?: string;
       enginePreference?: string;
@@ -396,6 +489,9 @@ export const dawApi = {
       targetInstrument?: string;
       referenceIds?: string[];
       selectedInfluences?: string[];
+      featureLocks?: Record<string, string>;
+      referenceMode?: "reconstruct" | "reference_compose" | "reinterpret";
+      useProjectChordTrack?: boolean;
       selection?: SelectionContext;
       engine?: string;
       seed?: number;
