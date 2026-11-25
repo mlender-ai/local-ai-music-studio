@@ -33,6 +33,7 @@ from engine.generation import (
 )
 from engine.instruments import list_instruments
 from engine.providers import get_provider_summary, select_provider
+from engine.runtime import get_runtime_registry, save_local_runtime_overrides
 
 DIST_DIR = engine_paths.ROOT / "apps" / "daw" / "dist"
 
@@ -561,17 +562,35 @@ class StartGenerationBody(BaseModel):
 
 
 class ApplyTakeBody(BaseModel):
-    applyMode: str = "new_tracks"  # new_tracks | selected_range | new_project | keep_take
+    applyMode: str = "add"  # add | new_tracks | replace_range | selected_range | alternative_take | extend | new_project | keep_take
     targetTrackId: str | None = None
     startBeats: float | None = None
-    addSectionMarkers: bool = True
+    addSectionMarkers: bool = False
+    replaceSections: bool = False
     expectedRevision: int | None = None
+    forceReapply: bool = False
 
 
 class SeparateStemsBody(BaseModel):
     assetId: str = Field(min_length=1)
+    sourceTrackId: str | None = None
     modelName: str = "htdemucs"
     sync: bool = False
+
+
+class RuntimeOverridesBody(BaseModel):
+    overrides: dict[str, Any]
+
+
+@app.get("/api/runtime")
+def api_get_runtime() -> dict[str, Any]:
+    return get_runtime_registry()
+
+
+@app.post("/api/runtime/config")
+def api_save_runtime_config(body: RuntimeOverridesBody) -> dict[str, Any]:
+    save_local_runtime_overrides(body.overrides)
+    return get_runtime_registry()
 
 
 @app.get("/api/providers")
@@ -668,6 +687,11 @@ def api_cancel_generation_job(job_id: str) -> dict[str, Any]:
     return generation_jobs.cancel_job(job_id)
 
 
+@app.post("/api/generation/jobs/{job_id}/retry")
+def api_retry_generation_job(job_id: str, sync: bool = False) -> dict[str, Any]:
+    return generation_jobs.retry_job(job_id, sync=sync)
+
+
 @app.get("/api/projects/{project_id}/takes")
 def api_list_takes(project_id: str) -> dict[str, Any]:
     return {"takes": list_takes(project_id)}
@@ -693,7 +717,9 @@ def api_apply_take(project_id: str, take_id: str, body: ApplyTakeBody) -> dict[s
         target_track_id=body.targetTrackId,
         start_beats=body.startBeats,
         add_section_markers=body.addSectionMarkers,
+        replace_sections=body.replaceSections,
         expected_revision=body.expectedRevision,
+        force_reapply=body.forceReapply,
     )
 
 
@@ -708,6 +734,7 @@ def api_separate_stems(project_id: str, body: SeparateStemsBody) -> dict[str, An
     return generation_jobs.start_stem_separation_job(
         project_id=project_id,
         asset_id=body.assetId,
+        source_track_id=body.sourceTrackId,
         model_name=body.modelName,
         sync=body.sync,
     )

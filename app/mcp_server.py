@@ -440,6 +440,12 @@ def daw_list_instruments() -> dict:
     return daw_mcp.list_instruments()
 
 
+@server.tool(name="daw.get_runtime_status", annotations=READ)
+def daw_get_runtime_status() -> dict:
+    """Inspect Shared Runtime Registry 6-state status across YuE2, ACE-Step, Demucs, Vocal QA models, and Editable MIDI."""
+    return daw_mcp.get_runtime_status()
+
+
 def main():
     server.run(transport="stdio")
 

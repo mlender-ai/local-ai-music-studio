@@ -20,6 +20,8 @@ class ReferenceBinding(CompModel):
     appliedFeatures: dict[str, Any] = Field(default_factory=dict)
     unmappedFeatures: list[str] = Field(default_factory=list)
     traceabilityNote: str = ""
+    featureLifecycle: list[dict[str, Any]] = Field(default_factory=list)
+    perReferenceBindings: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PlannedSection(CompModel):
@@ -66,7 +68,7 @@ class QualityReport(CompModel):
 class TakeProvenance(CompModel):
     engine: str
     engineLabel: str
-    mode: Literal["full_music", "instrument_session", "loop_midi", "stem_separation"]
+    mode: Literal["full_music", "instrument_session", "loop_midi", "stem_separation", "midi_variation", "audio_arrangement"]
     providerId: str
     model: str
     seed: int
@@ -98,8 +100,14 @@ class Take(CompModel):
     jobId: str
     planId: str | None = None
     title: str
-    mode: Literal["full_music", "instrument_session", "loop_midi", "stem_separation"]
+    mode: Literal["full_music", "instrument_session", "loop_midi", "stem_separation", "midi_variation", "audio_arrangement"]
     status: Literal["ready", "applied", "rejected", "kept"] = "ready"
+    baseRevision: int | None = None
+    baseTrackFingerprints: dict[str, str] = Field(default_factory=dict)
+    sourceTrackId: str | None = None
+    parentSourceAssetId: str | None = None
+    separationModel: str | None = None
+    separationJobId: str | None = None
     previewRelativePath: str | None = None
     previewDurationSec: float = 0.0
     previewIntegratedLufs: float | None = None

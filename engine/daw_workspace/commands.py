@@ -80,6 +80,7 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
             type=trk_type,
             color=color,
             stemLabel=payload.get("stemLabel"),
+            stemMeta=payload.get("stemMeta"),
             instrumentRef=payload.get("instrumentRef") or ("basic-poly-synth" if trk_type == "midi" else None),
         )
         p.tracks.append(trk)
@@ -131,6 +132,38 @@ def apply_command(project: Project, cmd_type: str, payload: dict[str, Any]) -> P
         trk = _find_track(p, str(payload["trackId"]))
         inst = payload.get("instrumentRef")
         trk.instrumentRef = str(inst).strip() if inst else None
+
+    elif cmd_type == "track.addTakeLane":
+        trk = _find_track(p, str(payload["trackId"]))
+        lane = dict(payload["lane"])
+        lane.setdefault("id", make_id("lane"))
+        lane.setdefault("createdAt", utc_now_iso())
+        trk.takeLanes = [ln for ln in trk.takeLanes if ln.get("id") != lane["id"]] + [lane]
+
+    elif cmd_type == "track.renameTakeLane":
+        trk = _find_track(p, str(payload["trackId"]))
+        lane_id = str(payload["laneId"])
+        new_name = str(payload["name"]).strip()
+        if not new_name:
+            raise ValueError("Take lane name cannot be empty")
+        for ln in trk.takeLanes:
+            if ln.get("id") == lane_id:
+                ln["name"] = new_name
+                break
+        else:
+            raise ValueError(f"Take lane not found: {lane_id}")
+
+    elif cmd_type == "track.removeTakeLane":
+        trk = _find_track(p, str(payload["trackId"]))
+        lane_id = str(payload["laneId"])
+        trk.takeLanes = [ln for ln in trk.takeLanes if ln.get("id") != lane_id]
+
+    elif cmd_type == "clip.setFades":
+        _, clp = _find_clip(p, str(payload["clipId"]))
+        if "fadeInBeats" in payload:
+            clp.fadeInBeats = max(0.0, min(64.0, float(payload["fadeInBeats"])))
+        if "fadeOutBeats" in payload:
+            clp.fadeOutBeats = max(0.0, min(64.0, float(payload["fadeOutBeats"])))
 
     elif cmd_type == "clip.add":
         trk = _find_track(p, str(payload["trackId"]))

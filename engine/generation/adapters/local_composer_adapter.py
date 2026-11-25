@@ -209,8 +209,9 @@ def execute_local_composition(
     )
     detected_sections = gen_analysis.get("arrangement", {}).get("sections", [])
 
-    # Reference vs Generated comparison when a Reference was bound
+    # Reference vs Generated comparison when a Reference was bound + update featureLifecycle `verified`
     ref_comp = None
+    verified_features: list[str] = []
     if plan.referenceBinding.referenceIds:
         ref_id = plan.referenceBinding.referenceIds[0]
         ref_obj = next((r for r in project.references if r.get("id") == ref_id), None)
@@ -221,9 +222,13 @@ def execute_local_composition(
                 target_name=str(ident.get("title", "Generated Take")),
                 target_analysis=gen_analysis,
             )
+            if ref_comp.get("measuredDeltas", {}).get("tempoCompatible") is True:
+                verified_features.append("tempoBpm")
+            if len(detected_sections) >= 1 and "arrangementArc" in plan.referenceBinding.appliedFeatures:
+                verified_features.append("arrangementArc")
 
-    vocal_screen = screen_vocal_leakage(preview_audio, sr)
-    if vocal_screen.get("suspectedVocal") and ident.get("instrumentalOnly", True):
+    vocal_screen = screen_vocal_leakage(preview_audio, sr, source_kind="deterministic_midi_synth")
+    if vocal_screen.get("status") == "REJECT" and ident.get("instrumentalOnly", True):
         all_warnings.append("Vocal-band concentration flagged; verify instrumental output manually.")
 
     verdict = "fail" if (is_silent or has_nan) else ("warn" if all_warnings else "pass")
