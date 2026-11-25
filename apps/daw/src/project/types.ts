@@ -119,6 +119,105 @@ export interface TakeLane {
   createdAt?: string;
 }
 
+export interface EffectSlot {
+  id: string;
+  type: string;
+  name: string;
+  nameKo?: string;
+  enabled: boolean;
+  bypass: boolean;
+  wetDry: number;
+  preset?: string | null;
+  parameters: Record<string, unknown>;
+  sidechainTrackId?: string | null;
+}
+
+export interface SendSlot {
+  id: string;
+  busId: string;
+  levelDb: number;
+  preFader: boolean;
+  enabled: boolean;
+}
+
+export interface AutomationPoint {
+  id: string;
+  beat: number;
+  value: number;
+  interpolation?: "linear" | "step";
+}
+
+export interface AutomationLane {
+  id: string;
+  targetType: "track" | "fx" | "instrument" | "send";
+  targetId?: string | null;
+  parameterId: string;
+  enabled: boolean;
+  points: AutomationPoint[];
+}
+
+export interface TrackFreezeState {
+  frozen: boolean;
+  assetId: string;
+  stateHash: string;
+  frozenAt: string;
+  durationSec: number;
+  sampleRate?: number;
+  fxMeters?: Record<string, Record<string, unknown>>;
+}
+
+export interface BusTrack {
+  id: string;
+  name: string;
+  kind: "return" | "group";
+  gainDb: number;
+  pan: number;
+  mute: boolean;
+  solo: boolean;
+  effects: EffectSlot[];
+}
+
+export interface InstrumentCatalogEntry {
+  id: string;
+  instrumentId: string;
+  name: string;
+  instrumentName: string;
+  nameKo: string;
+  category: string;
+  role: string;
+  engineType: string;
+  pluginFormat?: string;
+  presetList: Array<{ id: string; name: string; nameKo?: string }>;
+  supportedParameters: Array<{
+    id: string;
+    label: string;
+    labelKo?: string;
+    min: number;
+    max: number;
+    default: number;
+    unit?: string;
+    scale?: string;
+  }>;
+  supportedArticulations?: string[];
+  sampleLibrary?: string | null;
+  license?: string;
+  runtimeAvailability: string;
+  verificationStatus?: string;
+  description?: string;
+}
+
+export interface FxCatalogEntry {
+  type: string;
+  name: string;
+  nameKo: string;
+  category: string;
+  engine: string;
+  description: string;
+  defaultParams: Record<string, unknown>;
+  presets: Array<{ id: string; name: string; nameKo?: string; params?: Record<string, unknown> }>;
+  cabinets?: Array<{ id: string; name: string }>;
+}
+
 export interface Track {
   id: string;
   name: string;
@@ -131,7 +230,12 @@ export interface Track {
   stemLabel?: string | null;
   stemMeta?: Record<string, unknown> | null;
   instrumentRef: string | null;
-  effects: Record<string, unknown>[];
+  instrumentConfig?: Record<string, unknown>;
+  effects: EffectSlot[];
+  sends?: SendSlot[];
+  automationLanes?: AutomationLane[];
+  freezeState?: TrackFreezeState | null;
+  outputBusId?: string;
   clips: Clip[];
   takeLanes?: TakeLane[];
 }
@@ -354,6 +458,8 @@ export interface Project {
   chordTrackLocked?: boolean;
   assets: Asset[];
   tracks: Track[];
+  buses?: BusTrack[];
+  masterEffects?: EffectSlot[];
   references: ReferenceItem[];
   compositionPlans?: CompositionPlan[];
   takes?: Take[];

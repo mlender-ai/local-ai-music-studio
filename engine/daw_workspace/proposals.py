@@ -282,11 +282,11 @@ def interpret_producer_instruction(
     sel_clip_ids = sel.get("selectedClipIds") or []
     bpb = project.timeSignature.beats_per_bar
 
-    # Reject clearly unsupported Phase 05–07 capabilities honestly!
+    # Reject ONLY genuinely unsupported future-phase capabilities honestly!
+    # Phase 05 EQ, Compressor, Sidechain, Reverb, Delay, Guitar Amp, Saturation, Chorus, Automation & Pro Instruments are NOW LIVE!
     unsupported_patterns = [
-        (["eq", "이큐", "컴프레서", "compressor", "리버브", "reverb", "딜레이", "delay", "디스토션", "vst", "au"], "Phase 05 (Sound Design / FX Rack)"),
         (["보컬 생성", "가사 노래", "노래 불러", "vocal singing", "sing lyrics"], "Phase 07 (Full Vocal Production)"),
-        (["마스터링", "mastering", "사이드체인", "sidechain"], "Phase 06 (Mixing & Mastering)"),
+        (["자동 마스터링", "ai 마스터링", "auto mastering"], "Phase 06 (AI Mastering Suite)"),
     ]
     # Allow "구간 만들어줘" / "브리지 만들어줘" as section creation!
     is_section_req = any(k in low for k in ("구간", "브리지", "브릿지", "섹션", "section", "bridge", "chorus", "intro", "outro"))
@@ -295,8 +295,34 @@ def interpret_producer_instruction(
             return {
                 "supported": False,
                 "action": "unsupported",
-                "messageKo": f"요청하신 기능은 현재 지원되지 않습니다 ({phase_label} 예정). 현재는 AI 작곡(풀 트랙·악기 세션·루프/MIDI), 레퍼런스 분석, 트랙 제어, 클립 편집, 구간 마커를 실행할 수 있습니다.",
-                "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition (full music, instrument sessions, loops/MIDI), reference analysis, track/clip/MIDI edits, and section markers.",
+                "messageKo": f"요청하신 기능은 현재 지원되지 않습니다 ({phase_label} 예정). 현재는 AI 작곡, 레퍼런스 정밀 채보, 가상악기·프리셋 변경, EQ/컴프레서/사이드체인/리버브/딜레이/앰프 FX, 오토메이션 및 클립 편집을 지원합니다.",
+                "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition, precision transcription, Pro Instruments, EQ/Compressor/Sidechain/Reverb/Delay/Amp FX, Automation, and clip editing.",
+            }
+
+    # 0.0 Phase 05 AI Producer Sound Design, Instrument Swap, FX Chain, Sidechain & Automation routing!
+    # Check BEFORE composition routing so "신스 훅 멜로디는 유지하고 아날로그 느낌으로 공간감 넓혀줘" or
+    # "드럼 리듬은 그대로 두고 소리만 빈티지하게" stages exact Instrument/FX/Automation operations preserving MIDI!
+    is_explicit_new_compose = any(k in low for k in ("풀 트랙 만들어", "곡을 만들어", "새 곡", "full track", "compose a song"))
+    if not is_explicit_new_compose:
+        from engine.sound_design import plan_sound_design_operations
+
+        sd_plan = plan_sound_design_operations(
+            project,
+            text,
+            selection=sel,
+            active_reference_id=active_reference_id,
+        )
+        if sd_plan and sd_plan.get("matched") and sd_plan.get("operations"):
+            return {
+                "supported": True,
+                "action": "stage_proposal",
+                "soundDesignIntent": sd_plan["intent"],
+                "diagnosis": sd_plan.get("diagnosis"),
+                "preservedNote": sd_plan.get("preservedNote"),
+                "summary": sd_plan["summary"],
+                "operations": sd_plan["operations"],
+                "messageKo": f"음향 진단 기반 프로덕션 변경 제안을 생성했습니다: {sd_plan['summary']} ({sd_plan.get('preservedNote', '')})",
+                "messageEn": f"Staged acoustic sound design proposal: {sd_plan['summary']}",
             }
 
     # 0. Phase 03.2 Advanced Reference Intelligence routing (Transcription, Chords, Reconstruct, Feature-Locked Compose)

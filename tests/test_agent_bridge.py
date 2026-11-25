@@ -187,14 +187,23 @@ def test_c_full_agent_editing_workflow_and_undo_reopen(isolated_bridge_env):
     assert len(guitar_after_undo.clips) == 1
     assert guitar_after_undo.clips[0].gainDb == 0.0
 
-    # 6. Unsupported Korean request (EQ / Reverb / Composition) returns honest refusal
-    refusal = client.post(
+    # 6. Phase 05 FX request (EQ / Reverb) is now genuinely supported as a staged proposal,
+    #    while Phase 07 singing vocal synthesis still returns an honest refusal!
+    fx_prop = client.post(
         f"/api/projects/{saved.id}/producer/instruct",
         json={"instruction": "기타에 리버브랑 EQ 걸어줘", "baseRevision": after_undo.revision},
     )
+    assert fx_prop.status_code == 200
+    assert fx_prop.json()["supported"] is True
+    assert fx_prop.json()["action"] == "proposal_created"
+
+    refusal = client.post(
+        f"/api/projects/{saved.id}/producer/instruct",
+        json={"instruction": "한국어 가사로 보컬 노래를 직접 불러서 녹음해줘", "baseRevision": after_undo.revision},
+    )
     assert refusal.status_code == 200
     assert refusal.json()["supported"] is False
-    assert "Phase 05" in refusal.json()["messageKo"]
+    assert refusal.json()["messageKo"]
 
     # 7. MCP MIDI note edit defaults to safe staged proposal (Phase 03-A) -> apply -> read roundtrip
     midi_edit = mcp_tools.edit_midi_notes(

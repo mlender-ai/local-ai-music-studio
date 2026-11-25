@@ -735,9 +735,27 @@ button:disabled {
 .mixer-channel.master {
   width: 112px;
   min-width: 112px;
+  flex-shrink: 0;
   background: #232730;
   border-color: var(--border-strong);
   margin-left: auto;
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  box-shadow: -8px 0 14px rgba(10, 12, 16, 0.55);
+}
+
+/* Device Rack: prevent native <input type="range"> 129px intrinsic width from overflowing grid cells */
+[data-testid="device-rack-panel"] input.mini-slider {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+[data-testid="device-rack-panel"] label {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mixer-fader-wrap {

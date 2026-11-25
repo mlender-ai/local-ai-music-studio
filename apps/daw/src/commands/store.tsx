@@ -569,6 +569,8 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
           setPast((prev) => [...prev.slice(-(MAX_HISTORY - 1)), current]);
           setFuture([]);
         }
+        // Keep ref synchronously updated so back-to-back dispatches in the same handler never drop earlier commands!
+        projectRef.current = next;
         setProject(next);
 
         if (
@@ -1022,6 +1024,38 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       if (!current) return;
       setIsExporting(true);
       try {
+        const usesStudioEngine =
+          (current.buses?.length ?? 0) > 0 ||
+          (current.masterEffects?.length ?? 0) > 0 ||
+          current.tracks.some(
+            (t) =>
+              Boolean(t.instrumentRef?.startsWith("sf-") || t.instrumentRef?.startsWith("pro-")) ||
+              (t.effects?.length ?? 0) > 0 ||
+              (t.sends?.length ?? 0) > 0 ||
+              (t.automationLanes?.length ?? 0) > 0 ||
+              Boolean(t.freezeState?.frozen)
+          );
+
+        if (usesStudioEngine) {
+          // Ensure latest edits are persisted before 3-pass FluidSynth + Pedalboard studio render
+          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          setSavedRevision(saved.revision);
+          setSavedFingerprint(projectFingerprint(saved));
+          const serverRes = await dawApi.exportServerWav(saved.id, useLoopRange);
+          const url = URL.createObjectURL(serverRes.blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = serverRes.filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast(
+            `Exported ${serverRes.filename} (${serverRes.durationSec.toFixed(1)}s · 48kHz Studio DSP · ${serverRes.integratedLufs.toFixed(1)} LUFS · Peak ${serverRes.peakDbfs.toFixed(1)} dBFS)`
+          );
+          return;
+        }
+
         const result = await renderProjectOfflineWav(current, audioEngine, { useLoopRange });
         const savedInfo = await dawApi.uploadExportWav(current.id, result.filename, result.blob);
         const url = URL.createObjectURL(result.blob);
@@ -1535,18 +1569,39 @@ export function DawProvider({ children }: { children: React.ReactNode }) {
       if (!current || !instruction.trim()) return null;
       try {
         // Ensure latest unsaved local edits are synced before staging server proposal
+        let effectiveRev = savedRevisionRef.current;
         if (projectFingerprint(current) !== savedFingerprint) {
-          const saved = await dawApi.saveProject(current, savedRevisionRef.current);
+          const saved = await dawApi.saveProject(current, effectiveRev);
+          savedRevisionRef.current = saved.revision;
+          effectiveRev = saved.revision;
+          projectRef.current = saved;
           setSavedRevision(saved.revision);
           setSavedFingerprint(projectFingerprint(saved));
           setProject(saved);
         }
-        const res = await dawApi.sendProducerInstruction(current.id, {
-          instruction: instruction.trim(),
-          selection,
-          activeReferenceId: activeReference?.id ?? null,
-          baseRevision: savedRevisionRef.current,
-        });
+        let res: ProducerInstructResponse;
+        try {
+          res = await dawApi.sendProducerInstruction(current.id, {
+            instruction: instruction.trim(),
+            selection,
+            activeReferenceId: activeReference?.id ?? null,
+            baseRevision: effectiveRev,
+          });
+        } catch (err) {
+          if (err instanceof RevisionConflictError) {
+            // Autosave raced with instruction submit: adopt latest server revision and retry once cleanly
+            savedRevisionRef.current = err.serverRevision;
+            setSavedRevision(err.serverRevision);
+            res = await dawApi.sendProducerInstruction(current.id, {
+              instruction: instruction.trim(),
+              selection,
+              activeReferenceId: activeReference?.id ?? null,
+              baseRevision: err.serverRevision,
+            });
+          } else {
+            throw err;
+          }
+        }
         if (res.action === "analyze_reference" && res.referenceId) {
           await runReferenceAnalysis(res.referenceId);
         } else if (res.action === "transcription_started" && res.job) {

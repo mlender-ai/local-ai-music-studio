@@ -697,4 +697,93 @@ export const dawApi = {
   getMusicMemory(projectId: string): Promise<{ projectId: string; musicMemory: Record<string, unknown> }> {
     return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/memory`);
   },
+
+  // --- Phase 05: Pro Instruments, FX Catalog, EQ Curve, Track Freeze, Plugin Scan & Sound Diagnosis ---
+
+  getInstrumentCatalog(): Promise<{
+    instruments: import("./types").InstrumentCatalogEntry[];
+    fluidsynth: Record<string, unknown>;
+  }> {
+    return apiFetch("/api/instruments/catalog");
+  },
+
+  async previewInstrumentBlob(body: {
+    instrumentRef: string;
+    presetId?: string | null;
+    parameters?: Record<string, unknown>;
+  }): Promise<Blob> {
+    const res = await fetch("/api/instruments/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} previewing instrument`);
+    return res.blob();
+  },
+
+  getFxCatalog(): Promise<{ effects: import("./types").FxCatalogEntry[] }> {
+    return apiFetch("/api/fx/catalog");
+  },
+
+  computeEqCurve(
+    bands: Array<Record<string, unknown>>,
+    outputGainDb = 0
+  ): Promise<{ frequenciesHz: number[]; magnitudeDb: number[] }> {
+    return apiFetch("/api/fx/eq-curve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bands, outputGainDb }),
+    });
+  },
+
+  scanHostPlugins(probeExternal = false): Promise<Record<string, unknown>> {
+    return apiFetch(`/api/plugins/scan?probeExternal=${probeExternal}`);
+  },
+
+  freezeTrack(
+    projectId: string,
+    trackId: string
+  ): Promise<{ trackId: string; frozen: boolean; fromCache: boolean; freezeState: Record<string, unknown>; project: Project }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/freeze`,
+      { method: "POST" }
+    );
+  },
+
+  unfreezeTrack(
+    projectId: string,
+    trackId: string
+  ): Promise<{ trackId: string; frozen: boolean; project: Project }> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/unfreeze`,
+      { method: "POST" }
+    );
+  },
+
+  diagnoseTrack(projectId: string, trackId: string): Promise<Record<string, unknown>> {
+    return apiFetch(
+      `/api/projects/${encodeURIComponent(projectId)}/tracks/${encodeURIComponent(trackId)}/diagnose`,
+      { method: "POST" }
+    );
+  },
+
+  async exportServerWav(
+    projectId: string,
+    useLoopRange = false
+  ): Promise<{ blob: Blob; filename: string; durationSec: number; peakDbfs: number; integratedLufs: number }> {
+    const res = await fetch(`/api/projects/${encodeURIComponent(projectId)}/export/studio-wav`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ useLoopRange }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} exporting studio WAV`);
+    const blob = await res.blob();
+    return {
+      blob,
+      filename: res.headers.get("X-Export-Filename") || "studio_mix_48k.wav",
+      durationSec: parseFloat(res.headers.get("X-Export-Duration-Sec") || "0"),
+      peakDbfs: parseFloat(res.headers.get("X-Export-Peak-Dbfs") || "-96"),
+      integratedLufs: parseFloat(res.headers.get("X-Export-Lufs") || "-60"),
+    };
+  },
 };

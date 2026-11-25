@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sliders } from "luci
 import { ProjectBrowser } from "../browser/ProjectBrowser";
 import { loadWorkspacePrefs, saveWorkspacePrefs, useDaw } from "../commands/store";
 import { isImeComposing, useI18n } from "../i18n";
+import { DeviceRackPanel } from "../devices/DeviceRackPanel";
 import { MixerPanel } from "../mixer/MixerPanel";
 import { PianoRoll } from "../piano-roll/PianoRoll";
 import { AIProducerPanel } from "../producer/AIProducerPanel";
@@ -54,7 +55,7 @@ export function DawWorkspace() {
   const [producerOpen, setProducerOpen] = useState(savedPrefs.producerOpen ?? true);
   const [producerWidth, setProducerWidth] = useState(258);
   const [dockOpen, setDockOpen] = useState(savedPrefs.dockOpen ?? true);
-  const [dockHeight, setDockHeight] = useState(224);
+  const [dockHeight, setDockHeight] = useState(252);
   const [dockTab, setDockTab] = useState<DockTab>("clip");
 
   useEffect(() => {
@@ -221,6 +222,10 @@ export function DawWorkspace() {
                 setRefUrlDraft("");
                 setRefUrlModalOpen(true);
               }}
+              onOpenDeviceRack={() => {
+                setDockOpen(true);
+                setDockTab("fx");
+              }}
             />
             <div
               className="resize-handle-v"
@@ -248,7 +253,13 @@ export function DawWorkspace() {
 
         {/* Center Column: Arrangement Timeline + Resizable Bottom Dock */}
         <main className="center-column">
-          <ArrangementTimeline onOpenClipInEditor={handleOpenClipInEditor} />
+          <ArrangementTimeline
+            onOpenClipInEditor={handleOpenClipInEditor}
+            onOpenDeviceRack={() => {
+              setDockOpen(true);
+              setDockTab("fx");
+            }}
+          />
 
           {dockOpen ? (
             <>
@@ -291,7 +302,7 @@ export function DawWorkspace() {
                     <button
                       className={`dock-tab ${dockTab === "fx" ? "active" : ""}`}
                       onClick={() => setDockTab("fx")}
-                      style={{ color: dockTab === "fx" ? "var(--text-primary)" : "var(--text-muted)" }}
+                      data-testid="tab-device-rack"
                     >
                       {t("dock.fxRack")}
                     </button>
@@ -324,25 +335,7 @@ export function DawWorkspace() {
                   {dockTab === "piano" && <PianoRoll />}
                   {dockTab === "mixer" && <MixerPanel />}
                   {dockTab === "reference" && <ReferenceAnalysisPanel />}
-                  {dockTab === "fx" && (
-                    <div
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      <Sliders size={18} />
-                      <div style={{ color: "var(--text-secondary)", fontWeight: 600 }}>
-                        {t("dock.fxTitle")}
-                      </div>
-                      <div style={{ fontSize: 11 }}>{t("dock.fxDesc")}</div>
-                    </div>
-                  )}
+                  {dockTab === "fx" && <DeviceRackPanel />}
                 </div>
               </section>
             </>

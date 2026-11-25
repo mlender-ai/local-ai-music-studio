@@ -353,4 +353,62 @@ describe("Phase 01.2 Korean Localization & IME safety", () => {
     });
     expect(proj.chordTrack).toHaveLength(2);
   });
+
+  it("supports Phase 05 Device Rack FX, Return Bus, Send, and Automation commands", () => {
+    let proj = makeSampleProject();
+    proj = executeCommand(proj, {
+      type: "fx.add",
+      payload: {
+        trackId: "trk_m",
+        slot: {
+          id: "fx_eq_1",
+          type: "parametric_eq",
+          name: "Parametric EQ",
+          enabled: true,
+          bypass: false,
+          wetDry: 1.0,
+          parameters: { outputGainDb: 0 },
+        },
+      },
+    });
+    expect(proj.tracks[1].effects).toHaveLength(1);
+
+    proj = executeCommand(proj, {
+      type: "fx.setBypass",
+      payload: { trackId: "trk_m", fxId: "fx_eq_1", bypass: true },
+    });
+    expect(proj.tracks[1].effects[0].bypass).toBe(true);
+
+    proj = executeCommand(proj, {
+      type: "bus.add",
+      payload: { id: "bus_rev_1", name: "Room Reverb", kind: "return", effects: [] },
+    });
+    expect(proj.buses).toHaveLength(1);
+
+    proj = executeCommand(proj, {
+      type: "send.set",
+      payload: { trackId: "trk_m", busId: "bus_rev_1", levelDb: -8.0 },
+    });
+    expect(proj.tracks[1].sends).toHaveLength(1);
+    expect(proj.tracks[1].sends![0].levelDb).toBe(-8.0);
+
+    proj = executeCommand(proj, {
+      type: "automation.upsertLane",
+      payload: {
+        trackId: "trk_m",
+        lane: {
+          id: "auto_cut_1",
+          targetType: "instrument",
+          parameterId: "cutoffHz",
+          enabled: true,
+          points: [
+            { id: "p1", beat: 0, value: 400 },
+            { id: "p2", beat: 16, value: 8500 },
+          ],
+        },
+      },
+    });
+    expect(proj.tracks[1].automationLanes).toHaveLength(1);
+    expect(proj.tracks[1].automationLanes![0].points).toHaveLength(2);
+  });
 });
