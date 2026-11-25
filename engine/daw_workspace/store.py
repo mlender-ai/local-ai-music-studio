@@ -110,7 +110,7 @@ def _sanitize_filename(name: str) -> str:
 
 
 def migrate_project_dict(data: dict[str, Any]) -> dict[str, Any]:
-    """Migrate older schema v1.0.0 / v1.1.0 project dictionaries cleanly into v1.2.0+."""
+    """Migrate older schema v1.0.0 / v1.1.0 / v1.2.0 project dictionaries cleanly into v1.3.0+."""
     out = dict(data)
     if "revision" not in out or not isinstance(out["revision"], int) or out["revision"] < 1:
         out["revision"] = 1
@@ -120,6 +120,17 @@ def migrate_project_dict(data: dict[str, Any]) -> dict[str, Any]:
         out["compositionPlans"] = []
     if "takes" not in out or not isinstance(out["takes"], list):
         out["takes"] = []
+    if "musicMemory" not in out or not isinstance(out["musicMemory"], dict):
+        out["musicMemory"] = {}
+    for trk in out.get("tracks", []):
+        if isinstance(trk, dict):
+            trk.setdefault("takeLanes", [])
+            trk.setdefault("stemMeta", None)
+            for clp in trk.get("clips", []):
+                if isinstance(clp, dict):
+                    clp.setdefault("fadeInBeats", 0.0)
+                    clp.setdefault("fadeOutBeats", 0.0)
+                    clp.setdefault("reversed", False)
     out["schemaVersion"] = SCHEMA_VERSION
     return out
 

@@ -18,6 +18,7 @@ from engine.generation import (
 )
 from engine.instruments import list_instruments as _list_instruments
 from engine.providers import get_provider_summary
+from engine.runtime import get_runtime_registry
 
 from . import analysis, commands, proposals, reaper, references, session, store
 
@@ -597,3 +598,7 @@ def list_providers() -> dict[str, Any]:
 
 def list_instruments() -> dict[str, Any]:
     return {"instruments": _list_instruments(), "engines": detect_generation_engines()}
+
+
+def get_runtime_status() -> dict[str, Any]:
+    return get_runtime_registry()

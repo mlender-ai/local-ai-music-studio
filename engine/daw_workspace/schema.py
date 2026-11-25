@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-SCHEMA_VERSION = "1.2.0"
+SCHEMA_VERSION = "1.3.0"
 DEFAULT_PPQ = 480
 DEFAULT_SAMPLE_RATE = 48000
 
@@ -88,6 +88,9 @@ class Clip(DawModel):
     loopLengthSec: float | None = Field(default=None, gt=0.0)
     loopLengthBeats: float | None = Field(default=None, gt=0.0)
     gainDb: float = Field(default=0.0, ge=-24.0, le=12.0)
+    fadeInBeats: float = Field(default=0.0, ge=0.0, le=64.0)
+    fadeOutBeats: float = Field(default=0.0, ge=0.0, le=64.0)
+    reversed: bool = False
     notes: list[MidiNote] = Field(default_factory=list)
 
 
@@ -101,8 +104,10 @@ class Track(DawModel):
     mute: bool = False
     solo: bool = False
     stemLabel: str | None = None
+    stemMeta: dict[str, Any] | None = None
     instrumentRef: str | None = None
     effects: list[dict[str, Any]] = Field(default_factory=list)
+    takeLanes: list[dict[str, Any]] = Field(default_factory=list)
     clips: list[Clip] = Field(default_factory=list)
 
 
@@ -142,6 +147,7 @@ class Project(DawModel):
     references: list[dict[str, Any]] = Field(default_factory=list)
     compositionPlans: list[dict[str, Any]] = Field(default_factory=list)
     takes: list[dict[str, Any]] = Field(default_factory=list)
+    musicMemory: dict[str, Any] = Field(default_factory=dict)
     notes: str = ""
     createdAt: str = Field(default_factory=utc_now_iso)
     updatedAt: str = Field(default_factory=utc_now_iso)

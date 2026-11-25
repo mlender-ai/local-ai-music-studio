@@ -1,64 +1,46 @@
-"""Real Demucs Stem Separation Adapter (Phase 03-E).
-
-Honestly reports unavailable when `demucs` is not installed; NEVER fakes separated stems.
-When installed, separates into Drums, Bass, Other, Vocals and preserves Original Mix muted.
-"""
+"""Real Demucs Stem Separation Adapter with Process-Group Cancellation & Shared Lock (Phase 03.1 / 04)."""
 
 from __future__ import annotations
 
-import importlib.util
-import shutil
-import subprocess
+import threading
 from pathlib import Path
 from typing import Any
 
+from engine.generation.process_guard import run_cancellable_guarded
+from engine.runtime import get_runtime_registry, record_engine_verification
+
 
 def probe_demucs() -> dict[str, Any]:
-    cli = shutil.which("demucs")
-    pkg = importlib.util.find_spec("demucs") is not None
-    available = bool(cli or pkg)
-    return {
-        "id": "demucs-htdemucs",
-        "name": "Demucs Stem Separation (htdemucs)",
-        "kind": "stem-separation",
-        "available": available,
-        "cliPath": cli,
-        "modes": ["stem_separation"],
-        "stems": ["drums", "bass", "other", "vocals"],
-        "statusNoteKo": (
-            "Demucs 스템 분리 엔진이 설치되어 있습니다 (Drums/Bass/Other/Vocals 분리 가능)."
-            if available
-            else "Demucs가 설치되어 있지 않아 실제 스템 분리를 실행할 수 없습니다 (가짜 스템을 생성하지 않습니다. 설치: `uv pip install demucs`)."
-        ),
-        "statusNoteEn": (
-            "Demucs stem separation is installed (Drums/Bass/Other/Vocals)."
-            if available
-            else "Demucs is not installed on this host (never fabricates fake stems; install via `uv pip install demucs`)."
-        ),
-    }
+    reg = get_runtime_registry()
+    return next(e for e in reg["engines"] if e["id"] == "demucs-htdemucs")
 
 
 def separate_stems_demucs(
     audio_path: Path,
     out_dir: Path,
     model_name: str = "htdemucs",
-    timeout_sec: int = 300,
+    timeout_sec: float = 360.0,
+    cancel_event: threading.Event | None = None,
 ) -> list[dict[str, Any]]:
-    """Run real Demucs separation on `audio_path`; raises honestly if Demucs is missing."""
+    """Run real Demucs separation under shared lock & real cancellation; raises honestly if uninstalled."""
     info = probe_demucs()
     if not info["available"]:
         raise RuntimeError(
             "Demucs is not installed on this machine. Real stem separation cannot run without Demucs."
         )
     out_dir.mkdir(parents=True, exist_ok=True)
-    cmd = (
-        [info["cliPath"], "-n", model_name, "-o", str(out_dir), str(audio_path)]
-        if info["cliPath"]
-        else ["python", "-m", "demucs", "-n", model_name, "-o", str(out_dir), str(audio_path)]
+    cli_path = info.get("binaryPath")
+    if cli_path and Path(cli_path).is_file():
+        cmd = [cli_path, "-n", model_name, "-o", str(out_dir), str(audio_path)]
+    else:
+        cmd = ["python", "-m", "demucs", "-n", model_name, "-o", str(out_dir), str(audio_path)]
+
+    run_cancellable_guarded(
+        cmd,
+        out_dir / "demucs.log",
+        cancel_event=cancel_event,
+        timeout_sec=timeout_sec,
     )
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec, check=False)
-    if proc.returncode != 0:
-        raise RuntimeError(f"Demucs failed (code {proc.returncode}): {proc.stderr[-300:]}")
 
     stem_dir = out_dir / model_name / audio_path.stem
     stems: list[dict[str, Any]] = []
@@ -73,5 +55,7 @@ def separate_stems_demucs(
         if wav.is_file():
             stems.append({"role": stem_key, "name": label, "color": color, "wavPath": wav})
     if not stems:
+        record_engine_verification("demucs-htdemucs", False, error=f"No stems produced under {stem_dir}")
         raise RuntimeError(f"Demucs completed but no stem WAVs found under {stem_dir}")
+    record_engine_verification("demucs-htdemucs", True, wav_path=str(stems[0]["wavPath"]))
     return stems

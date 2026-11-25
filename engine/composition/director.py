@@ -328,12 +328,20 @@ def create_composition_plan(
     target_instrument: str | None = None,
     reference_ids: list[str] | None = None,
     selected_influences: list[str] | None = None,
+    per_reference_influences: dict[str, list[str]] | None = None,
     selection: dict[str, Any] | None = None,
     provider_id: str | None = None,
     engine_preference: str = "auto",
+    production_mode: str = "editable_midi",  # "neural_audio" | "editable_midi" | "hybrid"
 ) -> CompositionPlan:
-    """Create a complete, traceable, genre-adaptive CompositionPlan before generation."""
-    binding = build_reference_binding(project, reference_ids=reference_ids, explicit_influences=selected_influences)
+    """Create a complete, traceable, genre-adaptive CompositionPlan with real AI authoring authority."""
+    binding = build_reference_binding(
+        project,
+        reference_ids=reference_ids,
+        explicit_influences=selected_influences,
+        per_reference_influences=per_reference_influences,
+        target_engine=engine_preference,
+    )
     ref_bpm = binding.appliedFeatures.get("tempoBpm")
     ref_key = binding.appliedFeatures.get("key")
 
@@ -506,39 +514,92 @@ def create_composition_plan(
     climax_sec = max(planned_sections, key=lambda s: s.energy)
     duration_sec = round(total_bars * bpb * (60.0 / bpm), 2)
 
-    # Optional LLM enrichment ONLY when local Ollama or user-configured API is genuinely active
+    # Real AI Producer authoring authority (Section 4.2):
+    # When Claude Code CLI / Ollama / Custom API is active, allow it to author real structured
+    # chordProgression, motifScaleDegrees, swingRatio, section arrangement & variation directives!
     ctx = build_producer_context(project, selection=selection)
-    llm_note_patch, prov_meta = invoke_llm_json(
+    llm_patch, prov_meta = invoke_llm_json(
         system_prompt=(
-            "You are an AI Music Producer inside a DAW. Return compact JSON with keys "
-            "`title`, `motifConcept`, `variationTips` (array of 2 concise strings) matching the requested genre/key/BPM."
+            "You are a professional AI Music Producer inside a local DAW. Design a musical composition plan. "
+            "Return ONLY valid JSON with keys: "
+            "`title` (string), "
+            "`chordProgression` (array of 4 standard chord symbols like [\"Fm7\",\"Dbmaj7\",\"Abmaj7\",\"Eb6\"]), "
+            "`motifConcept` (concise string), "
+            "`motifScaleDegrees` (array of 8 integers 1..7), "
+            "`swingRatio` (number 0.50..0.64), "
+            "`variationTips` (array of 2 concise Korean strings), "
+            "`summaryKo` (1 concise Korean producer sentence describing the musical direction)."
         ),
-        user_prompt=f"Instruction: {instruction}\nGenre: {genre}, BPM: {bpm}, Key: {key}, Mode: {resolved_mode}\nContext: {ctx['project']}",
+        user_prompt=(
+            f"User request: {instruction}\n"
+            f"Detected Genre: {genre}, BPM: {bpm}, Key: {key}, Mode: {resolved_mode}, Bars: {total_bars}\n"
+            f"Default Chords: {chords}\n"
+            f"Active Reference Features: {binding.appliedFeatures}\n"
+            f"Project Context: {ctx['project']}"
+        ),
         provider_id=provider_id,
     )
 
+    llm_authored_fields: list[str] = []
+    motif_degrees = list(profile["motifDegrees"])
+    swing_val = float(binding.appliedFeatures.get("swingRatio") or profile["swingRatio"])
+
+    if isinstance(llm_patch, dict):
+        # Apply validated AI-authored chord progression (unless user explicitly bound reference chords)
+        ai_chords = llm_patch.get("chordProgression")
+        if (
+            isinstance(ai_chords, list)
+            and 2 <= len(ai_chords) <= 8
+            and all(isinstance(c, str) and re.match(r"^[A-G][#b]?[a-zA-Z0-9]*$", c.strip()) for c in ai_chords)
+            and not (len(valid_ref_chords) >= 2 and any(k in binding.selectedInfluences for k in ("bass_movement", "harmony_mood")))
+        ):
+            chords = [c.strip() for c in ai_chords[:4]]
+            while len(chords) < 4:
+                chords.append(chords[len(chords) % len(ai_chords)])
+            llm_authored_fields.append("chordProgression")
+
+        # Apply validated AI-authored motif scale degrees
+        ai_degs = llm_patch.get("motifScaleDegrees")
+        if isinstance(ai_degs, list) and 4 <= len(ai_degs) <= 12 and all(isinstance(d, (int, float)) and 1 <= int(d) <= 7 for d in ai_degs):
+            motif_degrees = [int(d) for d in ai_degs]
+            llm_authored_fields.append("motifScaleDegrees")
+
+        # Apply validated AI-authored swing feel
+        ai_swing = llm_patch.get("swingRatio")
+        if isinstance(ai_swing, (int, float)) and 0.50 <= float(ai_swing) <= 0.65 and "swingRatio" not in binding.appliedFeatures:
+            swing_val = round(float(ai_swing), 3)
+            llm_authored_fields.append("swingRatio")
+
+    prov_meta = {**prov_meta, "llmAuthoredFields": llm_authored_fields}
+
     title_base = (
-        str(llm_note_patch.get("title")).strip()
-        if isinstance(llm_note_patch, dict) and llm_note_patch.get("title")
+        str(llm_patch.get("title")).strip()
+        if isinstance(llm_patch, dict) and llm_patch.get("title")
         else (
             f"{key} {genre.title()} {resolved_inst.replace('_', ' ').title() if resolved_inst else 'Arrangement'}"
         )
     )
+    if isinstance(llm_patch, dict) and llm_patch.get("title"):
+        llm_authored_fields.append("title")
+
     motif_concept = (
-        str(llm_note_patch.get("motifConcept")).strip()
-        if isinstance(llm_note_patch, dict) and llm_note_patch.get("motifConcept")
+        str(llm_patch.get("motifConcept")).strip()
+        if isinstance(llm_patch, dict) and llm_patch.get("motifConcept")
         else profile["motifConcept"]
     )
+    if isinstance(llm_patch, dict) and llm_patch.get("motifConcept"):
+        llm_authored_fields.append("motifConcept")
 
     variations = [
         "Motif A (Bars 1–2) -> Motif A' rhythmic/register lift (Bars 3–4) to prevent loop monotony",
         "Turnaround percussion fill & passing-tone bass pickup entering every new section",
         "Dynamic contrast between Break/Verse texture and full-band Climax",
     ]
-    if isinstance(llm_note_patch, dict) and isinstance(llm_note_patch.get("variationTips"), list):
-        extra_tips = [str(x).strip() for x in llm_note_patch["variationTips"] if str(x).strip()][:2]
+    if isinstance(llm_patch, dict) and isinstance(llm_patch.get("variationTips"), list):
+        extra_tips = [str(x).strip() for x in llm_patch["variationTips"] if str(x).strip()][:2]
         if extra_tips:
             variations = extra_tips + variations[:1]
+            llm_authored_fields.append("variations")
 
     # Resolve bar range from selection if loop/instrument mode
     sel_bar_range = ctx.get("selection", {}).get("barRange")
@@ -551,14 +612,18 @@ def create_composition_plan(
         else ("local-multitrack-composer" if engine_preference in ("auto", "local-multitrack-composer") else engine_preference)
     )
 
+    ai_ko = str(llm_patch.get("summaryKo")).strip() if isinstance(llm_patch, dict) and llm_patch.get("summaryKo") else ""
     summary_ko = (
-        f"[{resolved_mode}] {title_base} · {bpm} BPM · {key} · {total_bars}마디({duration_sec:.1f}초) · "
-        f"악기: {', '.join(r['name'] for r in instrument_roles)}"
-        + (f" · 레퍼런스 반영: {', '.join(binding.selectedInfluences)}" if binding.referenceIds else "")
+        ai_ko
+        or (
+            f"[{resolved_mode}] {title_base} · {bpm} BPM · {key} · {total_bars}마디({duration_sec:.1f}초) · "
+            f"코드: {'–'.join(chords)} · 악기: {', '.join(r['name'] for r in instrument_roles)}"
+            + (f" · 레퍼런스 반영: {', '.join(binding.selectedInfluences)}" if binding.referenceIds else "")
+        )
     )
     summary_en = (
         f"[{resolved_mode}] {title_base} · {bpm} BPM · {key} · {total_bars} bars ({duration_sec:.1f}s) · "
-        f"Roles: {', '.join(r['name'] for r in instrument_roles)}"
+        f"Chords: {'–'.join(chords)} · Roles: {', '.join(r['name'] for r in instrument_roles)}"
     )
 
     return CompositionPlan(
@@ -579,7 +644,7 @@ def create_composition_plan(
         },
         signatureMotif={
             "concept": motif_concept,
-            "scaleDegrees": list(profile["motifDegrees"]),
+            "scaleDegrees": motif_degrees,
             "callAndResponse": True,
             "variationRule": "A -> A' (rhythmic variation) -> B (contrast lift) -> Return",
         },
@@ -589,7 +654,7 @@ def create_composition_plan(
             "chordProgression": chords,
             "chordsPerBar": 1,
             "grooveFeel": binding.appliedFeatures.get("grooveFeel") or profile["grooveFeel"],
-            "swingRatio": float(binding.appliedFeatures.get("swingRatio") or profile["swingRatio"]),
+            "swingRatio": swing_val,
         },
         instrumentRoles=instrument_roles,
         arrangement=planned_sections,
@@ -603,13 +668,14 @@ def create_composition_plan(
         },
         generationStrategy={
             "mode": resolved_mode,
+            "productionMode": production_mode,
             "preferredEngine": engine_preference,
             "actualEngine": actual_engine,
             "targetInstrument": resolved_inst,
             "targetTrackId": ctx.get("selection", {}).get("selectedTrackId") if resolved_mode != "full_music" else None,
             "preserveExistingTracks": preserve_existing,
             "startBeats": start_beats,
-            "durationBeats": total_bars * bpb,
+            "durationBeats": total_beats if (total_beats := total_bars * bpb) else total_bars * bpb,
         },
         referenceBinding=binding,
         providerProvenance=prov_meta,
