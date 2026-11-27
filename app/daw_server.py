@@ -801,22 +801,29 @@ def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[
         }
     if routed.get("action") == "composition_plan":
         ref_id = routed.get("referenceId") or body.activeReferenceId
+        np_meta = routed.get("nativePerformance")
         plan = create_composition_plan(
             project=proj,
             instruction=body.instruction,
+            mode="full_music" if np_meta else None,
             reference_ids=[ref_id] if ref_id else None,
             selection=body.selection,
             feature_locks=routed.get("featureLocks"),
             reference_mode=str(routed.get("referenceMode") or "reference_compose"),
             use_project_chord_track=bool(routed.get("useProjectChordTrack", False)),
+            production_mode="neural_audio" if np_meta else None,
         )
+        if np_meta:
+            plan.generationStrategy["nativePerformance"] = dict(np_meta)
         saved_plan, rev = save_composition_plan(project_id, plan)
+        notice_ko = f" ({np_meta['isolationNoticeKo']})" if isinstance(np_meta, dict) and np_meta.get("isolationNoticeKo") else ""
         return {
             "supported": True,
             "action": "composition_plan_created",
             "plan": saved_plan,
+            "nativePerformance": np_meta,
             "projectRevision": rev,
-            "messageKo": f"작곡 계획이 생성되었습니다: {plan.summaryKo}",
+            "messageKo": f"작곡 계획이 생성되었습니다: {plan.summaryKo}{notice_ko}",
             "messageEn": f"Composition plan created: {plan.summaryEn}",
         }
     return routed
@@ -845,6 +852,12 @@ class CreateCompositionPlanBody(BaseModel):
     enginePreference: str = "auto"
     productionMode: str | None = None
     allowPreviewInstruments: bool = False
+    nativePerformance: dict[str, Any] | None = None
+    bpmOverride: float | None = None
+    keyOverride: str | None = None
+    durationSecOverride: float | None = None
+    chordProgressionOverride: list[str] | None = None
+    titleOverride: str | None = None
 
 
 class StartGenerationBody(BaseModel):
@@ -1165,6 +1178,19 @@ def api_create_composition_plan(project_id: str, body: CreateCompositionPlanBody
         reference_mode=body.referenceMode,
         use_project_chord_track=body.useProjectChordTrack,
     )
+    if body.bpmOverride is not None:
+        plan.musicalIdentity["tempoBpm"] = float(body.bpmOverride)
+    if body.keyOverride:
+        plan.musicalIdentity["key"] = body.keyOverride
+        plan.harmonyAndGroove["key"] = body.keyOverride
+    if body.durationSecOverride is not None:
+        plan.musicalIdentity["durationSec"] = float(body.durationSecOverride)
+    if body.chordProgressionOverride:
+        plan.harmonyAndGroove["chordProgression"] = list(body.chordProgressionOverride)
+    if body.titleOverride:
+        plan.musicalIdentity["title"] = body.titleOverride
+    if body.nativePerformance:
+        plan.generationStrategy["nativePerformance"] = dict(body.nativePerformance)
     saved_plan, rev = save_composition_plan(project_id, plan)
     return {"plan": saved_plan, "projectRevision": rev}
 

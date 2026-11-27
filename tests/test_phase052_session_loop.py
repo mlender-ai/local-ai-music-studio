@@ -350,21 +350,39 @@ def test_05_session_library_persistence_and_taste_feedback_sync(monkeypatch, tmp
 
 
 def test_06_natural_language_section50_routing_and_phase051_protection():
-    """Section 50: All 7 natural-language session prompts route cleanly while Phase 05.1 YuE2 First remains protected!"""
+    """Phase 05.3 Section 18: General musical performance prompts route to YuE2 Native Performance Mode by default,
+    while explicit editable MIDI / layer prompts route cleanly to Phase 05.2 session_layer_action!"""
     proj = store.create_project(name="NL Routing Test", bpm=90.0, with_default_tracks=False)
     try:
-        # 1–7. Section 50 layered natural-language prompts
-        prompts_and_checks = [
-            ("드럼 루프 만들어줘.", "session_layer_created", "drums", None),
-            ("베이스 추가해줘.", "session_layer_created", "bass", None),
-            ("현재 드럼과 베이스에 어울리는 따뜻하고 세련된 Neo Soul 건반 연주를 추가해줘.", "session_layer_created", "keys", "neo_soul_comping"),
-            ("피아노 멜로디 하나 얹어줘.", "session_layer_created", "keys", "piano_melody"),
-            ("기타 리프를 펑키하게 바꿔줘.", "session_layer_created", "guitar", "funk_riff"),
-            ("퍼커션이 조금 더 독특했으면 좋겠어.", "session_layer_created", "percussion", "syncopated_riff"),
-            ("여기서 기타 솔로 넣어줘.", "session_layer_created", "guitar", "solo"),
-            ("이제 브릿지를 만들어줘.", "session_bridge_created", None, None),
+        # 1. General musical performance prompts -> Native Performance Mode (`composition_plan_created`, `yue2-native`!)
+        native_perf_prompts = [
+            "기타 리프 만들어줘.",
+            "피아노 솔로 만들어줘.",
+            "독특한 드럼 그루브 만들어줘.",
+            "베이스 리프 만들어줘.",
+            "이제 브릿지를 만들어줘.",
+            "인디 록 만들어줘.",
+            "세련된 R&B 힙합 인스트루멘탈을 짧게 만들어줘.",
         ]
-        for text, expected_action, expected_inst, expected_perf in prompts_and_checks:
+        for text in native_perf_prompts:
+            r = client.post(f"/api/projects/{proj.id}/producer/instruct", json={"instruction": text})
+            assert r.status_code == 200, f"Failed on prompt: {text}"
+            body = r.json()
+            assert body["supported"] is True
+            assert body["action"] == "composition_plan_created", f"Prompt '{text}' routed to {body['action']}"
+            assert body["plan"]["generationStrategy"]["actualEngine"] == "yue2-native"
+
+        # 2. Explicit editable MIDI / layer requests -> Phase 05.2 Session Layer Action (opt-in preserved!)
+        explicit_midi_prompts = [
+            ("편집 가능한 MIDI 드럼 루프 만들어줘.", "session_layer_created", "drums", None),
+            ("MIDI 레이어로 베이스 추가해줘.", "session_layer_created", "bass", None),
+            ("현재 드럼과 베이스에 어울리는 Neo Soul 건반 레이어 추가해줘.", "session_layer_created", "keys", "neo_soul_comping"),
+            ("기타 리프를 펑키하게 테이크로 바꿔줘.", "session_layer_created", "guitar", "funk_riff"),
+            ("MIDI 퍼커션 레이어 독특하게 추가해줘.", "session_layer_created", "percussion", "syncopated_riff"),
+            ("편집 가능한 MIDI 기타 솔로 넣어줘.", "session_layer_created", "guitar", "solo"),
+            ("편집 가능한 MIDI 브릿지를 만들어줘.", "session_bridge_created", None, None),
+        ]
+        for text, expected_action, expected_inst, expected_perf in explicit_midi_prompts:
             r = client.post(f"/api/projects/{proj.id}/producer/instruct", json={"instruction": text})
             assert r.status_code == 200, f"Failed on prompt: {text}"
             body = r.json()
@@ -374,13 +392,5 @@ def test_06_natural_language_section50_routing_and_phase051_protection():
                 assert body["layerResult"]["targetInstrument"] == expected_inst
             if expected_perf:
                 assert body["layerResult"]["performanceType"] == expected_perf
-
-        # Phase 05.1 protection: Full-music requests STILL route to YuE2 First (`composition_plan_created`)!
-        for full_prompt in ("인디 록 만들어줘.", "세련된 R&B 힙합 인스트루멘탈을 짧게 만들어줘."):
-            r_full = client.post(f"/api/projects/{proj.id}/producer/instruct", json={"instruction": full_prompt})
-            assert r_full.status_code == 200
-            bf = r_full.json()
-            assert bf["action"] == "composition_plan_created"
-            assert bf["plan"]["generationStrategy"]["actualEngine"] == "yue2-native"
     finally:
         store.delete_project(proj.id)

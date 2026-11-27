@@ -307,10 +307,15 @@ class GenerationJobManager:
                     self._update(job_id, status="generating", stage="generating", progress=35)
                     self._append_log(job_id, "generating", 40, "Running native YuE2 synthesis (official resting-voice ABC + yue-synth Metal)")
                     out_wav = take_dir / "preview.wav"
+                    np_cfg = dict(plan.generationStrategy.get("nativePerformance") or {})
                     yue_res = run_yue2_generation(
                         plan,
                         out_wav,
                         seed=actual_seed,
+                        cot=str(np_cfg.get("cot") or "melody"),
+                        abc_score=np_cfg.get("abcScore"),
+                        cfg_scale=float(np_cfg["cfgScale"]) if np_cfg.get("cfgScale") is not None else 2.4,
+                        semantic_temperature=float(np_cfg["semanticTemperature"]) if np_cfg.get("semanticTemperature") is not None else 0.80,
                         cancel_event=cancel_ev,
                         use_demucs_vocal_qa=True,
                     )

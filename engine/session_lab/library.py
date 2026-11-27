@@ -147,6 +147,7 @@ def save_session_asset(
                 "id": make_id("rcp"),
                 "assetId": asset_id,
                 "name": recipe.get("name") or f"Recipe: {asset['name']}",
+                "genre": recipe.get("genre") or "",
                 "instrument": instrument,
                 "performanceType": performance_type,
                 "generationStrategy": generation_strategy,
@@ -154,13 +155,70 @@ def save_session_asset(
                 "instrumentPreset": instrument_preset,
                 "fxChain": list(fx_chain or []),
                 "grooveProfile": recipe.get("grooveProfile") or {},
-                "promptTemplate": recipe.get("promptTemplate") or "",
+                "promptTemplate": recipe.get("promptTemplate") or recipe.get("stylePrompt") or "",
+                "modelVersion": recipe.get("modelVersion"),
+                "stylePrompt": recipe.get("stylePrompt"),
+                "abcScore": recipe.get("abcScore"),
+                "cotMode": recipe.get("cotMode"),
+                "seed": recipe.get("seed"),
+                "generationParams": recipe.get("generationParams"),
+                "estimatedBpm": recipe.get("estimatedBpm"),
+                "estimatedKey": recipe.get("estimatedKey"),
+                "soundDesign": recipe.get("soundDesign"),
+                "successFactors": list(recipe.get("successFactors") or []),
+                "failureFactors": list(recipe.get("failureFactors") or []),
                 "createdAt": now,
             }
             db["recipes"].append(saved_recipe)
         _save_db(db)
 
     return {"asset": asset, "recipe": saved_recipe, "libraryPath": str(_library_path())}
+
+
+def find_approved_native_recipes(
+    *,
+    performance_type: str | None = None,
+    instrument: str | None = None,
+    limit: int = 3,
+) -> list[dict[str, Any]]:
+    """Return ONLY user-approved (`userRating == 'good'`) Native Performance Recipes for AI Producer reuse (Phase 05.3 Section 20)."""
+    with _lib_lock:
+        db = _load_db()
+    approved_asset_ids = {
+        a["id"]: a
+        for a in db.get("assets", [])
+        if a.get("userRating") == "good" and str(a.get("sourceEngine", "")).startswith("yue2")
+    }
+    if not approved_asset_ids:
+        return []
+    matches: list[dict[str, Any]] = []
+    for rcp in reversed(db.get("recipes", [])):
+        aid = rcp.get("assetId")
+        if aid not in approved_asset_ids:
+            continue
+        if performance_type and str(rcp.get("performanceType", "")).lower() != performance_type.lower():
+            continue
+        if instrument and str(rcp.get("instrument", "")).lower() != instrument.lower():
+            continue
+        asset = approved_asset_ids[aid]
+        matches.append(
+            {
+                "recipeId": rcp.get("id"),
+                "assetId": aid,
+                "name": rcp.get("name"),
+                "performanceType": rcp.get("performanceType"),
+                "instrument": rcp.get("instrument"),
+                "stylePrompt": rcp.get("stylePrompt") or rcp.get("promptTemplate"),
+                "cotMode": rcp.get("cotMode"),
+                "seed": rcp.get("seed"),
+                "estimatedBpm": rcp.get("estimatedBpm") or asset.get("bpm"),
+                "estimatedKey": rcp.get("estimatedKey") or asset.get("key"),
+                "audioPath": asset.get("audioPath"),
+            }
+        )
+        if len(matches) >= limit:
+            break
+    return matches
 
 
 def search_session_assets(

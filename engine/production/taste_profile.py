@@ -32,14 +32,18 @@ DEFAULT_TASTE_PROFILE: dict[str, Any] = {
             "basic_midi_instrument_sound",
             "monotonous_robotic_drum_groove",
             "unnatural_midi_guitar_riff",
+            "soundfont_based_primary_music_production",
+            "rule_based_midi_riffs_and_mechanical_ensemble",
+            "harmonic_clashes_between_independent_midi_layers",
             "dry_unprocessed_flat_texture",
             "excessive_harsh_distortion_or_muddy_reverb",
         ],
-        "preferredGenres": ["rnb_neosoul", "hiphop", "house", "indie_rock"],
+        "preferredGenres": ["rnb_neosoul", "hiphop", "funk", "house", "indie_rock"],
         "preferredInstruments": {},
         "soundDesignNotes": (
-            "자연스러운 공간감과 따뜻한 질감을 선호하며, 과장된 FX나 기본 MIDI 느낌의 촌스러운 톤을 피합니다. "
-            "이미 잘 믹스된 네이티브 오디오에는 필요한 최소한의 정리(먹먹한 로우미드 컷, 자연스러운 공간/헤드룸 정리)만 적용합니다."
+            "Phase 05.1 YuE2 Native Audio의 음악적 자연스러움과 Studio Preview의 공간감·음색을 기준으로 삼습니다. "
+            "SoundFont/MIDI Performer 기반 음악 제작은 음악성 저하로 불합격 판정되었으므로, 일반 연주 요청도 "
+            "YuE2 Native Performance를 기본으로 사용하고 불필요한 과잉 FX를 피합니다."
         ),
     },
     "projectOverrides": {},
@@ -56,7 +60,34 @@ DEFAULT_TASTE_PROFILE: dict[str, Any] = {
                 "lack_of_sound_design_and_space",
             ],
             "noteKo": "기타 리프·연주가 부자연스럽고 드럼 그루브가 단조로우며 피아노·기타가 기본 MIDI처럼 들림. 이펙터 질감·공간감이 부족함. YuE2 Native Audio 우선 정책으로 전환.",
-        }
+        },
+        {
+            "id": "fb_phase051_native_approved",
+            "project": "Native Production Validation 001",
+            "recordedAt": "2026-11-27T15:00:00Z",
+            "verdict": "approved_direction",
+            "tags": [
+                "yue2_native_musical_naturalness",
+                "studio_preview_improved_tone_and_space",
+                "realistic_live_performance_texture",
+            ],
+            "noteKo": "Phase 05.1 YuE2 Native Audio + Studio Preview 결과에 대해 자연스러운 연주감과 개선된 음색·공간감으로 긍정적 평가.",
+        },
+        {
+            "id": "fb_phase052_midi_performer_rejected",
+            "project": "Late Night Sessions 001 (Phase 05.2)",
+            "recordedAt": "2026-11-28T01:12:00Z",
+            "verdict": "rejected_quality",
+            "tags": [
+                "soundfont_based_music_rejected",
+                "awkward_guitar_and_piano_performance",
+                "harmonic_clashes",
+                "loss_of_yue2_musical_naturalness",
+                "rule_based_midi_riffs",
+                "mechanical_ensemble",
+            ],
+            "noteKo": "Phase 05.2 자체 MIDI Performer + SoundFont 기반 레이어 음악은 연주가 어색하고 불협화음이 많으며 YuE2 특유의 자연스러움이 사라짐(청취 불합격). 일반 연주 요청을 Native Performance Mode(YuE2)로 전환하고 SoundFont 자동 추천 차단.",
+        },
     ],
     "updatedAt": "2026-11-27T00:00:00Z",
 }

@@ -21,6 +21,15 @@
         }
       ]
     },
+    "native_performance": {
+      "primaryEngine": "yue2-native",
+      "productionMode": "neural_audio",
+      "fallbackBehavior": "explain_and_wait_for_user",
+      "allowSilentFallback": false,
+      "midiPerformerExplicitOptInOnly": true,
+      "isolationNoticeKo": "요청하신 악기가 음악적 중심 역할을 하는 자연스러운 YuE2 Native Audio 합주를 생성합니다. 완전 독립 악기 생성은 제한적이며, 스템 추출 시 블리드·음질 저하 가능성이 있습니다. 노트 단위 편집이 필요하시면 '편집 가능한 MIDI로'라고 명시해 주세요.",
+      "isolationNoticeEn": "Generates a natural YuE2 Native Audio performance featuring the requested instrument. Accompaniment-free single-instrument isolation is limited and stem extraction may introduce bleed. Explicitly request 'editable MIDI' when note-level editing is needed."
+    },
     "hybrid": {
       "primaryEngine": "hybrid",
       "productionMode": "hybrid",

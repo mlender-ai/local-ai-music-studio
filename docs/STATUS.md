@@ -1,7 +1,7 @@
 # STATUS.md — Current Development Status
 
 **Last Updated:** 2026-11-28  
-**Active Phase:** **Phase 05.2 — AI Session & Loop Production (Instrument Performance · Layered Composition · Musical Intelligence)** — **Complete & Verified**  
+**Active Phase:** **Phase 05.3 — Native Musical Performance Lab (YuE2 Performance Diversity · Dual-Model Vocal QA · Native Performance Policy)** — **Experiments A–H Complete & Verified (User Listening Pending)**  
 **Integration Branch:** `develop/ai-native-daw` (unmerged pending user review)  
 **Stacked Task Branches (all pushed, open & unmerged pending user review):**
 1. `feat/daw-workspace-phase-01` (PR #15 → `develop/ai-native-daw`)
@@ -19,37 +19,32 @@
 13. `feat/daw-professional-fx` (PR #27 → `feat/daw-professional-instruments`) — GATE 4 Professional FX
 14. `feat/daw-phase05-integration` (PR #28 → `feat/daw-professional-fx`) — GATE 5–7 Device Rack UI, AI Sound Design & 81 MCP Tools
 15. `feat/daw-yue2-native-production` (PR #29 → `feat/daw-phase05-integration`) — Phase 05.1 YuE2 First Native Engine, Permanent Production Policy, Studio Preview Parity & 88 MCP Tools
-16. **`feat/daw-ai-session-loop-production` (→ `feat/daw-yue2-native-production`) — Phase 05.2 AI Session & Loop Production, Musical Performance Intelligence, Layer Protection, Studio Session Library & 104 MCP Tools**
+16. `feat/daw-ai-session-loop-production` (PR #30 → `feat/daw-yue2-native-production`) — Phase 05.2 AI Session & Loop Infrastructure (`SessionContext`, Layer Protection, Take Lanes, Studio Session Library, 104 MCP Tools; SF3/MIDI audio output rejected on user listening)
+17. **`experiment/yue2-native-performance-lab` (→ `feat/daw-ai-session-loop-production`) — Phase 05.3 Native Musical Performance Lab, Native Performance Mode Policy, Demucs+PANNs Dual Vocal QA & 8 YuE2 Performance Experiments (A–H)**
 
-## Completed in Phase 05.2
+## Completed in Phase 05.3
 
-- [x] **GATE 0 · Empirical YuE2 Solo-Instrument Capability Audit (`engine/session_lab/vocabulary.py`):**
-  - Ran real 16 s Metal `yue-synth` + Demucs `htdemucs` probes for solo drums (`drumsShare=19.1%`, `other=76.7%`) and solo guitar (`other=28.2%`, `drums`/`bass` bleed), honestly classifying accompaniment-free YuE2 single-instrument generation as `UNSUPPORTED` while preserving Phase 05.1 **YuE2 First (`VERIFIED`)** for full-music instrumental requests.
-  - Defined complete 6-family Instrument Performance Vocabulary (`guitar`, `keys`, `bass`, `drums`, `percussion`, `synth`) and Generation Strategies A–E.
-- [x] **Shared `SessionContext`, Layer Protection & 5-Part Quality Gate (`engine/session_lab/context.py`, `alignment.py`):**
-  - Extracts real kick/snare groove anchors, occupied pitch registers, locked Chord Timeline, and motif memory into a compact `SessionContext`.
-  - Enforces SHA-256 cryptographic **Layer Protection** (`Draft | Generated | Auditioned | Approved | Rejected | Locked`) blocking accidental overwrites of `Locked` tracks and verifying zero mutation of protected layers on every generation.
-  - Implemented Loop Integrity & click-free bar alignment (`align_audio_loop_to_bars`), honest Tempo Drift blocking (`check_tempo_alignment`), jazz-tension-aware Harmonic Compatibility (`evaluate_harmonic_compatibility`), and 5-Part Musical Quality Gate (keeping Gate E `User Listening` strictly `UNVERIFIED`).
-- [x] **Musical Performance Intelligence (`engine/session_lab/performers.py`, `engine.py`):**
-  - Idiomatic performers for Drums (D1–D3), Bass (B1–B3, kick-locked), Keys/Rhodes (P1–P3, rootless voice-led), Guitar (G1 Funk Muted Riff, G2 Clean Melodic, G3 Expressive Solo with real smooth pitch-bend/slide ramps), Percussion (PC1–PC3 on new real SF3 GM `percussion-latin-studio` kit with zero kick/snare duplication), Synth, Structured Variation, and Contrasting Bridge + 2-beat Transition.
-  - Non-destructive **Take Lane A/B switching** on the same track (zero double-playing), 3-mode level-matched previews (`solo`, `in_context`, `before_mix`), FluidSynth SF3 instance pooling + batched Drum Rack pad pre-warming, and fixed SoundFont ID mappings (`sf-bass-electric`, `sf-organ-vintage`, `sf-pad-warm`).
-- [x] **Studio Session Library, AI Producer Natural Language & 104 MCP Tools (`engine/session_lab/library.py`, `proposals.py`, `app/daw_server.py`, `app/mcp_server.py`):**
-  - Persistent `outputs/daw/session_library.json` (18 asset categories, Performance Recipes, user ratings/feedback synced directly into persistent Taste Profile).
-  - Natural-language AI Producer routing for layered session prompts (Section 50) while protecting all Phase 02–05.1 routes (including YuE2 First full-music prompts).
-  - Exposed 14 new Session Lab / Library REST endpoints and 16 new MCP tools (`104` total: `9 music.*` + `95 daw.*`).
-- [x] **Reference Session Validation (`Late Night Sessions 001` · GATES 1–9):**
-  - Produced and saved DAW project `Late Night Sessions 001` (`proj_1b410631f3`, 90 BPM, D minor, 6 Main Groove layers + Guitar Take A/B + 4-bar Bridge & Transition + `Studio Preview`) and exported 14 listening WAVs across Groups A, B, and C (`docs/production-tests/PHASE_052_SESSION_LOOP_REPORT.md`), plus 8 searchable Session Library assets.
+- [x] **Permanent Native Performance Policy & Taste Feedback Sync (Sections 18–20):**
+  - Updated `config/production/default_policy.json` (`schemaVersion: 2`), `config/production/engine_routing.json`, `engine/daw_workspace/proposals.py`, `app/daw_server.py`, and `engine/generation/daw_jobs.py` so general performance requests (`"기타 리프 만들어줘"`, `"피아노 솔로 만들어줘"`, `"독특한 드럼 그루브 만들어줘"`, `"베이스 리프 만들어줘"`, `"브릿지 만들어줘"`) default to **YuE2 Native Performance Mode (`yue2-native`)** with honest isolation notices.
+  - Preserved Phase 05.2 `SessionContext`, Layer Protection, Take Lanes, and Session Library infrastructure while restricting MIDI Performer strictly to **explicit MIDI opt-in** prompts.
+  - Synced Phase 05.1 positive and Phase 05.2 SF3 rejection feedback into `engine/production/taste_profile.py` / `outputs/daw/taste_profile.json`, marked Phase 05.2 SF3 library assets `poor` (retained for comparison), and stored 8 new unrated (`unused`) Native Performance Recipes in `outputs/daw/session_library.json` with `find_approved_native_recipes()` reuse gating.
+- [x] **YuE2 Instrumental Vocal-Leakage Fix & Dual-Model Vocal QA (`yue2_adapter.py`, `advisor.py`):**
+  - Integrated cached local **PANNs MobileNetV1 AudioSet (527-class)** classifier dynamically via Runtime Registry alongside Demucs `htdemucs` (`demucs_plus_panns_corroborated`), cleanly separating melodic guitar bleed (Exp G: `PASS`) from real humming/speech leakage (prior `% verse`/`% chorus`/`% bridge` attempts: `REJECT`).
+  - Normalized instrumental ABC section markers (`% verse`/`% chorus`/`% bridge` → `% intro`/`% instrumental`/`% interlude`/`% outro`) after proving vocal section headers trigger YuE2 humming leakage (`Humming 0.93` → `-42.4 dBFS PASS`).
+  - Fixed `diagnose_track_audio()` to render from each track's first clip position instead of hardcoded beat `0.0`.
+- [x] **8 Pure YuE2 Native Audio Performance Experiments (`Native Performance Lab 001` · `proj_bdb68c87bd`):**
+  - Generated, diagnosed, minimally treated (non-destructive EQ/Room), and exported 8 separate 48 kHz Stereo 24-bit listening WAVs (`01_Funk_Guitar_Riff.wav` … `08_Musical_Bridge.wav`) plus untouched `originals/` and full `metadata/` JSON logs (`docs/production-tests/PHASE_053_NATIVE_PERFORMANCE_LAB.md`).
+  - **7 of 8 `Vocal QA: PASS`** (A, B, C, D, F, G, H) and **1 `UNCERTAIN`** (E: borderline PANNs `Speech 0.234`, flagged honestly for human verification). Zero MIDI/SoundFont substitution.
 
 ## Verification Status
 
-- **Phase 05.2 Automated Suite (`tests/test_phase052_session_loop.py`):** **`6 passed`** (`0 failed`).
-- **Phase 05.1 + Phase 04 + Phase 03 + Agent Bridge Regression (`pytest`):** **`20 passed`** (`0 failed`).
+- **Backend Regression Suite (`pytest`):** **`26 passed`** (`0 failed`) across Phase 05.2/05.3 routing, Phase 05.1 native production, Phase 04 arrangement, Phase 03 composition, and Agent Bridge.
 - **Frontend (`vitest`):** **`14 passed`** (`0 failed`).
-- **Live Browser QA (`http://127.0.0.1:8796`):** Verified `Late Night Sessions 001` (`proj_1b410631f3`, `90.00 BPM`, `4/4`, 13 tracks, 12 Chord Track events, `MAIN GROOVE`/`BRIDGE` markers, 2 Guitar Take Lanes + Device Rack SF3/Amp/EQ, `STUDIO PREVIEW` up-to-date, playhead advance, full reload persistence, and **`0` console / page / HTTP 4xx-5xx errors**).
+- **Live Browser QA (`http://127.0.0.1:8796`):** Verified `Native Performance Lab 001` (`proj_bdb68c87bd`, `102.00 BPM`, `4/4`, 8 sequential non-overlapping tracks `01`–`08`, 8 section markers, waveforms, Device Rack non-destructive EQ, green `STUDIO PREVIEW` up-to-date badge, transport Play/Stop, full reload persistence, and **`0` console / page / HTTP 4xx-5xx errors**).
 
-## Honest Host Limitations & Deferred Phases
+## Honest Host Limitations & Next Gate
 
-- **Subjective Musicality:** Remains `UNVERIFIED` until direct user listening of Groups A, B, and C.
-- **YuE2 Single-Instrument Isolation:** Empirically `UNSUPPORTED` in GATE 0; full-band YuE2 remains default for full music while isolated layered sessions use Strategy C (Pro SF3/Drum Rack/Synth).
-- **SF3 Guitar Micro-Expression:** Smooth pitch-bend ramps & slides are live, while authentic finger vibrato and pinch harmonics remain `UNSUPPORTED` on SF3.
+- **Subjective Musicality:** Strictly **`UNVERIFIED`** until direct user listening of `01_Funk_Guitar_Riff.wav` … `08_Musical_Bridge.wav`.
+- **Experiment E Vocal QA:** `UNCERTAIN` (`PANNs mix Speech=0.234`) — awaiting manual listening confirmation.
+- **YuE2 Single-Instrument Isolation:** Full-band/featured-ensemble Native Audio is live and default; accompaniment-free isolated YuE2 stems remain `UNSUPPORTED` (Demucs stem extraction carries bleed/quality-loss risk).
 - **Deferred:** Phase 06 (AI Mixing & Mastering Automation), Phase 07 (Vocal Synthesis & Lyrics).
