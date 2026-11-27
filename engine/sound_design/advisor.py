@@ -91,13 +91,35 @@ def diagnose_track_audio(project: Project, track_id: str, max_beats: float = 16.
 
 
 def _find_track_by_hints(project: Project, hints: list[str], selected_track_id: str | None = None) -> Track | None:
-    for trk in project.tracks:
+    # Prefer tracks that actually contain clips (never target an empty placeholder track when populated tracks exist!)
+    populated = [t for t in project.tracks if t.clips and not t.mute]
+    search_pool = populated or [t for t in project.tracks if t.clips] or list(project.tracks)
+    for trk in search_pool:
         low_n = trk.name.lower()
         if any(h in low_n for h in hints):
             return trk
     if selected_track_id:
-        return next((t for t in project.tracks if t.id == selected_track_id), None)
-    return project.tracks[0] if project.tracks else None
+        sel_trk = next((t for t in project.tracks if t.id == selected_track_id), None)
+        if sel_trk and (sel_trk.clips or not populated):
+            return sel_trk
+    # Prefer native_audio_original or populated audio track over empty default tracks
+    native_trk = next(
+        (t for t in search_pool if (t.stemMeta or {}).get("assetKind") == "native_audio_original"),
+        None,
+    )
+    if native_trk:
+        return native_trk
+    return search_pool[0] if search_pool else None
+
+
+def _is_native_audio_mix_track(trk: Track) -> bool:
+    if trk.type != "audio":
+        return False
+    meta = trk.stemMeta or {}
+    if meta.get("assetKind") == "native_audio_original" or meta.get("sourceEngine") == "yue2-native":
+        return True
+    low = trk.name.lower()
+    return any(k in low for k in ("native", "mix", "yue2", "original", "master"))
 
 
 def plan_sound_design_operations(
@@ -343,9 +365,12 @@ def plan_sound_design_operations(
                 "preservedNote": "기존 MIDI 멜로디 및 드럼/베이스 유지",
             }
 
-    # 6. Request A & General Track Sound Diagnosis + EQ / Amp / FX Design ("기타가 너무 먹먹해", "크런치 앰프", "로즈 피아노", etc.)
+    # 6. Request A & General Track / Native Audio Mix Sound Diagnosis + Honest FX Design
     target_trk = None
-    if any(k in low for k in ("기타", "guitar")):
+    is_overall_mix_req = any(k in low for k in ("전체적", "전체", "마스터", "믹스", "mix", "overall", "곡 전체"))
+    if is_overall_mix_req:
+        target_trk = _find_track_by_hints(project, ["native", "yue2", "mix", "original"], sel_tid)
+    elif any(k in low for k in ("기타", "guitar")):
         target_trk = _find_track_by_hints(project, ["guitar", "기타"], sel_tid)
     elif any(k in low for k in ("건반", "피아노", "로즈", "keys", "piano", "ep")):
         target_trk = _find_track_by_hints(project, ["keys", "건반", "piano", "피아노", "rhodes"], sel_tid)
@@ -359,9 +384,126 @@ def plan_sound_design_operations(
     if not target_trk:
         return None
 
-    diagnosis = diagnose_track_audio(project, target_trk.id, max_beats=8.0)
+    diagnosis = diagnose_track_audio(project, target_trk.id, max_beats=min(16.0, float(project.lengthBeats)))
+    is_native_mix = _is_native_audio_mix_track(target_trk)
 
-    # Muddy / dark acoustic diagnosis -> real measured EQ cut/boost!
+    # Special honest handling for already-mixed Native Audio tracks (Phase 05.1 · Section 9):
+    # NEVER blindly pile heavy distortion/reverb/high-HPF onto an already-mixed stereo track!
+    if is_native_mix and not any(k in low for k in ("앰프", "amp", "크런치", "디스토션")):
+        bands = diagnosis.get("bandsPct") or {}
+        low_mid_pct = float(bands.get("low_mid_200_500", 20.0))
+        centroid_hz = float(diagnosis.get("spectralCentroidHz", 1500.0))
+        width = float(diagnosis.get("stereoWidth", 0.35))
+        rationale_steps: list[str] = []
+
+        wants_clean = any(k in low for k in ("먹먹", "탁하", "답답", "선명", "정리", "밝게", "eq", "이큐"))
+        wants_space = any(k in low for k in ("공간감", "자연스럽", "넓", "리버브", "reverb", "룸", "홀"))
+
+        # 1. Gentle mix-bus EQ ONLY if warranted by mud/darkness or user cleanup request
+        if wants_clean and (low_mid_pct >= 18.0 or centroid_hz < 2200.0):
+            cut_db = -2.8 if low_mid_pct >= 28.0 else (-2.0 if low_mid_pct >= 22.0 else -1.5)
+            air_db = 1.6 if centroid_hz < 1400.0 else 1.0
+            ops.append(
+                {
+                    "type": "fx.add",
+                    "payload": {
+                        "trackId": target_trk.id,
+                        "type": "parametric_eq",
+                        "preset": "low_mid_clean",
+                        "parameters": {
+                            "bands": [
+                                {"id": "hpf", "type": "highpass", "freqHz": 32.0, "gainDb": 0.0, "q": 0.707, "enabled": True},
+                                {"id": "low", "type": "low_shelf", "freqHz": 95.0, "gainDb": 0.0, "q": 0.707, "enabled": False},
+                                {"id": "low_mid", "type": "peak", "freqHz": 290.0, "gainDb": cut_db, "q": 1.3, "enabled": True},
+                                {"id": "high_mid", "type": "peak", "freqHz": 3200.0, "gainDb": 1.1, "q": 1.1, "enabled": True},
+                                {"id": "high", "type": "high_shelf", "freqHz": 9000.0, "gainDb": air_db, "q": 0.707, "enabled": True},
+                                {"id": "lpf", "type": "lowpass", "freqHz": 18000.0, "gainDb": 0.0, "q": 0.707, "enabled": False},
+                            ]
+                        },
+                    },
+                }
+            )
+            summary_parts.append(f"Mix-Safe EQ (HPF 32Hz, 290Hz {cut_db}dB, 9kHz +{air_db}dB)")
+            rationale_steps.append(
+                f"로우미드({low_mid_pct}%)와 스펙트럼 중심({centroid_hz} Hz) 진단 결과에 맞춰 저음 펀치를 해치지 않는 32Hz HPF 및 290Hz {cut_db}dB 완만한 컷 적용."
+            )
+
+        # 2. Gentle Room Reverb Return Send ONLY (never heavy wet insert reverb on a full stereo mix!)
+        if wants_space:
+            if width < 0.70:
+                existing_bus = next(
+                    (b for b in (project.buses or []) if "reverb" in str(b.get("name", "")).lower() or "리버브" in str(b.get("name", ""))),
+                    None,
+                )
+                if existing_bus:
+                    bus_id = str(existing_bus["id"])
+                else:
+                    bus_id = make_id("bus")
+                    ops.append({"type": "bus.add", "payload": {"id": bus_id, "name": "Natural Room", "kind": "return"}})
+                    ops.append(
+                        {
+                            "type": "fx.add",
+                            "payload": {
+                                "target": "bus",
+                                "busId": bus_id,
+                                "type": "reverb",
+                                "preset": "studio_room",
+                                "wetDry": 1.0,
+                            },
+                        }
+                    )
+                send_db = -14.5 if width < 0.35 else -17.5
+                ops.append(
+                    {
+                        "type": "send.set",
+                        "payload": {"trackId": target_trk.id, "busId": bus_id, "levelDb": send_db, "preFader": False},
+                    }
+                )
+                summary_parts.append(f"Natural Room Send ({send_db} dB)")
+                rationale_steps.append(
+                    f"네이티브 스테레오 믹스(현재 폭 {width})의 원래 질감을 해치지 않도록 인서트 대신 Return Bus({send_db} dB)로 얕은 공간감만 보강."
+                )
+            else:
+                rationale_steps.append(f"이미 스테레오 폭({width})이 충분하여 과도한 리버브를 추가하지 않았습니다.")
+
+        if not ops:
+            return {
+                "matched": True,
+                "intent": "native_audio_no_fx_needed",
+                "summary": f"{target_trk.name}: 이미 균형 잡힌 네이티브 오디오 (추가 FX 미적용 권장)",
+                "operations": [],
+                "diagnosis": diagnosis,
+                "soundDesignPlan": {
+                    "targetTrackId": target_trk.id,
+                    "targetCategory": "native_audio_mix",
+                    "fxApplied": False,
+                    "rationale": rationale_steps or ["음향 진단 결과 추가 가공 없이 원본 네이티브 오디오를 유지하는 편이 유리합니다."],
+                },
+                "noOpExplanationKo": (
+                    f"{target_trk.name} 음향 진단 결과(중심 {centroid_hz} Hz, 로우미드 {low_mid_pct}%, 폭 {width}) "
+                    "이미 균형 잡힌 네이티브 오디오이므로 불필요한 FX를 억지로 추가하지 않았습니다."
+                ),
+                "noOpExplanationEn": f"{target_trk.name} is already acoustically balanced; skipping unnecessary FX.",
+                "preservedNote": "원본 네이티브 오디오 무손실 보존",
+            }
+
+        return {
+            "matched": True,
+            "intent": "native_audio_gentle_polish",
+            "summary": f"{target_trk.name} (Native Mix) · " + " · ".join(summary_parts),
+            "operations": ops,
+            "diagnosis": diagnosis,
+            "soundDesignPlan": {
+                "targetTrackId": target_trk.id,
+                "targetCategory": "native_audio_mix",
+                "fxApplied": True,
+                "rationale": rationale_steps,
+                "nonDestructive": True,
+            },
+            "preservedNote": "원본 네이티브 오디오 WAV는 무손실 보존되며, 비파괴 FX/센드로만 정리됩니다 (Undo 1클릭 복구).",
+        }
+
+    # Muddy / dark acoustic diagnosis on individual instrument/stem track -> real measured EQ cut/boost!
     if any(k in low for k in ("먹먹", "탁하", "답답", "선명", "밝게", "eq", "이큐")):
         low_mid_pct = float((diagnosis.get("bandsPct") or {}).get("low_mid_200_500", 22.0))
         cut_db = -4.5 if low_mid_pct >= 28.0 else -3.0

@@ -13,6 +13,12 @@ from .eq import DEFAULT_EQ_BANDS, apply_parametric_eq, compute_eq_response_curve
 from .freeze import compute_track_render_hash, freeze_track, is_track_freeze_valid, unfreeze_track
 from .guitar_amp import AMP_MODELS, CABINET_PROFILES, apply_guitar_amp
 from .reverb import REVERB_MODES, apply_reverb
+from .studio_preview import (
+    compute_studio_preview_hash,
+    get_studio_preview_status,
+    render_studio_preview,
+    resolve_studio_preview_file,
+)
 
 __all__ = [
     "AMP_MODELS",
@@ -39,14 +45,18 @@ __all__ = [
     "apply_tremolo",
     "compute_delay_ms",
     "compute_eq_response_curve",
+    "compute_studio_preview_hash",
     "compute_track_render_hash",
     "default_fx_slot",
     "evaluate_automation_at_beat",
     "find_automation_lane",
     "freeze_track",
+    "get_studio_preview_status",
     "is_track_freeze_valid",
     "list_fx_catalog",
     "process_fx_chain",
+    "render_studio_preview",
+    "resolve_studio_preview_file",
     "sample_automation_curve",
     "unfreeze_track",
 ]

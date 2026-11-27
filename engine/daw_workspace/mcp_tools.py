@@ -49,11 +49,15 @@ def _resolve_project_id(project_id: str | None) -> str:
 
 
 def get_capabilities() -> dict[str, Any]:
+    from engine.production import get_full_production_policy_snapshot, get_taste_profile
+
     return {
         "product": "AI-Native DAW",
-        "phase": "04",
-        "referencePhase": "03.2",
-        "schemaVersion": "1.4.0",
+        "phase": "04",  # Backward-compatible Phase 04 contract field
+        "currentPhase": "05.1",
+        "referencePhase": "03.2.1",
+        "schemaVersion": "1.4.0",  # Backward-compatible MCP schema contract field
+        "projectSchemaVersion": "1.5.0",
         "supported": {
             "projectReadWrite": True,
             "revisionConflictGuard": True,
@@ -65,12 +69,34 @@ def get_capabilities() -> dict[str, Any]:
             "midiEdit": ["addNote", "moveNote", "resizeNote", "setVelocity", "deleteNote"],
             "sectionMarkers": ["add", "rename", "remove", "extend"],
             "chordTrack": ["setTrack", "upsert", "delete", "setLocked"],
+            "proInstrumentsAndFx": [
+                "fluidsynth_sf3_multisampled",
+                "pro_analog_and_fm_synths",
+                "pro_drum_rack_choke_round_robin",
+                "pro_sampler_transient_slicer",
+                "pedalboard_dsp_fx_chain",
+                "external_sidechain_compression",
+                "send_return_and_group_buses",
+                "sample_rate_automation_lanes",
+                "track_freeze_48k",
+                "studio_preview_parity",
+            ],
+            "nativeMusicProduction": [
+                "yue2_native_default_engine",
+                "official_resting_voice_abc_compiler",
+                "no_silent_midi_fallback",
+                "instrument_quality_tiers",
+                "persistent_taste_profile",
+                "five_gate_quality_gate",
+                "native_audio_preservation",
+                "hybrid_stem_and_midi_layering",
+            ],
             "referenceIntelligence": [
                 "import_audio_video",
                 "url_metadata_probe",
                 "bs1770_4_loudness_and_true_peak",
                 "half_double_time_tempo_resolution",
-                "reference_blueprint_v2",
+                "reference_blueprint_v3",
                 "normalized_audio_comparison",
             ],
             "advancedReferenceIntelligence": [
@@ -88,12 +114,11 @@ def get_capabilities() -> dict[str, Any]:
             "aiComposition": [
                 "composition_plan",
                 "reference_guided_composition",
-                "full_music_multitrack",
+                "yue2_native_full_music",
                 "instrument_session",
                 "loop_and_midi_composition",
                 "take_level_matched_preview",
                 "transactional_take_apply",
-                "six_voice_multi_timbre_instruments",
             ],
             "aiArrangement": [
                 "selective_bar_variation",
@@ -107,12 +132,12 @@ def get_capabilities() -> dict[str, Any]:
             "stereoWavExport": True,
         },
         "unsupported": {
-            "fxRackEqCompReverb": "Planned for Phase 05",
-            "externalPluginsAuVst3": "Planned for Phase 05",
             "aiMixingMastering": "Planned for Phase 06",
-            "vocalSynthesisAndLyrics": "Planned for Phase 07 (Instrumental-only policy in Phase 03/04)",
+            "vocalSynthesisAndLyrics": "Planned for Phase 07 (Instrumental-by-default policy in Phase 05.1)",
             "audioTimeStretchWarp": "Planned for later phase",
         },
+        "productionPolicy": get_full_production_policy_snapshot(),
+        "tasteProfile": get_taste_profile(),
         "providers": get_provider_summary(),
         "generationEngines": detect_generation_engines(),
         "runtimeRegistry": get_runtime_registry(),
@@ -950,7 +975,19 @@ def assign_instrument_preset(
     project_id: str | None = None,
     expected_revision: int | None = None,
     stage_only: bool = False,
+    allow_preview: bool = False,
 ) -> dict[str, Any]:
+    from engine.production import validate_instrument_selection
+
+    check = validate_instrument_selection(
+        instrument_ref,
+        production_mode=True,
+        allow_preview=allow_preview,
+        explicit_user_request=allow_preview,
+    )
+    if not check["allowed"]:
+        raise ValueError(check["reasonEn"])
+
     payload: dict[str, Any] = {"trackId": track_id, "instrumentRef": instrument_ref}
     if preset is not None:
         payload["preset"] = preset
@@ -1137,3 +1174,59 @@ def create_hybrid_native_layer(
         "layeredTrackIds": res["layeredTrackIds"],
         "nativeAudioPreservedUntouched": res["nativeAudioPreservedUntouched"],
     }
+
+
+# --- Phase 05.1 Permanent Production Policy, Taste Profile & Studio Preview MCP Tools ---
+
+def get_production_policy() -> dict[str, Any]:
+    from engine.production import get_full_production_policy_snapshot
+
+    return get_full_production_policy_snapshot()
+
+
+def get_taste_profile(project_id: str | None = None) -> dict[str, Any]:
+    from engine.production import get_taste_profile as _get_taste
+
+    return _get_taste(project_id=project_id)
+
+
+def update_taste_profile(
+    global_patch: dict[str, Any] | None = None,
+    project_id: str | None = None,
+    project_patch: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    from engine.production import update_taste_profile as _upd_taste
+
+    return _upd_taste(global_patch=global_patch, project_id=project_id, project_patch=project_patch)
+
+
+def reset_taste_profile(project_id: str | None = None) -> dict[str, Any]:
+    from engine.production import reset_taste_profile as _rst_taste
+
+    return _rst_taste(project_id=project_id)
+
+
+def resolve_production_instrument(
+    role: str,
+    genre: str = "rnb_neosoul",
+    instruction: str = "",
+    allow_preview: bool = False,
+) -> dict[str, Any]:
+    from engine.production import get_taste_profile as _get_taste, resolve_production_instrument as _res_inst
+
+    taste = _get_taste().get("effectiveForProject") or {}
+    return _res_inst(role, genre=genre, instruction=instruction, allow_preview=allow_preview, taste_profile=taste)
+
+
+def get_studio_preview_status(project_id: str | None = None) -> dict[str, Any]:
+    from engine.fx.studio_preview import get_studio_preview_status as _status
+
+    pid = _resolve_project_id(project_id)
+    return _status(pid)
+
+
+def render_studio_preview(project_id: str | None = None, filename_export_copy: str | None = None) -> dict[str, Any]:
+    from engine.fx.studio_preview import render_studio_preview as _render
+
+    pid = _resolve_project_id(project_id)
+    return _render(pid, filename_export_copy=filename_export_copy)

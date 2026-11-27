@@ -203,55 +203,46 @@ class GenerationJobManager:
         sync: bool = False,
         production_mode: str | None = None,
     ) -> dict[str, Any]:
-        """Queue (or run synchronously) a generation job with strict engine honesty (Section 3.1)."""
-        resolved_prod_mode = production_mode or str(plan.generationStrategy.get("productionMode") or "")
+        """Queue (or run synchronously) a generation job enforcing Permanent Production Policy (YuE2 First, ZERO silent MIDI fallback)."""
+        from engine.production import (
+            build_generation_provenance,
+            evaluate_five_gate_quality,
+            resolve_production_route,
+        )
 
-        # STRICT HONESTY GATE (Section 3.1): NEVER silently run MIDI when user explicitly requested Neural Audio / YuE2 / ACE-Step!
-        if engine_choice == "yue2-native":
-            yue = probe_yue2()
-            if not yue["available"]:
-                return {
-                    "engineUnavailable": True,
-                    "requestedEngine": "yue2-native",
-                    "state": yue["state"],
-                    "missingItems": yue.get("missingItems", []),
-                    "suggestedAlternative": "local-multitrack-composer",
-                    "messageKo": yue["statusNoteKo"] + " 편집 가능한 MIDI 세션으로 생성하려면 제작 방식을 '편집 가능 MIDI'로 선택하세요.",
-                    "messageEn": yue["statusNoteEn"] + " Switch explicitly to Editable MIDI if you want synthesized MIDI tracks instead.",
-                }
-        elif engine_choice == "ace-step-local":
-            ace = probe_acestep()
-            if not ace["available"]:
-                return {
-                    "engineUnavailable": True,
-                    "requestedEngine": "ace-step-local",
-                    "state": ace["state"],
-                    "missingItems": ace.get("missingItems", []),
-                    "suggestedAlternative": "local-multitrack-composer",
-                    "messageKo": ace["statusNoteKo"] + " ACE-Step 미설치 상태에서 자체 MIDI로 몰래 대체하지 않습니다.",
-                    "messageEn": ace["statusNoteEn"] + " Refusing to silently substitute local MIDI when ACE-Step was requested.",
-                }
-        elif engine_choice == "neural_audio" or resolved_prod_mode == "neural_audio":
-            yue = probe_yue2()
-            ace = probe_acestep()
-            if yue["available"]:
-                engine_choice = "yue2-native"
-            elif ace["available"]:
-                engine_choice = "ace-step-local"
-            else:
-                return {
-                    "engineUnavailable": True,
-                    "requestedEngine": "neural_audio",
-                    "state": yue["state"],
-                    "missingItems": yue.get("missingItems", []),
-                    "suggestedAlternative": "editable_midi",
-                    "messageKo": "신경망 오디오 엔진(YuE2 / ACE-Step)이 현재 환경에 설치되어 있지 않습니다. 가짜 신경망 오디오를 만들지 않으며, 원하시면 '편집 가능 MIDI' 모드로 전환해 제작할 수 있습니다.",
-                    "messageEn": "No neural audio engine (YuE2 / ACE-Step) is installed locally. Switch explicitly to Editable MIDI to compose MIDI tracks instead.",
-                }
-        elif engine_choice == "auto" and plan.mode == "full_music":
-            # Prefer real YuE2 when actually ready/verified; otherwise execute explicitly-labeled local-multitrack-composer
-            if probe_yue2()["available"]:
-                engine_choice = "yue2-native"
+        resolved_prod_mode = production_mode or (str(plan.generationStrategy.get("productionMode") or "") or None)
+        route = resolve_production_route(
+            mode=plan.mode,
+            engine_choice=engine_choice,
+            production_mode=resolved_prod_mode,
+            feature_locks=dict((plan.harmonyAndGroove or {}).get("featureLocks") or {}),
+            reference_mode=str((plan.harmonyAndGroove or {}).get("referenceMode") or "reference_compose"),
+            instruction=plan.instruction,
+        )
+
+        if route.get("engineUnavailable"):
+            msg_ko = str(route.get("messageKo") or "요청하신 신경망 오디오 엔진이 준비되지 않았습니다.")
+            msg_en = str(route.get("messageEn") or "Requested neural audio engine is unavailable.")
+            return {
+                "engineUnavailable": True,
+                "silentFallbackBlocked": True,
+                "requestedEngine": route.get("requestedEngine"),
+                "state": route.get("state", "uninstalled"),
+                "runtimeStatus": route.get("runtimeStatus", "NOT_INSTALLED"),
+                "missingItems": route.get("missingItems", []),
+                "suggestedAlternative": route.get("suggestedAlternative", "editable_midi"),
+                "alternatives": route.get("alternatives", []),
+                "messageKo": msg_ko,
+                "messageEn": msg_en,
+                "errorKo": msg_ko,
+                "errorEn": msg_en,
+            }
+
+        routed_engine = str(route.get("routedEngine") or "yue2-native")
+        effective_prod_mode = str(route.get("productionMode") or "neural_audio")
+        policy_snap = dict(route.get("policyApplied") or {})
+        requested_engine_label = engine_choice
+        engine_choice = routed_engine
 
         # Capture baseRevision & track fingerprints BEFORE generation starts (Section 15 concurrent edit safety!)
         save_composition_plan(project_id, plan)
@@ -314,19 +305,88 @@ class GenerationJobManager:
 
                 if engine_choice == "yue2-native":
                     self._update(job_id, status="generating", stage="generating", progress=35)
-                    self._append_log(job_id, "generating", 40, "Running native YuE2 synthesis (yue-plan gate + yue-synth)")
+                    self._append_log(job_id, "generating", 40, "Running native YuE2 synthesis (official resting-voice ABC + yue-synth Metal)")
                     out_wav = take_dir / "preview.wav"
-                    yue_res = run_yue2_generation(plan, out_wav, seed=actual_seed, cancel_event=cancel_ev)
+                    yue_res = run_yue2_generation(
+                        plan,
+                        out_wav,
+                        seed=actual_seed,
+                        cancel_event=cancel_ev,
+                        use_demucs_vocal_qa=True,
+                    )
+                    self._update(job_id, status="validating_quality", stage="validating_quality", progress=84)
+                    self._append_log(job_id, "validating_quality", 86, "Analyzing actual YuE2 WAV (BS.1770-4, BPM, Vocal QA, 5-Gate Quality Gate)")
                     audio, sr = sf.read(str(out_wav), dtype="float32", always_2d=True)
                     loud = loudness.measure_loudness(audio, sr)
                     lvl_gain = round(max(-12.0, min(12.0, -16.0 - float(loud["integratedLufs"]))), 2)
                     vocal_sc = yue_res["vocalScreening"]
+                    target_bpm = float(plan.musicalIdentity.get("tempoBpm") or proj.bpm)
+
+                    # Run real acoustic analysis on the generated YuE2 audio
+                    from engine.daw_workspace import analysis as daw_analysis
+
+                    sha = hashlib.sha256(out_wav.read_bytes()).hexdigest()[:16]
+                    gen_analysis = daw_analysis.analyze_audio_file(
+                        out_wav,
+                        source_asset_id=take_id,
+                        sha256=sha,
+                        cache_dir=take_dir / "cache",
+                        project_bpm=target_bpm,
+                    )
+                    detected_sections = gen_analysis.get("arrangement", {}).get("sections", [])
+                    est_bpm = gen_analysis.get("rhythm", {}).get("adoptedTempoBpm") or gen_analysis.get("rhythm", {}).get("estimatedBpm")
+                    est_key = gen_analysis.get("harmony", {}).get("estimatedKey")
+
+                    five_gate = evaluate_five_gate_quality(
+                        requested_engine=requested_engine_label,
+                        actual_engine="yue2-native",
+                        production_mode=effective_prod_mode,
+                        expected_duration_sec=float(plan.musicalIdentity.get("durationSec") or yue_res["durationSec"]),
+                        expected_bpm=target_bpm,
+                        estimated_bpm=float(est_bpm) if est_bpm else None,
+                        audio_path=out_wav,
+                        audio_pcm=audio,
+                        sample_rate=sr,
+                        vocal_screening=vocal_sc,
+                        instrumental_only=bool(plan.musicalIdentity.get("instrumentalOnly", True)),
+                        instruments_used=[],
+                        native_audio_preserved=True,
+                        playback_verified=None,
+                        preview_status="Original Audio",
+                        silent_fallback_occurred=False,
+                    )
+                    gen_prov = build_generation_provenance(
+                        requested_engine=requested_engine_label,
+                        routed_engine="yue2-native",
+                        actual_engine="yue2-native",
+                        production_mode=effective_prod_mode,
+                        mode="full_music",
+                        policy_snapshot=policy_snap,
+                        model_version=str(yue_res.get("modelVersion") or "YuE2-3B-Q8_0 + YuE2-Vae-F32"),
+                        seed=actual_seed,
+                        plan_id=plan.id,
+                        reference_ids=list(plan.referenceBinding.referenceIds),
+                        abc_score_source=str(yue_res.get("scoreSource") or "official_v6_compile_score"),
+                        cot_mode=str((yue_res.get("request") or {}).get("cot") or "melody"),
+                        cfg_scale=(yue_res.get("request") or {}).get("cfg_scale"),
+                        semantic_temperature=((yue_res.get("request") or {}).get("semantic_sampling") or {}).get("temperature"),
+                        runtime_log_path=(yue_res.get("runMeta") or {}).get("logPath"),
+                        semantic_tokens_path=yue_res.get("semanticTokensPath"),
+                        silent_fallback_occurred=False,
+                    )
+
                     warn_list: list[str] = []
                     if vocal_sc.get("status") == "REJECT":
                         warn_list.append("Vocal leakage REJECTED — do not approve as instrumental.")
                     elif vocal_sc.get("status") == "UNCERTAIN":
                         warn_list.append("Vocal screening UNCERTAIN — manual listening required before instrumental approval.")
-                    verdict = "fail" if vocal_sc.get("status") == "REJECT" else ("warn" if warn_list else "pass")
+                    warn_list.extend(five_gate["gates"]["gateC"].get("warnings", []))
+                    warn_list.extend(five_gate["gates"]["gateD"].get("warnings", []))
+                    verdict = (
+                        "fail"
+                        if five_gate["overallStatus"] == "FAIL" or vocal_sc.get("status") == "REJECT"
+                        else ("warn" if warn_list else "pass")
+                    )
                     take = Take(
                         id=take_id,
                         projectId=project_id,
@@ -342,15 +402,16 @@ class GenerationJobManager:
                         previewIntegratedLufs=loud["integratedLufs"],
                         levelMatchedGainDb=lvl_gain,
                         plannedSections=[s.model_dump() for s in plan.arrangement],
+                        detectedSections=detected_sections,
                         artifacts=[
                             TakeArtifact(
                                 role="full_mix",
-                                name=f"{plan.musicalIdentity.get('title', 'YuE2 Mix')}",
+                                name=f"{plan.musicalIdentity.get('title', 'YuE2 Mix')} (Native Audio)",
                                 trackType="audio",
                                 color="#6a997c",
                                 audioRelativePath=f"takes/{take_id}/preview.wav",
                                 startBeats=0.0,
-                                durationBeats=round((yue_res["durationSec"] / (60.0 / proj.bpm)), 2),
+                                durationBeats=round((yue_res["durationSec"] / (60.0 / target_bpm)), 2),
                             )
                         ],
                         qualityReport=QualityReport(
@@ -361,20 +422,36 @@ class GenerationJobManager:
                                 "loudnessStandard": loud["standard"],
                                 "integratedLufs": loud["integratedLufs"],
                                 "truePeakDbtp": loud["truePeakDbtp"],
+                                "samplePeakDbfs": loud["samplePeakDbfs"],
+                                "loudnessRangeLu": loud["loudnessRangeLu"],
+                                "crestFactorDb": loud["crestFactorDb"],
+                                "peakRssGiB": (yue_res.get("runMeta") or {}).get("peakRssGiB"),
+                                "elapsedSec": (yue_res.get("runMeta") or {}).get("elapsedSec"),
+                                "previewStatus": "Original Audio",
+                            },
+                            musical={
+                                "targetBpm": target_bpm,
+                                "estimatedBpm": est_bpm,
+                                "targetKey": plan.musicalIdentity.get("key"),
+                                "estimatedKey": est_key,
+                                "scoreSource": yue_res.get("scoreSource"),
+                                "fiveGateQuality": five_gate,
                             },
                             vocalScreening=vocal_sc,
                             verdict=verdict,  # type: ignore[arg-type]
                             warnings=warn_list,
+                            honestyNote="YuE2 Native Audio 실생성 음원입니다. 자동 지표는 기술·리스크 검사만 수행하며 음악적 완성도는 사용자 직접 청취 전까지 UNVERIFIED입니다.",
                         ),
                         provenance=TakeProvenance(
                             engine="yue2-native",
-                            engineLabel="YuE2 Native Audio Generator",
+                            engineLabel="YuE2 Native Audio Generator (yue2.cpp Metal)",
                             mode="full_music",
                             providerId=str(plan.providerProvenance.get("providerId") or "local-music-director"),
-                            model="YuE2-3B-Q8_0",
+                            model=str(yue_res.get("modelVersion") or "YuE2-3B-Q8_0 + YuE2-Vae-F32"),
                             seed=actual_seed,
                             planId=plan.id,
                             referenceIds=list(plan.referenceBinding.referenceIds),
+                            generationProvenance=gen_prov,
                         ),
                     )
                 else:
@@ -395,6 +472,47 @@ class GenerationJobManager:
                     )
                     take.baseRevision = base_rev
                     take.baseTrackFingerprints = base_fps
+                    # Attach 5-gate Quality Gate & Generation Provenance to explicit MIDI takes too!
+                    midi_insts = [str(a.instrumentRef) for a in take.artifacts if a.instrumentRef]
+                    midi_prev_path = take_dir / "preview.wav"
+                    midi_five_gate = evaluate_five_gate_quality(
+                        requested_engine=requested_engine_label,
+                        actual_engine=take.provenance.engine,
+                        production_mode=effective_prod_mode,
+                        expected_duration_sec=take.previewDurationSec,
+                        expected_bpm=float(plan.musicalIdentity.get("tempoBpm") or proj.bpm),
+                        audio_path=midi_prev_path if midi_prev_path.is_file() else None,
+                        vocal_screening=take.qualityReport.vocalScreening,
+                        instrumental_only=bool(plan.musicalIdentity.get("instrumentalOnly", True)),
+                        instruments_used=midi_insts,
+                        native_audio_preserved=True,
+                        playback_verified=None,
+                        preview_status="Realtime Preview",
+                        silent_fallback_occurred=False,
+                    )
+                    take.qualityReport.musical["fiveGateQuality"] = midi_five_gate
+                    take.provenance.generationProvenance = build_generation_provenance(
+                        requested_engine=requested_engine_label,
+                        routed_engine=engine_choice,
+                        actual_engine=take.provenance.engine,
+                        production_mode=effective_prod_mode,
+                        mode=plan.mode,
+                        policy_snapshot=policy_snap,
+                        model_version=take.provenance.model,
+                        seed=actual_seed,
+                        plan_id=plan.id,
+                        reference_ids=list(plan.referenceBinding.referenceIds),
+                        instrument_resolutions=[
+                            {
+                                "role": r.get("role"),
+                                "instrumentRef": r.get("instrumentRef"),
+                                "preset": r.get("preset"),
+                                "qualityTier": r.get("qualityTier"),
+                            }
+                            for r in plan.instrumentRoles
+                        ],
+                        silent_fallback_occurred=False,
+                    )
 
                 if cancel_ev.is_set():
                     raise GenerationCancelledError("Cancelled before persisting take")
@@ -891,6 +1009,10 @@ def apply_take(
 
             if not dst_track_id:
                 dst_track_id = make_id("trk")
+                is_native_audio_take = (
+                    art_type == "audio"
+                    and (take.get("provenance") or {}).get("engine") == "yue2-native"
+                )
                 stem_meta = (
                     {
                         "parentSourceAssetId": take.get("parentSourceAssetId"),
@@ -900,7 +1022,17 @@ def apply_take(
                         "stemRole": art.get("role"),
                     }
                     if art_type == "stem"
-                    else None
+                    else (
+                        {
+                            "assetKind": "native_audio_original",
+                            "protectedFromMidiOverwrite": True,
+                            "sourceEngine": "yue2-native",
+                            "takeId": take_id,
+                            "seed": (take.get("provenance") or {}).get("seed"),
+                        }
+                        if is_native_audio_take
+                        else None
+                    )
                 )
                 updated = commands.apply_command(
                     updated,
@@ -915,6 +1047,16 @@ def apply_take(
                         "instrumentRef": art.get("instrumentRef") if art_type == "midi" else None,
                     },
                 )
+                if art_type == "midi" and art.get("instrumentRef") and art.get("preset"):
+                    updated = commands.apply_command(
+                        updated,
+                        "track.setInstrument",
+                        {
+                            "trackId": dst_track_id,
+                            "instrumentRef": art["instrumentRef"],
+                            "preset": art["preset"],
+                        },
+                    )
                 if art.get("gainDb") is not None:
                     updated = commands.apply_command(updated, "track.setGain", {"trackId": dst_track_id, "gainDb": float(art["gainDb"])})
                 if art.get("pan") is not None:

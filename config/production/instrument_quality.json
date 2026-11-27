@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "tiers": {
+    "PREVIEW": {
+      "autoSelectInProduction": false,
+      "descriptionKo": "초경량 브라우저 스케치·미리듣기 전용 기본 신스. 프로덕션 모드에서 자동 선택 금지.",
+      "descriptionEn": "Lightweight browser sketch/preview voices. Blocked from automatic production selection."
+    },
+    "PRODUCTION_CANDIDATE": {
+      "autoSelectInProduction": true,
+      "descriptionKo": "실제 멀티샘플 SoundFont(SF3), Pro Analog/FM Synth, Drum Rack, Sampler 등 프로덕션 후보 악기. 사용자 청취 승인을 거치면 USER_APPROVED로 승격 가능.",
+      "descriptionEn": "Multi-sampled SF3, Pro Analog/FM Synth, Drum Rack, and Sampler candidates eligible for production pending user approval."
+    },
+    "USER_APPROVED": {
+      "autoSelectInProduction": true,
+      "descriptionKo": "사용자가 실제 청취 후 프로덕션 사용을 명시적으로 승인한 악기 또는 외부 AU/VST3 플러그인.",
+      "descriptionEn": "Instruments or external AU/VST3 plugins explicitly approved by the user after listening."
+    },
+    "UNAVAILABLE": {
+      "autoSelectInProduction": false,
+      "descriptionKo": "현재 로컬 환경에 런타임·라이브러리가 없거나 사용 불가능한 악기.",
+      "descriptionEn": "Instruments unavailable in the current local runtime."
+    }
+  },
+  "instrumentTiers": {
+    "drum-kit-electronic": "PREVIEW",
+    "bass-fm-sub": "PREVIEW",
+    "keys-electric-ep": "PREVIEW",
+    "guitar-clean-pluck": "PREVIEW",
+    "synth-fm-hook": "PREVIEW",
+    "pad-warm-analog": "PREVIEW",
+    "basic-poly-synth": "PREVIEW",
+    "pro-drum-rack": "PRODUCTION_CANDIDATE",
+    "pro-synth-analog": "PRODUCTION_CANDIDATE",
+    "pro-synth-fm": "PRODUCTION_CANDIDATE",
+    "pro-sampler": "PRODUCTION_CANDIDATE",
+    "sf-piano-grand": "PRODUCTION_CANDIDATE",
+    "sf-ep-rhodes": "PRODUCTION_CANDIDATE",
+    "sf-organ-b3": "PRODUCTION_CANDIDATE",
+    "sf-bass-finger": "PRODUCTION_CANDIDATE",
+    "sf-bass-acoustic": "PRODUCTION_CANDIDATE",
+    "sf-guitar-clean": "PRODUCTION_CANDIDATE",
+    "sf-guitar-acoustic": "PRODUCTION_CANDIDATE",
+    "sf-strings-pad": "PRODUCTION_CANDIDATE",
+    "sf-drums-acoustic": "PRODUCTION_CANDIDATE"
+  },
+  "userApprovedInstruments": [],
+  "roleProductionPriority": {
+    "drums": [
+      {"instrumentRef": "pro-drum-rack", "defaultPreset": "boombap-vintage", "genrePresets": {"house": "house-909", "rnb_neosoul": "boombap-vintage", "hiphop": "boombap-vintage", "lofi": "jazz-brush", "indie_rock": "indie-rock-acoustic"}},
+      {"instrumentRef": "sf-drums-acoustic", "defaultPreset": "standard_kit"}
+    ],
+    "bass": [
+      {"instrumentRef": "sf-bass-finger", "defaultPreset": "finger_bass"},
+      {"instrumentRef": "pro-synth-analog", "defaultPreset": "deep-sub-bass"},
+      {"instrumentRef": "sf-bass-acoustic", "defaultPreset": "upright_bass"}
+    ],
+    "keys": [
+      {"instrumentRef": "sf-ep-rhodes", "defaultPreset": "rhodes_tine"},
+      {"instrumentRef": "sf-piano-grand", "defaultPreset": "concert_grand"},
+      {"instrumentRef": "sf-organ-b3", "defaultPreset": "drawbar_organ"}
+    ],
+    "guitar": [
+      {"instrumentRef": "sf-guitar-clean", "defaultPreset": "jazz_hollow"},
+      {"instrumentRef": "sf-guitar-acoustic", "defaultPreset": "nylon_acoustic"}
+    ],
+    "synth_hook": [
+      {"instrumentRef": "pro-synth-analog", "defaultPreset": "warm-analog-pluck"},
+      {"instrumentRef": "pro-synth-fm", "defaultPreset": "glass-fm-bell"}
+    ],
+    "pad": [
+      {"instrumentRef": "pro-synth-analog", "defaultPreset": "wide-analog-pad"},
+      {"instrumentRef": "sf-strings-pad", "defaultPreset": "warm_pad"}
+    ],
+    "sampler": [
+      {"instrumentRef": "pro-sampler", "defaultPreset": "one-shot"}
+    ]
+  },
+  "roleRealismNotes": {
+    "guitar": {
+      "limitationKo": "현재 설치된 FluidSynth SF3 기타(PRODUCTION_CANDIDATE)는 코드 보이싱·레이어 보조에는 활용 가능하지만, 실제 네오소울·R&B 기타의 슬라이드·뮤트·피킹 뉘앙스를 완전히 대체하기 어렵습니다. 자연스러운 리드 기타 사운드는 YuE2 Native Audio 생성 또는 전용 기타 AU/VST3·실제 녹음 오디오를 권장합니다.",
+      "limitationEn": "Installed FluidSynth SF3 guitar is a PRODUCTION_CANDIDATE suitable for backing layers, but cannot match live R&B/Neo Soul guitar phrasing. Use YuE2 Native Audio or a dedicated AU/VST3 guitar plugin / real recording for realistic lead guitar."
+    },
+    "drums": {
+      "limitationKo": "Pro Drum Rack(초크 그룹·라운드 로빈 지원)이 기본 MIDI 드럼보다 훨씬 안정적이나, 자연스러운 어쿠스틱 그루브와 공기감은 YuE2 Native Audio 생성 후 필요 시 하이브리드 레이어링을 권장합니다.",
+      "limitationEn": "Pro Drum Rack supports choke groups and round-robin, though organic acoustic pocket and room feel are best generated via YuE2 Native Audio with optional hybrid layering."
+    }
+  }
+}

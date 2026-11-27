@@ -662,9 +662,10 @@ def daw_assign_instrument_preset(
     project_id: str | None = None,
     expected_revision: int | None = None,
     stage_only: bool = False,
+    allow_preview: bool = False,
 ) -> dict:
-    """Assign a professional virtual instrument, preset & parameters to a MIDI track without altering its MIDI notes."""
-    return daw_mcp.assign_instrument_preset(track_id, instrument_ref, preset, parameters, project_id, expected_revision, stage_only)
+    """Assign a professional virtual instrument, preset & parameters to a MIDI track without altering its MIDI notes (blocks PREVIEW tier unless allow_preview=True)."""
+    return daw_mcp.assign_instrument_preset(track_id, instrument_ref, preset, parameters, project_id, expected_revision, stage_only, allow_preview)
 
 
 @server.tool(name="daw.add_track_fx", annotations=WRITE)
@@ -767,6 +768,62 @@ def daw_create_hybrid_native_layer(
 ) -> dict:
     """Hybrid Production Mode: keep original Native Audio untouched (Section 15) and layer editable MIDI tracks cleanly on top."""
     return daw_mcp.create_hybrid_native_layer(golden_reference_id, layer_roles, bars, project_id)
+
+
+# --- AI-Native DAW Phase 05.1 Permanent Production Policy, Taste Profile & Studio Preview MCP Tools ---
+
+@server.tool(name="daw.get_production_policy", annotations=READ)
+def daw_get_production_policy() -> dict:
+    """Read the Permanent Music Production Policy (YuE2 First, No Silent MIDI Fallback, Instrument Quality Tiers, and runtime readiness)."""
+    return daw_mcp.get_production_policy()
+
+
+@server.tool(name="daw.get_taste_profile", annotations=READ)
+def daw_get_taste_profile(project_id: str | None = None) -> dict:
+    """Read the persistent User Music Taste & Feedback Profile (global preferences + optional project overrides)."""
+    return daw_mcp.get_taste_profile(project_id)
+
+
+@server.tool(name="daw.update_taste_profile", annotations=WRITE)
+def daw_update_taste_profile(
+    global_patch: dict | None = None,
+    project_id: str | None = None,
+    project_patch: dict | None = None,
+) -> dict:
+    """Update persistent User Music Taste preferences cleanly (global or project-scoped)."""
+    return daw_mcp.update_taste_profile(global_patch, project_id, project_patch)
+
+
+@server.tool(name="daw.reset_taste_profile", annotations=WRITE)
+def daw_reset_taste_profile(project_id: str | None = None) -> dict:
+    """Reset project-level taste override (when project_id is provided) or global taste profile to defaults."""
+    return daw_mcp.reset_taste_profile(project_id)
+
+
+@server.tool(name="daw.resolve_production_instrument", annotations=READ)
+def daw_resolve_production_instrument(
+    role: str,
+    genre: str = "rnb_neosoul",
+    instruction: str = "",
+    allow_preview: bool = False,
+) -> dict:
+    """Resolve the highest-tier available production instrument for a role, blocking PREVIEW voices by policy."""
+    return daw_mcp.resolve_production_instrument(role, genre, instruction, allow_preview)
+
+
+@server.tool(name="daw.get_studio_preview_status", annotations=READ)
+def daw_get_studio_preview_status(project_id: str | None = None) -> dict:
+    """Inspect explicit playback parity status (Original Audio, Realtime Preview, Studio Preview, Rendering, Outdated Preview, Failed)."""
+    return daw_mcp.get_studio_preview_status(project_id)
+
+
+@server.tool(name="daw.render_studio_preview", annotations=WRITE)
+def daw_render_studio_preview(
+    project_id: str | None = None,
+    filename_export_copy: str | None = None,
+) -> dict:
+    """Render a revision-tracked 48 kHz Studio Preview WAV matching Studio Export 1:1 so users can audition FX & instruments accurately before export."""
+    return daw_mcp.render_studio_preview(project_id, filename_export_copy)
 
 
 def main():

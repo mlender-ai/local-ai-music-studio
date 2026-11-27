@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "routes": {
+    "full_music": {
+      "primaryEngine": "yue2-native",
+      "productionMode": "neural_audio",
+      "fallbackBehavior": "explain_and_wait_for_user",
+      "allowSilentFallback": false,
+      "alternatives": [
+        {
+          "id": "editable_midi",
+          "engine": "local-multitrack-composer",
+          "labelKo": "편집 가능 MIDI + 프로 가상악기",
+          "labelEn": "Editable MIDI + Pro Virtual Instruments"
+        },
+        {
+          "id": "hybrid",
+          "engine": "hybrid",
+          "labelKo": "하이브리드 (네이티브 오디오 + MIDI 레이어)",
+          "labelEn": "Hybrid (Native Audio + MIDI Layer)"
+        }
+      ]
+    },
+    "hybrid": {
+      "primaryEngine": "hybrid",
+      "productionMode": "hybrid",
+      "preserveNativeAudio": true,
+      "fallbackBehavior": "explain_and_wait_for_user",
+      "allowSilentFallback": false
+    },
+    "editable_midi": {
+      "primaryEngine": "local-multitrack-composer",
+      "productionMode": "editable_midi",
+      "requireProductionTierInstruments": true,
+      "allowPreviewInstruments": false
+    },
+    "loop_midi": {
+      "primaryEngine": "midi-composer-v3",
+      "productionMode": "editable_midi",
+      "requireProductionTierInstruments": true,
+      "allowPreviewInstruments": false
+    },
+    "instrument_session": {
+      "primaryEngine": "midi-composer-v3",
+      "productionMode": "editable_midi",
+      "requireProductionTierInstruments": true,
+      "allowPreviewInstruments": false
+    },
+    "exact_event_lock": {
+      "primaryEngine": "hybrid_or_editable_midi",
+      "productionMode": "hybrid",
+      "reasonKo": "정확한 이벤트·드럼 타점·베이스 음표 단위 완전 고정(LOCK)은 YuE2 Native Audio 단독으로 보장할 수 없어 Hybrid 또는 Editable MIDI 경로를 안내합니다.",
+      "reasonEn": "Strict event-level drum/bass locking cannot be hard-guaranteed by YuE2 Native Audio alone; route to Hybrid or Editable MIDI with explicit notice."
+    }
+  }
+}

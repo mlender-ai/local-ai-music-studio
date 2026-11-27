@@ -17,6 +17,38 @@ from .reference_context import build_reference_binding
 from .schemas import CompositionPlan, PlannedSection
 
 GENRE_PROFILES: dict[str, dict[str, Any]] = {
+    "rnb_neosoul": {
+        "defaultBpm": 90.0,
+        "defaultKey": "D minor",
+        "scale": "dorian",
+        "grooveFeel": "neo_soul_pocket",
+        "swingRatio": 0.59,
+        "chords": ["Dm9", "G13", "Cmaj9", "A7"],
+        "motifConcept": "Warm Rhodes & restrained clean-guitar call-and-response motif over pocket bass and unhurried late-night drums",
+        "motifDegrees": [5, 3, 4, 5, 7, 6, 5, 3],
+        "sections": [
+            ("INTRO", 4, 0.42, ["keys", "pad"]),
+            ("VERSE", 8, 0.72, ["drums", "bass", "keys"]),
+            ("HOOK", 8, 0.88, ["drums", "bass", "keys", "guitar"]),
+            ("OUTRO", 4, 0.45, ["keys", "bass", "pad"]),
+        ],
+    },
+    "indie_rock": {
+        "defaultBpm": 116.0,
+        "defaultKey": "E minor",
+        "scale": "natural_minor",
+        "grooveFeel": "driving_indie_groove",
+        "swingRatio": 0.52,
+        "chords": ["Em7", "Cmaj7", "G", "D"],
+        "motifConcept": "Shimmering indie guitar arpeggio hook anchored by tight live-feel drums and melodic picked bass",
+        "motifDegrees": [1, 3, 5, 4, 2, 3, 5, 1],
+        "sections": [
+            ("INTRO", 4, 0.48, ["guitar", "drums"]),
+            ("VERSE", 8, 0.72, ["drums", "bass", "guitar"]),
+            ("CHORUS", 8, 0.95, ["drums", "bass", "guitar", "keys"]),
+            ("OUTRO", 4, 0.44, ["guitar", "pad"]),
+        ],
+    },
     "house": {
         "defaultBpm": 126.0,
         "defaultKey": "F minor",
@@ -179,6 +211,10 @@ ROLE_CATALOG: dict[str, dict[str, Any]] = {
 
 def _detect_genre(text: str, ref_bpm: float | None = None) -> str:
     low = text.lower()
+    if any(k in low for k in ("r&b", "rnb", "알앤비", "네오소울", "neo soul", "neo-soul", "소울", "soul")):
+        return "rnb_neosoul"
+    if any(k in low for k in ("인디 록", "인디록", "indie rock", "록", "rock", "밴드", "band", "개러지", "shoegaze")):
+        return "indie_rock"
     if any(k in low for k in ("house", "하우스", "deep house", "딥하우스", "tech house", "클럽", "club", "edm", "dance", "댄스")):
         return "house"
     if any(k in low for k in ("lofi", "lo-fi", "로파이", "칠합", "chill", "재즈", "jazz", "카페")):
@@ -189,16 +225,71 @@ def _detect_genre(text: str, ref_bpm: float | None = None) -> str:
         return "hiphop"
     if any(k in low for k in ("ambient", "앰비언트", "시네마틱", "cinematic", "몽환", "명상", "ost", "사운드트랙")):
         return "ambient"
-    if any(k in low for k in ("pop", "팝", "알앤비", "r&b", "rnb", "인디", "indie", "밝은", "신나는")):
+    if any(k in low for k in ("pop", "팝", "인디", "indie", "밝은", "신나는")):
         return "pop"
     if ref_bpm:
         if 118 <= ref_bpm <= 134:
             return "house"
         if 75 <= ref_bpm <= 96:
-            return "lofi"
+            return "rnb_neosoul"
         if 96 < ref_bpm < 118:
             return "synthwave"
-    return "house"
+    return "rnb_neosoul"
+
+
+def _extract_duration_sec(text: str) -> float | None:
+    m = re.search(r"(\d{1,3})\s*(?:초|sec|seconds?)", text, re.IGNORECASE)
+    if m:
+        val = float(m.group(1))
+        if 8.0 <= val <= 180.0:
+            return val
+    low = text.lower()
+    if any(k in low for k in ("짧게", "짧은", "short", "snippet", "데모", "테스트", "검증")):
+        return 22.0
+    return None
+
+
+def _is_instrumental_only(text: str, default_instrumental: bool = True) -> bool:
+    """Strictly respect Korean/English vocal negations and Permanent Policy `instrumentalByDefault`."""
+    low = text.lower()
+    explicit_no_vocal = any(
+        k in low
+        for k in (
+            "무보컬",
+            "인스트루멘털",
+            "인스트루멘탈",
+            "instrumental",
+            "no vocal",
+            "without vocal",
+            "vocal-free",
+            "보컬 없",
+            "보컬은 없",
+            "보컬 빼",
+            "보컬 제외",
+            "보컬과 허밍",
+            "허밍은 전혀",
+            "전혀 사용하지 말",
+            "반주만",
+        )
+    )
+    if explicit_no_vocal:
+        return True
+    explicit_want_vocal = any(
+        k in low
+        for k in (
+            "보컬 넣어",
+            "보컬 추가",
+            "가사 넣",
+            "노래 불러",
+            "with vocals",
+            "add vocals",
+            "singing",
+            "with lyrics",
+        )
+    )
+    if explicit_want_vocal:
+        return False
+    return bool(default_instrumental)
 
 
 def _detect_mode_and_instrument(
@@ -207,23 +298,50 @@ def _detect_mode_and_instrument(
     explicit_instrument: str | None = None,
 ) -> tuple[str, str | None]:
     low = text.lower()
+    # Strip harmonic reference phrases ("코드 진행", "chord progression") so they don't falsely trigger single-instrument `keys` loop mode!
+    low_for_inst = re.sub(r"코드\s*진행|chord\s*progression", "", low)
     target_inst = explicit_instrument
     if not target_inst:
-        if any(k in low for k in ("신스 훅", "신스훅", "synth hook", "리드", "lead", "멜로디", "melody", "훅", "hook", "신스", "synth")):
+        if any(k in low_for_inst for k in ("신스 훅", "신스훅", "synth hook", "리드", "lead", "멜로디", "melody", "훅", "hook", "신스", "synth")):
             target_inst = "synth_hook"
-        elif any(k in low for k in ("드럼", "drum", "비트", "beat", "퍼커션", "리듬")):
+        elif any(k in low_for_inst for k in ("드럼", "drum", "비트", "beat", "퍼커션", "리듬")):
             target_inst = "drums"
-        elif any(k in low for k in ("베이스", "bass", "서브")):
+        elif any(k in low_for_inst for k in ("베이스", "bass", "서브")):
             target_inst = "bass"
-        elif any(k in low for k in ("피아노", "건반", "키보드", "코드", "piano", "keys", "chord", "rhodes", "ep")):
+        elif any(k in low_for_inst for k in ("피아노", "건반", "키보드", "코드", "piano", "keys", "chord", "rhodes", "ep")):
             target_inst = "keys"
-        elif any(k in low for k in ("기타", "guitar", "아르페지오", "플럭")):
+        elif any(k in low_for_inst for k in ("기타", "guitar", "아르페지오", "플럭")):
             target_inst = "guitar"
-        elif any(k in low for k in ("패드", "pad", "텍스처", "스트링")):
+        elif any(k in low_for_inst for k in ("패드", "pad", "텍스처", "스트링")):
             target_inst = "pad"
 
     if explicit_mode in ("full_music", "instrument_session", "loop_midi"):
         return explicit_mode, target_inst
+
+    # Full-music / reference-conditioned song requests ALWAYS resolve to `full_music` unless MIDI/loop/single-part explicitly asked!
+    if any(
+        k in low
+        for k in (
+            "풀 트랙",
+            "완곡",
+            "전체 곡",
+            "인스트루멘털",
+            "인스트루멘탈",
+            "instrumental",
+            "레퍼런스",
+            "reference",
+            "full track",
+            "full song",
+            "한 곡",
+            "음악 만들어",
+            "인디 록",
+            "인디록",
+            "r&b",
+            "알앤비",
+            "네오소울",
+        )
+    ) and not any(k in low for k in ("midi", "미디", "루프", "loop", "4마디", "패턴", "훅을 만들어", "훅 만들어", "라인 만들어", "세션")):
+        return "full_music", None
 
     # Infer mode cleanly from natural language
     if any(k in low for k in ("midi", "미디", "루프", "loop", "4마디", "8마디", "패턴", "훅을 만들어", "훅 만들어", "멜로디 만들어", "라인 만들어", "세션")):
@@ -337,9 +455,45 @@ def create_composition_plan(
     selection: dict[str, Any] | None = None,
     provider_id: str | None = None,
     engine_preference: str = "auto",
-    production_mode: str = "editable_midi",  # "neural_audio" | "editable_midi" | "hybrid"
+    production_mode: str | None = None,  # None -> resolved via Permanent Production Policy (YuE2 First for full_music!)
+    allow_preview_instruments: bool = False,
 ) -> CompositionPlan:
-    """Create a complete, traceable, genre-adaptive CompositionPlan honoring Reference Feature Locks & Chord Track."""
+    """Create a complete, traceable, genre-adaptive CompositionPlan honoring Permanent Production Policy,
+    Instrument Quality Tiers, Taste Profile, Reference Feature Locks & Chord Track."""
+    from engine.production import (
+        get_taste_profile,
+        load_production_policy,
+        resolve_production_instrument,
+        resolve_production_route,
+    )
+
+    policy = load_production_policy()
+    taste = get_taste_profile(project_id=project.id)
+    eff_taste = taste.get("effectiveForProject") or {}
+
+    resolved_mode, resolved_inst = _detect_mode_and_instrument(
+        instruction, explicit_mode=mode, explicit_instrument=target_instrument
+    )
+    route = resolve_production_route(
+        mode=resolved_mode,
+        engine_choice=engine_preference,
+        production_mode=production_mode,
+        feature_locks=feature_locks,
+        reference_mode=reference_mode,
+        instruction=instruction,
+    )
+    effective_prod_mode = str(
+        route.get("productionMode") or ("neural_audio" if resolved_mode == "full_music" else "editable_midi")
+    )
+    effective_engine = str(
+        route.get("routedEngine")
+        or (
+            policy.get("defaultFullMusicEngine", "yue2-native")
+            if resolved_mode == "full_music" and effective_prod_mode == "neural_audio"
+            else ("midi-composer-v3" if resolved_mode in ("loop_midi", "instrument_session") else "local-multitrack-composer")
+        )
+    )
+
     binding = build_reference_binding(
         project,
         reference_ids=reference_ids,
@@ -348,7 +502,7 @@ def create_composition_plan(
         feature_locks=feature_locks,
         feature_source_map=feature_source_map,
         bass_lock_mode=bass_lock_mode,
-        target_engine=engine_preference,
+        target_engine=effective_engine,
         reference_mode=reference_mode,
         use_project_chord_track=use_project_chord_track,
     )
@@ -364,9 +518,6 @@ def create_composition_plan(
 
     genre = _detect_genre(instruction, ref_bpm=ref_bpm)
     profile = GENRE_PROFILES[genre]
-    resolved_mode, resolved_inst = _detect_mode_and_instrument(
-        instruction, explicit_mode=mode, explicit_instrument=target_instrument
-    )
 
     prompt_bpm = _extract_bpm(instruction)
     bpm = prompt_bpm or ref_bpm or (project.bpm if resolved_mode != "full_music" else profile["defaultBpm"])
@@ -386,11 +537,18 @@ def create_composition_plan(
         or any(k in binding.selectedInfluences for k in ("bass_movement", "mood_energy", "harmony_mood"))
     ):
         chords = valid_ref_chords[:8]
+    elif genre in ("rnb_neosoul", "lofi") and key == profile["defaultKey"]:
+        chords = list(profile["chords"])
     else:
         chords = _chords_for_key(key, profile["chords"])
 
     bpb = project.timeSignature.beats_per_bar
     prompt_bars = _extract_bars(instruction)
+    requested_dur_sec = _extract_duration_sec(instruction)
+    if not prompt_bars and requested_dur_sec is not None and resolved_mode == "full_music":
+        bar_sec = bpb * (60.0 / max(45.0, bpm))
+        prompt_bars = max(4, min(16, int(round(requested_dur_sec / bar_sec))))
+        prompt_bars = max(4, ((prompt_bars + 2) // 4) * 4)
 
     # Determine section arrangement (NEVER hardcoded 48 bars!)
     planned_sections: list[PlannedSection] = []
@@ -511,12 +669,23 @@ def create_composition_plan(
     instrument_roles = []
     for rk in active_role_keys:
         meta = ROLE_CATALOG.get(rk, ROLE_CATALOG["synth_hook"])
+        resolved_inst_meta = resolve_production_instrument(
+            rk,
+            genre=genre,
+            instruction=instruction,
+            allow_preview=allow_preview_instruments,
+            taste_profile=eff_taste,
+        )
         instrument_roles.append(
             {
                 "role": rk,
                 "name": meta["name"],
                 "trackType": meta["trackType"],
-                "instrumentRef": meta["instrumentRef"],
+                "instrumentRef": resolved_inst_meta["instrumentRef"],
+                "preset": resolved_inst_meta.get("preset"),
+                "qualityTier": resolved_inst_meta["qualityTier"],
+                "rationaleKo": resolved_inst_meta.get("rationaleKo"),
+                "limitationNoteKo": resolved_inst_meta.get("limitationNoteKo"),
                 "color": meta["color"],
                 "register": meta["register"],
                 "pan": meta["pan"],
@@ -528,11 +697,11 @@ def create_composition_plan(
     # Check if user explicitly asked to preserve existing drums/bass or target current selection
     low_inst = instruction.lower()
     preserve_existing = any(k in low_inst for k in ("유지", "보존", "그대로", "preserve", "keep")) or resolved_mode != "full_music"
-    vocal_requested = any(k in low_inst for k in ("보컬", "가사", "노래", "vocal", "lyrics", "sing"))
-    instrumental_only = not vocal_requested
+    default_inst_only = bool(eff_taste.get("defaultInstrumentalOnly", policy.get("instrumentalByDefault", True)))
+    instrumental_only = _is_instrumental_only(instruction, default_instrumental=default_inst_only)
 
     climax_sec = max(planned_sections, key=lambda s: s.energy)
-    duration_sec = round(total_bars * bpb * (60.0 / bpm), 2)
+    duration_sec = round(requested_dur_sec if requested_dur_sec is not None else (total_bars * bpb * (60.0 / bpm)), 2)
 
     # Real AI Producer authoring authority (Section 4.2):
     # When Claude Code CLI / Ollama / Custom API is active, allow it to author real structured
@@ -626,24 +795,20 @@ def create_composition_plan(
     sel_bar_range = ctx.get("selection", {}).get("barRange")
     start_beats = float(sel_bar_range["startBeats"]) if (sel_bar_range and resolved_mode != "full_music") else 0.0
 
-    # Determine actual engine label honestly
-    actual_engine = (
-        "midi-composer-v3"
-        if resolved_mode in ("loop_midi", "instrument_session")
-        else ("local-multitrack-composer" if engine_preference in ("auto", "local-multitrack-composer") else engine_preference)
-    )
+    # Determine actual engine honestly via Permanent Production Policy (YuE2 First for Full Music!)
+    actual_engine = effective_engine
 
     ai_ko = str(llm_patch.get("summaryKo")).strip() if isinstance(llm_patch, dict) and llm_patch.get("summaryKo") else ""
     summary_ko = (
         ai_ko
         or (
-            f"[{resolved_mode}] {title_base} · {bpm} BPM · {key} · {total_bars}마디({duration_sec:.1f}초) · "
+            f"[{resolved_mode} · {actual_engine}] {title_base} · {bpm} BPM · {key} · {total_bars}마디({duration_sec:.1f}초) · "
             f"코드: {'–'.join(chords)} · 악기: {', '.join(r['name'] for r in instrument_roles)}"
             + (f" · 레퍼런스 반영: {', '.join(binding.selectedInfluences)}" if binding.referenceIds else "")
         )
     )
     summary_en = (
-        f"[{resolved_mode}] {title_base} · {bpm} BPM · {key} · {total_bars} bars ({duration_sec:.1f}s) · "
+        f"[{resolved_mode} · {actual_engine}] {title_base} · {bpm} BPM · {key} · {total_bars} bars ({duration_sec:.1f}s) · "
         f"Chords: {'–'.join(chords)} · Roles: {', '.join(r['name'] for r in instrument_roles)}"
     )
 
@@ -695,9 +860,23 @@ def create_composition_plan(
         },
         generationStrategy={
             "mode": resolved_mode,
-            "productionMode": production_mode,
+            "productionMode": effective_prod_mode,
             "preferredEngine": engine_preference,
             "actualEngine": actual_engine,
+            "engineUnavailable": bool(route.get("engineUnavailable", False)),
+            "policyAction": route.get("policyAction"),
+            "policyWarningsKo": route.get("warningsKo", []),
+            "policyWarningsEn": route.get("warningsEn", []),
+            "tasteProfileApplied": {
+                "defaultInstrumentalOnly": default_inst_only,
+                "avoidQualities": list(eff_taste.get("avoidQualities") or []),
+                "preferredQualities": list(eff_taste.get("preferredQualities") or []),
+            },
+            "productionPolicy": {
+                "defaultFullMusicEngine": policy.get("defaultFullMusicEngine"),
+                "allowSilentMidiFallback": bool(policy.get("allowSilentMidiFallback", False)),
+                "allowPreviewInstrumentsInProduction": bool(policy.get("allowPreviewInstrumentsInProduction", False)),
+            },
             "targetInstrument": resolved_inst,
             "targetTrackId": ctx.get("selection", {}).get("selectedTrackId") if resolved_mode != "full_music" else None,
             "preserveExistingTracks": preserve_existing,

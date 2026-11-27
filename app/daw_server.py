@@ -122,11 +122,16 @@ class ExportServerBody(BaseModel):
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
+    from engine.production import load_production_policy
+
+    pol = load_production_policy()
     return {
         "status": "ok",
         "product": "AI-Native DAW",
-        "phase": "04",
+        "phase": "05.1",
         "port": 8796,
+        "defaultFullMusicEngine": pol.get("defaultFullMusicEngine", "yue2-native"),
+        "allowSilentMidiFallback": bool(pol.get("allowSilentMidiFallback", False)),
         "reaper": reaper.detect_reaper(),
         "uiBuilt": (DIST_DIR / "index.html").is_file(),
     }
@@ -660,8 +665,19 @@ def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[
             "supported": True,
             "action": "proposal_created",
             "proposal": prop,
+            "diagnosis": routed.get("diagnosis"),
+            "soundDesignPlan": routed.get("soundDesignPlan"),
             "messageKo": f"변경 제안이 생성되었습니다: {prop['summary']}. 확인 후 '적용'을 눌러 반영하세요.",
             "messageEn": f"Change proposal staged: {prop['summary']}. Click Apply to commit.",
+        }
+    if routed.get("action") == "sound_design_advisory":
+        return {
+            "supported": True,
+            "action": "sound_design_advisory",
+            "diagnosis": routed.get("diagnosis"),
+            "soundDesignPlan": routed.get("soundDesignPlan"),
+            "messageKo": routed.get("messageKo"),
+            "messageEn": routed.get("messageEn"),
         }
     if routed.get("action") == "arrangement_edit_plan":
         arr_plan = create_arrangement_edit_plan(
@@ -775,6 +791,8 @@ class CreateCompositionPlanBody(BaseModel):
     selection: dict[str, Any] | None = None
     providerId: str | None = None
     enginePreference: str = "auto"
+    productionMode: str | None = None
+    allowPreviewInstruments: bool = False
 
 
 class StartGenerationBody(BaseModel):
@@ -791,6 +809,8 @@ class StartGenerationBody(BaseModel):
     useProjectChordTrack: bool = False
     selection: dict[str, Any] | None = None
     engine: str = "auto"
+    productionMode: str | None = None
+    allowPreviewInstruments: bool = False
     seed: int | None = None
     sync: bool = False
 
@@ -1085,6 +1105,8 @@ def api_create_composition_plan(project_id: str, body: CreateCompositionPlanBody
         selection=body.selection,
         provider_id=body.providerId,
         engine_preference=body.enginePreference,
+        production_mode=body.productionMode,
+        allow_preview_instruments=body.allowPreviewInstruments,
         feature_locks=body.featureLocks,
         feature_source_map=body.featureSourceMap,
         bass_lock_mode=body.bassLockMode,
@@ -1121,6 +1143,8 @@ def api_start_generation_job(project_id: str, body: StartGenerationBody) -> dict
             selected_influences=body.selectedInfluences,
             selection=body.selection,
             engine_preference=body.engine,
+            production_mode=body.productionMode,
+            allow_preview_instruments=body.allowPreviewInstruments,
             feature_locks=body.featureLocks,
             feature_source_map=body.featureSourceMap,
             bass_lock_mode=body.bassLockMode,
@@ -1131,9 +1155,151 @@ def api_start_generation_job(project_id: str, body: StartGenerationBody) -> dict
         project_id=project_id,
         plan=plan,
         engine_choice=body.engine,
+        production_mode=body.productionMode,
         seed=body.seed,
         sync=body.sync,
     )
+
+
+# --- Phase 05.1 Permanent Production Policy, Taste Profile, Instrument Resolver & Studio Preview ---
+
+class TasteUpdateBody(BaseModel):
+    globalPatch: dict[str, Any] | None = None
+    projectId: str | None = None
+    projectPatch: dict[str, Any] | None = None
+
+
+class TasteFeedbackBody(BaseModel):
+    note: str = Field(min_length=1, max_length=1000)
+    verdict: str = "feedback"
+    tags: list[str] = Field(default_factory=list)
+    projectName: str | None = None
+    projectId: str | None = None
+
+
+class TasteResetBody(BaseModel):
+    projectId: str | None = None
+
+
+class ResolveInstrumentBody(BaseModel):
+    role: str = Field(min_length=1, max_length=64)
+    genre: str = "rnb_neosoul"
+    instruction: str = ""
+    allowPreviewInstruments: bool = False
+    explicitInstrumentRef: str | None = None
+
+
+class ValidateInstrumentBody(BaseModel):
+    instrumentRef: str = Field(min_length=1, max_length=120)
+    productionMode: bool = True
+    allowPreviewInstruments: bool = False
+    explicitUserRequest: bool = False
+
+
+class StudioPreviewRenderBody(BaseModel):
+    startBeats: float = Field(default=0.0, ge=0.0)
+    endBeats: float | None = Field(default=None, gt=0.0)
+    exportCopyFilename: str | None = None
+
+
+@app.get("/api/production/policy")
+def api_get_production_policy() -> dict[str, Any]:
+    from engine.production import get_full_production_policy_snapshot
+
+    return get_full_production_policy_snapshot()
+
+
+@app.get("/api/production/taste")
+def api_get_taste_profile(projectId: str | None = None) -> dict[str, Any]:
+    from engine.production import get_taste_profile
+
+    return get_taste_profile(project_id=projectId)
+
+
+@app.patch("/api/production/taste")
+def api_patch_taste_profile(body: TasteUpdateBody) -> dict[str, Any]:
+    from engine.production import update_taste_profile
+
+    return update_taste_profile(
+        global_patch=body.globalPatch,
+        project_id=body.projectId,
+        project_patch=body.projectPatch,
+    )
+
+
+@app.post("/api/production/taste/feedback")
+def api_record_taste_feedback(body: TasteFeedbackBody) -> dict[str, Any]:
+    from engine.production import record_user_feedback
+
+    return record_user_feedback(
+        note=body.note,
+        verdict=body.verdict,
+        tags=body.tags,
+        project_name=body.projectName,
+        project_id=body.projectId,
+    )
+
+
+@app.post("/api/production/taste/reset")
+def api_reset_taste_profile(body: TasteResetBody | None = None) -> dict[str, Any]:
+    from engine.production import reset_taste_profile
+
+    return reset_taste_profile(project_id=(body.projectId if body else None))
+
+
+@app.post("/api/production/instruments/resolve")
+def api_resolve_production_instrument(body: ResolveInstrumentBody) -> dict[str, Any]:
+    from engine.production import get_taste_profile, resolve_production_instrument
+
+    taste = get_taste_profile().get("effectiveForProject") or {}
+    return resolve_production_instrument(
+        body.role,
+        genre=body.genre,
+        instruction=body.instruction,
+        allow_preview=body.allowPreviewInstruments,
+        explicit_instrument_ref=body.explicitInstrumentRef,
+        taste_profile=taste,
+    )
+
+
+@app.post("/api/production/instruments/validate")
+def api_validate_instrument_selection(body: ValidateInstrumentBody) -> dict[str, Any]:
+    from engine.production import validate_instrument_selection
+
+    return validate_instrument_selection(
+        body.instrumentRef,
+        production_mode=body.productionMode,
+        allow_preview=body.allowPreviewInstruments,
+        explicit_user_request=body.explicitUserRequest,
+    )
+
+
+@app.get("/api/projects/{project_id}/studio-preview/status")
+def api_get_studio_preview_status(project_id: str) -> dict[str, Any]:
+    from engine.fx.studio_preview import get_studio_preview_status
+
+    return get_studio_preview_status(project_id)
+
+
+@app.post("/api/projects/{project_id}/studio-preview/render")
+def api_render_studio_preview(project_id: str, body: StudioPreviewRenderBody | None = None) -> dict[str, Any]:
+    from engine.fx.studio_preview import render_studio_preview
+
+    b = body or StudioPreviewRenderBody()
+    return render_studio_preview(
+        project_id,
+        start_beats=b.startBeats,
+        end_beats=b.endBeats,
+        filename_export_copy=b.exportCopyFilename,
+    )
+
+
+@app.get("/api/projects/{project_id}/studio-preview/audio")
+def api_get_studio_preview_audio(project_id: str):
+    from engine.fx.studio_preview import resolve_studio_preview_file
+
+    _, abs_path = resolve_studio_preview_file(project_id)
+    return FileResponse(abs_path, media_type="audio/wav", filename="studio_preview.wav")
 
 
 @app.get("/api/projects/{project_id}/generation/jobs")

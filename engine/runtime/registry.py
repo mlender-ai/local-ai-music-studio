@@ -27,6 +27,20 @@ from engine.daw_workspace.schema import utc_now_iso
 
 ENGINE_STATES = ("uninstalled", "binary_found", "model_found", "ready", "verified", "failed")
 
+RUNTIME_STATUS_MAP: dict[str, str] = {
+    "uninstalled": "NOT_INSTALLED",
+    "binary_found": "RUNTIME_FOUND",
+    "model_found": "MODEL_FOUND",
+    "ready": "READY",
+    "verified": "GENERATION_VERIFIED",
+    "failed": "FAILED",
+}
+
+
+def to_runtime_status(state: str) -> str:
+    """Map internal 6-state lifecycle to canonical Phase 05.1 uppercase runtime status."""
+    return RUNTIME_STATUS_MAP.get(state, "NOT_INSTALLED")
+
 
 def _local_config_path() -> Path:
     env_p = os.environ.get("DAW_RUNTIME_CONFIG", "").strip()
@@ -529,6 +543,20 @@ def get_runtime_registry() -> dict[str, Any]:
     }
 
     neural_ready = any(e["available"] for e in (yue2, acestep))
+    all_engines = [
+        yue2,
+        acestep,
+        demucs,
+        basic_pitch_entry,
+        pedalboard_entry,
+        fluidsynth_entry,
+        sheetsage2_entry,
+        allin1_entry,
+        yourmt3_entry,
+        local_midi,
+    ]
+    for eng in all_engines:
+        eng["runtimeStatus"] = to_runtime_status(str(eng.get("state", "uninstalled")))
     return {
         "configPath": str(_local_config_path()),
         "searchedRoots": [str(r) for r in roots],
@@ -539,5 +567,5 @@ def get_runtime_registry() -> dict[str, Any]:
         "proDspReady": has_pb,
         "proSoundfontReady": has_fs,
         "vocalQaModels": vocal_qa,
-        "engines": [yue2, acestep, demucs, basic_pitch_entry, pedalboard_entry, fluidsynth_entry, sheetsage2_entry, allin1_entry, yourmt3_entry, local_midi],
+        "engines": all_engines,
     }
