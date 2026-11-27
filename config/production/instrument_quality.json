@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "tiers": {
     "PREVIEW": {
       "autoSelectInProduction": false,
@@ -34,35 +34,53 @@
     "pro-synth-analog": "PRODUCTION_CANDIDATE",
     "pro-synth-fm": "PRODUCTION_CANDIDATE",
     "pro-sampler": "PRODUCTION_CANDIDATE",
+    "sf-drums-acoustic": "PRODUCTION_CANDIDATE",
+    "sf-drums-electronic": "PRODUCTION_CANDIDATE",
+    "sf-bass-electric": "PRODUCTION_CANDIDATE",
+    "sf-bass-synth": "PRODUCTION_CANDIDATE",
     "sf-piano-grand": "PRODUCTION_CANDIDATE",
     "sf-ep-rhodes": "PRODUCTION_CANDIDATE",
-    "sf-organ-b3": "PRODUCTION_CANDIDATE",
-    "sf-bass-finger": "PRODUCTION_CANDIDATE",
-    "sf-bass-acoustic": "PRODUCTION_CANDIDATE",
+    "sf-organ-vintage": "PRODUCTION_CANDIDATE",
     "sf-guitar-clean": "PRODUCTION_CANDIDATE",
-    "sf-guitar-acoustic": "PRODUCTION_CANDIDATE",
-    "sf-strings-pad": "PRODUCTION_CANDIDATE",
-    "sf-drums-acoustic": "PRODUCTION_CANDIDATE"
+    "sf-guitar-overdrive": "PRODUCTION_CANDIDATE",
+    "sf-strings-ensemble": "PRODUCTION_CANDIDATE",
+    "sf-vibraphone": "PRODUCTION_CANDIDATE",
+    "sf-pad-warm": "PRODUCTION_CANDIDATE",
+    "sf-brass-section": "PRODUCTION_CANDIDATE"
   },
   "userApprovedInstruments": [],
   "roleProductionPriority": {
     "drums": [
-      {"instrumentRef": "pro-drum-rack", "defaultPreset": "boombap-vintage", "genrePresets": {"house": "house-909", "rnb_neosoul": "boombap-vintage", "hiphop": "boombap-vintage", "lofi": "jazz-brush", "indie_rock": "indie-rock-acoustic"}},
-      {"instrumentRef": "sf-drums-acoustic", "defaultPreset": "standard_kit"}
+      {
+        "instrumentRef": "pro-drum-rack",
+        "defaultPreset": "boombap-vintage",
+        "genrePresets": {
+          "house": "house-909",
+          "rnb_neosoul": "boombap-vintage",
+          "hiphop": "boombap-vintage",
+          "lofi": "jazz-brush",
+          "indie_rock": "indie-rock-acoustic"
+        }
+      },
+      {"instrumentRef": "sf-drums-acoustic", "defaultPreset": "room"}
+    ],
+    "percussion": [
+      {"instrumentRef": "pro-drum-rack", "defaultPreset": "percussion-latin-studio"},
+      {"instrumentRef": "sf-drums-acoustic", "defaultPreset": "standard"}
     ],
     "bass": [
-      {"instrumentRef": "sf-bass-finger", "defaultPreset": "finger_bass"},
+      {"instrumentRef": "sf-bass-electric", "defaultPreset": "fingered"},
       {"instrumentRef": "pro-synth-analog", "defaultPreset": "deep-sub-bass"},
-      {"instrumentRef": "sf-bass-acoustic", "defaultPreset": "upright_bass"}
+      {"instrumentRef": "sf-bass-synth", "defaultPreset": "analog_bass_2"}
     ],
     "keys": [
-      {"instrumentRef": "sf-ep-rhodes", "defaultPreset": "rhodes_tine"},
-      {"instrumentRef": "sf-piano-grand", "defaultPreset": "concert_grand"},
-      {"instrumentRef": "sf-organ-b3", "defaultPreset": "drawbar_organ"}
+      {"instrumentRef": "sf-ep-rhodes", "defaultPreset": "jazz_warm_ep"},
+      {"instrumentRef": "sf-piano-grand", "defaultPreset": "warm_felt"},
+      {"instrumentRef": "sf-organ-vintage", "defaultPreset": "drawbar"}
     ],
     "guitar": [
       {"instrumentRef": "sf-guitar-clean", "defaultPreset": "jazz_hollow"},
-      {"instrumentRef": "sf-guitar-acoustic", "defaultPreset": "nylon_acoustic"}
+      {"instrumentRef": "sf-guitar-overdrive", "defaultPreset": "indie_overdrive"}
     ],
     "synth_hook": [
       {"instrumentRef": "pro-synth-analog", "defaultPreset": "warm-analog-pluck"},
@@ -70,7 +88,7 @@
     ],
     "pad": [
       {"instrumentRef": "pro-synth-analog", "defaultPreset": "wide-analog-pad"},
-      {"instrumentRef": "sf-strings-pad", "defaultPreset": "warm_pad"}
+      {"instrumentRef": "sf-pad-warm", "defaultPreset": "warm_pad"}
     ],
     "sampler": [
       {"instrumentRef": "pro-sampler", "defaultPreset": "one-shot"}
@@ -78,12 +96,24 @@
   },
   "roleRealismNotes": {
     "guitar": {
-      "limitationKo": "현재 설치된 FluidSynth SF3 기타(PRODUCTION_CANDIDATE)는 코드 보이싱·레이어 보조에는 활용 가능하지만, 실제 네오소울·R&B 기타의 슬라이드·뮤트·피킹 뉘앙스를 완전히 대체하기 어렵습니다. 자연스러운 리드 기타 사운드는 YuE2 Native Audio 생성 또는 전용 기타 AU/VST3·실제 녹음 오디오를 권장합니다.",
-      "limitationEn": "Installed FluidSynth SF3 guitar is a PRODUCTION_CANDIDATE suitable for backing layers, but cannot match live R&B/Neo Soul guitar phrasing. Use YuE2 Native Audio or a dedicated AU/VST3 guitar plugin / real recording for realistic lead guitar."
+      "limitationKo": "FluidSynth SF3 기타(clean_strat / jazz_hollow / muted_funk) + Tube Amp/Cab IR은 독립 편집·코드 호환·리듬 동기화가 100% 보장되는 PRODUCTION_CANDIDATE이나, 실제 연주자의 핑거링·초킹 뉘앙스는 사용자 직접 청취 평가 전까지 USER_APPROVED로 확정하지 않습니다.",
+      "limitationEn": "FluidSynth SF3 guitar + Tube Amp/Cab IR is a PRODUCTION_CANDIDATE with exact chord/rhythm alignment, though live guitarist nuances remain pending user listening before USER_APPROVED."
     },
     "drums": {
-      "limitationKo": "Pro Drum Rack(초크 그룹·라운드 로빈 지원)이 기본 MIDI 드럼보다 훨씬 안정적이나, 자연스러운 어쿠스틱 그루브와 공기감은 YuE2 Native Audio 생성 후 필요 시 하이브리드 레이어링을 권장합니다.",
-      "limitationEn": "Pro Drum Rack supports choke groups and round-robin, though organic acoustic pocket and room feel are best generated via YuE2 Native Audio with optional hybrid layering."
+      "limitationKo": "Pro Drum Rack(SF3 멀티샘플·초크 그룹·라운드 로빈)은 독립 편집과 정확한 박자 정렬을 제공하며, 유기적 어쿠스틱 룸 톤은 YuE2 Native + Demucs 추출 스템과 비교 선택할 수 있습니다.",
+      "limitationEn": "Pro Drum Rack provides editable multi-sampled kits with choke groups and round-robin; YuE2 Native + Demucs drum stem extraction can be auditioned alongside it."
+    },
+    "keys": {
+      "limitationKo": "sf-ep-rhodes(jazz_warm_ep / rhodes_tine) 및 sf-piano-grand(warm_felt)는 제작 후보(PRODUCTION_CANDIDATE)로, 사용자 청취 승인을 거치기 전까지 최고급 전문 Rhodes로 확정하지 않습니다.",
+      "limitationEn": "sf-ep-rhodes and sf-piano-grand are PRODUCTION_CANDIDATE instruments and are not declared top-tier until user listening approval."
     }
+  },
+  "performancePolicy": {
+    "forbidBasicBlockChordsOnly": true,
+    "forbidRootOnlySineBass": true,
+    "forbidRandomSoloNotes": true,
+    "forbidStaticTwoBarDrumRepeat": true,
+    "requireIntentionalMicrotiming": true,
+    "requireStrictInstrumentalNoVocal": true
   }
 }

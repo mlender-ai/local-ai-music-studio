@@ -299,9 +299,23 @@ def interpret_producer_instruction(
                 "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition, precision transcription, Pro Instruments, EQ/Compressor/Sidechain/Reverb/Delay/Amp FX, Automation, and clip editing.",
             }
 
-    # 0.0 Phase 05 / 05.1 AI Producer Routing Order Guard:
-    # NEVER let full-music or reference-conditioned composition prompts ("세련된 R&B 힙합 인스트루멘탈을 짧게 만들어줘",
-    # "인디 록 만들어줘", "이 레퍼런스처럼 따뜻하고 감각적인 음악 만들어줘") get hijacked by single-track Sound Design!
+    # 0.0 Phase 05.2 AI Session & Loop Production Router (Layer-by-Layer, Solo, Percussion, Funk Guitar, Bridge)
+    # Runs BEFORE generic Sound Design / Arrangement / Full-Music Composition while strictly protecting:
+    # - Phase 05.1 full-music YuE2 First ("인디 록 만들어줘", "R&B 힙합 인스트루멘탈 만들어줘")
+    # - Phase 04 bar-scoped arrangement edits ("5~8마디 드럼 변주해줘", "필인 넣어줘")
+    # - Phase 03 synth hook composition ("신스 훅 만들어줘")
+    # - Phase 02 mixer/section commands ("드럼 뮤트해줘", "9마디부터 브리지 구간 만들어줘")
+    is_mixer_or_fx_cmd = any(
+        k in low
+        for k in (
+            "볼륨", "volume", "게인", "gain", "뮤트", "mute", "음소거", "복제", "duplicate",
+            "리버브", "reverb", "이큐", "eq", "컴프", "사이드체인", "필터", "먹먹", "소리만",
+            "트랙 솔로", "솔로 해제", "solo off",
+        )
+    )
+    is_bar_range_arr = bool(re.search(r"\d+\s*[~\-–]\s*\d+\s*(?:마디|bars?)", low)) or any(
+        k in low for k in ("후반부만", "뒷부분만", "변주", "필인", "필 인", "만 남겨", "리버스", "페이드")
+    )
     is_new_music_compose = (
         any(
             k in low
@@ -320,10 +334,7 @@ def interpret_producer_instruction(
                 "인디 록 만들어",
                 "인디록 만들어",
                 "하우스 만들어",
-                "힙합 만들어",
-                "r&b",
-                "알앤비",
-                "네오소울",
+                "하우스 트랙",
                 "full track",
                 "compose a song",
                 "make a track",
@@ -331,8 +342,85 @@ def interpret_producer_instruction(
             )
         )
         and any(k in low for k in ("만들어", "작곡", "생성", "compose", "generate", "make", "create"))
-        and not any(k in low for k in ("소리만", "리듬은 그대로", "멜로디는 유지", "먹먹", "이큐", "eq", "컴프", "사이드체인", "필터"))
+        and not is_mixer_or_fx_cmd
     )
+
+    if not is_new_music_compose and not is_mixer_or_fx_cmd and not is_bar_range_arr:
+        bars_m = re.search(r"(\d+)\s*(?:마디|bars?)", low)
+        parsed_bars = max(4, min(16, int(bars_m.group(1)))) if bars_m else 8
+
+        # 0.0a Musical Bridge Generation (distinct from "9마디부터 브리지 구간 만들어줘" section marker!)
+        if (
+            any(k in low for k in ("브릿지", "브리지", "bridge"))
+            and any(k in low for k in ("만들어", "추가", "구성", "넣어", "create", "generate", "build"))
+            and not any(k in low for k in ("구간", "마커", "marker", "section"))
+        ):
+            return {
+                "supported": True,
+                "action": "session_layer_action",
+                "sessionOp": "generate_bridge",
+                "bars": 4 if not bars_m else parsed_bars,
+                "instruction": text,
+                "messageKo": "기존 메인 그루브를 유지하면서 대비되는 화성과 전환(Transition)이 포함된 브릿지를 생성합니다.",
+                "messageEn": "Generating a contrasting Bridge section & musical transition while preserving Main Groove layers.",
+            }
+
+        # 0.0b Musical Solo Performance (Guitar Solo / Piano Solo / Synth Solo)
+        if any(k in low for k in ("기타 솔로", "피아노 솔로", "건반 솔로", "guitar solo", "piano solo", "솔로 넣어", "솔로 추가", "솔로 만들어")):
+            solo_inst = "keys" if any(k in low for k in ("피아노", "건반", "로즈", "piano", "keys")) else (
+                "synth" if any(k in low for k in ("신스", "synth")) else "guitar"
+            )
+            return {
+                "supported": True,
+                "action": "session_layer_action",
+                "sessionOp": "generate_solo",
+                "targetInstrument": solo_inst,
+                "bars": parsed_bars,
+                "instruction": text,
+                "messageKo": f"기존 세션의 화성과 그루브를 유지하면서 표현력 있는 {solo_inst} 솔로 레이어를 생성합니다.",
+                "messageEn": f"Generating an expressive {solo_inst} solo layer over the existing session.",
+            }
+
+        # 0.0c Single-Instrument Session Layer Generation / Style Swap (Drums, Bass, Rhodes/Piano, Guitar, Percussion)
+        # Match the TARGET instrument (rightmost mention closest to action verb) so context phrases like
+        # "현재 드럼과 베이스에 어울리는 Neo Soul 건반 연주를 추가해줘" accurately target `keys`, NOT `bass`!
+        role_keywords: list[tuple[str, tuple[str, ...]]] = [
+            ("percussion", ("퍼커션", "percussion", "셰이커", "콩가", "봉고")),
+            ("guitar", ("기타", "guitar")),
+            ("bass", ("베이스", "bass")),
+            ("keys", ("피아노", "로즈", "건반", "rhodes", "piano", "keys")),
+            ("drums", ("드럼 루프", "드럼 그루브", "드럼 만들어", "드럼 추가", "drum loop", "drum groove")),
+        ]
+        layer_inst: str | None = None
+        best_pos = -1
+        for r_name, kws in role_keywords:
+            for kw in kws:
+                pos = low.rfind(kw)
+                if pos > best_pos:
+                    best_pos = pos
+                    layer_inst = r_name
+
+        is_layer_intent = any(
+            k in low
+            for k in (
+                "만들어", "추가", "얹어", "넣어", "생성", "바꿔", "독특", "펑키", "클린",
+                "add", "layer", "generate", "create", "funk", "groove", "loop", "riff", "melody", "comping",
+            )
+        )
+        if layer_inst and is_layer_intent and not any(k in low for k in ("신스 훅", "신스훅", "synth hook", "레퍼런스", "reference")):
+            as_alt = any(k in low for k in ("바꿔", "대신", "다른 버전", "테이크", "swap", "change", "alternative", "take"))
+            return {
+                "supported": True,
+                "action": "session_layer_action",
+                "sessionOp": "generate_layer",
+                "targetInstrument": layer_inst,
+                "bars": parsed_bars,
+                "asAlternativeTake": as_alt,
+                "instruction": text,
+                "messageKo": f"기존 승인·잠금 레이어를 보호하면서 '{layer_inst}' 독립 연주 레이어를 생성합니다.",
+                "messageEn": f"Generating isolated '{layer_inst}' performance layer while protecting existing approved/locked layers.",
+            }
+
     if not is_new_music_compose:
         from engine.sound_design import plan_sound_design_operations
 

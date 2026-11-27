@@ -127,7 +127,7 @@ def test_a_full_128bpm_house_production_end_to_end(isolated_phase03_env):
     assert reopened.schemaVersion == "1.5.0"
     assert len(reopened.tracks) >= 4
     assert any(t.instrumentRef == "pro-drum-rack" for t in reopened.tracks)
-    assert any(t.instrumentRef in ("sf-bass-finger", "pro-synth-analog") for t in reopened.tracks)
+    assert any(t.instrumentRef in ("sf-bass-electric", "pro-synth-analog") for t in reopened.tracks)
     assert any(t.instrumentRef in ("pro-synth-analog", "pro-synth-fm") for t in reopened.tracks)
 
     # 5. Offline 48 kHz Stereo WAV export of first 16 beats verifies multi-timbre audio is real & clean

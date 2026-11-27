@@ -99,6 +99,7 @@ class MidiNote(DawModel):
     velocity: int = Field(default=100, ge=1, le=127)
     startBeat: float = Field(ge=0.0)
     durationBeats: float = Field(gt=0.0, le=512.0)
+    pitchBendSemitones: float | None = Field(default=None, ge=-12.0, le=12.0)
 
 
 class Clip(DawModel):

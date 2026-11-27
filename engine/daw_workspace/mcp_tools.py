@@ -54,7 +54,7 @@ def get_capabilities() -> dict[str, Any]:
     return {
         "product": "AI-Native DAW",
         "phase": "04",  # Backward-compatible Phase 04 contract field
-        "currentPhase": "05.1",
+        "currentPhase": "05.2",
         "referencePhase": "03.2.1",
         "schemaVersion": "1.4.0",  # Backward-compatible MCP schema contract field
         "projectSchemaVersion": "1.5.0",
@@ -90,6 +90,17 @@ def get_capabilities() -> dict[str, Any]:
                 "five_gate_quality_gate",
                 "native_audio_preservation",
                 "hybrid_stem_and_midi_layering",
+            ],
+            "sessionLoopProduction": [
+                "shared_session_context_and_locked_chord_timeline",
+                "empirical_yue2_instrument_capability_matrix",
+                "idiomatic_drums_bass_keys_guitar_percussion_synth_performers",
+                "cryptographic_layer_protection_approve_lock",
+                "non_destructive_take_lane_ab_switching",
+                "three_mode_level_matched_layer_preview",
+                "contrasting_bridge_and_musical_transition_generation",
+                "loop_integrity_tempo_drift_and_harmonic_compatibility_validation",
+                "persistent_studio_session_library_and_taste_feedback_link",
             ],
             "referenceIntelligence": [
                 "import_audio_video",
@@ -1230,3 +1241,194 @@ def render_studio_preview(project_id: str | None = None, filename_export_copy: s
 
     pid = _resolve_project_id(project_id)
     return _render(pid, filename_export_copy=filename_export_copy)
+
+
+# --- Phase 05.2 AI Session & Loop Production + Studio Session Library MCP Tools (Section 38) ---
+
+def get_session_context(
+    project_id: str | None = None,
+    start_beats: float = 0.0,
+    end_beats: float | None = None,
+    focus_instrument: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import build_session_context
+
+    pid = _resolve_project_id(project_id)
+    proj = store.load_project(pid)
+    sec_range = {"startBeats": start_beats, "endBeats": end_beats} if end_beats is not None else None
+    return build_session_context(proj, section_range=sec_range, focus_instrument=focus_instrument)
+
+
+def get_instrument_capabilities() -> dict[str, Any]:
+    from engine.session_lab import get_instrument_capability_matrix
+
+    return get_instrument_capability_matrix()
+
+
+def generate_layer(
+    target_instrument: str,
+    performance_type: str | None = None,
+    instruction: str = "",
+    start_beats: float = 0.0,
+    bars: int = 8,
+    preferred_strategy: str = "auto",
+    as_alternative_take: bool = False,
+    target_track_id: str | None = None,
+    reference_id: str | None = None,
+    seed: int = 42,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import generate_session_layer
+
+    pid = _resolve_project_id(project_id)
+    return generate_session_layer(
+        pid,
+        target_instrument=target_instrument,
+        performance_type=performance_type,
+        instruction=instruction,
+        start_beats=start_beats,
+        bars=bars,
+        preferred_strategy=preferred_strategy,
+        as_alternative_take=as_alternative_take,
+        target_track_id=target_track_id,
+        reference_id=reference_id,
+        seed=seed,
+    )
+
+
+def generate_solo(
+    instrument: str = "guitar",
+    instruction: str = "",
+    start_beats: float = 0.0,
+    bars: int = 8,
+    seed: int = 77,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import generate_session_solo
+
+    pid = _resolve_project_id(project_id)
+    return generate_session_solo(pid, instrument=instrument, instruction=instruction, start_beats=start_beats, bars=bars, seed=seed)
+
+
+def generate_bridge(
+    start_beats: float | None = None,
+    bars: int = 4,
+    include_transition: bool = True,
+    seed: int = 520,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import generate_session_bridge
+
+    pid = _resolve_project_id(project_id)
+    return generate_session_bridge(pid, start_beats=start_beats, bars=bars, include_transition=include_transition, seed=seed)
+
+
+def generate_transition(
+    boundary_beat: float = 32.0,
+    seed: int = 530,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import generate_session_transition
+
+    pid = _resolve_project_id(project_id)
+    return generate_session_transition(pid, boundary_beat=boundary_beat, seed=seed)
+
+
+def switch_layer_take(track_id: str, lane_id: str, project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import switch_layer_take as _switch
+
+    pid = _resolve_project_id(project_id)
+    return _switch(pid, track_id, lane_id)
+
+
+def validate_layer(track_id: str, project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import validate_session_layer
+
+    pid = _resolve_project_id(project_id)
+    return validate_session_layer(pid, track_id)
+
+
+def align_loop(track_id: str, target_bars: int = 8, project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import align_session_loop
+
+    pid = _resolve_project_id(project_id)
+    return align_session_loop(pid, track_id, target_bars=target_bars)
+
+
+def preview_layer(track_id: str, mode: str = "in_context", project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import get_layer_preview_path
+
+    pid = _resolve_project_id(project_id)
+    p = get_layer_preview_path(pid, track_id, mode=mode)
+    return {"projectId": pid, "trackId": track_id, "mode": mode, "wavPath": str(p)}
+
+
+def lock_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import set_layer_state
+
+    return set_layer_state(_resolve_project_id(project_id), track_id, "Locked", note=note)
+
+
+def approve_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import set_layer_state
+
+    return set_layer_state(_resolve_project_id(project_id), track_id, "Approved", note=note)
+
+
+def reject_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import set_layer_state
+
+    return set_layer_state(_resolve_project_id(project_id), track_id, "Rejected", note=note)
+
+
+def save_session_asset_tool(
+    name: str,
+    category: str,
+    instrument: str,
+    performance_type: str,
+    bpm: float = 90.0,
+    key: str = "D minor",
+    bars: int = 8,
+    audio_path: str | None = None,
+    tags: list[str] | None = None,
+    project_id: str | None = None,
+    track_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import save_session_asset
+
+    return save_session_asset(
+        name=name,
+        category=category,
+        instrument=instrument,
+        performance_type=performance_type,
+        bpm=bpm,
+        key=key,
+        bars=bars,
+        audio_path=audio_path,
+        tags=tags,
+        project_id=project_id,
+        track_id=track_id,
+    )
+
+
+def search_session_assets_tool(
+    query: str | None = None,
+    category: str | None = None,
+    instrument: str | None = None,
+    key: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import search_session_assets
+
+    return search_session_assets(query=query, category=category, instrument=instrument, key=key)
+
+
+def submit_performance_feedback_tool(
+    asset_id: str,
+    rating: str,
+    comment: str = "",
+    detail_tags: list[str] | None = None,
+    project_id: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import submit_performance_feedback
+
+    return submit_performance_feedback(asset_id, rating=rating, comment=comment, detail_tags=detail_tags, project_id=project_id)

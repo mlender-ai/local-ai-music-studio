@@ -166,15 +166,16 @@ def _render_track_raw_source(
                     clipped_dur_beats = min(note.durationBeats, clip.durationBeats - rel_start_beats)
                     if clipped_dur_beats <= 0.0:
                         continue
-                    clip_notes_expanded.append(
-                        {
-                            "id": note.id,
-                            "pitch": note.pitch,
-                            "velocity": note.velocity,
-                            "startBeat": rel_start_beats,
-                            "durationBeats": clipped_dur_beats,
-                        }
-                    )
+                    note_ev: dict[str, Any] = {
+                        "id": note.id,
+                        "pitch": note.pitch,
+                        "velocity": note.velocity,
+                        "startBeat": rel_start_beats,
+                        "durationBeats": clipped_dur_beats,
+                    }
+                    if getattr(note, "pitchBendSemitones", None) is not None:
+                        note_ev["pitchBendSemitones"] = float(note.pitchBendSemitones)
+                    clip_notes_expanded.append(note_ev)
             if clip_notes_expanded:
                 def _resolve_asset_path(aid: str) -> Path | None:
                     try:

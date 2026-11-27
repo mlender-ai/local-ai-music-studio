@@ -482,7 +482,36 @@ def build_yue2_request_from_plan(
     chords_hint = " to ".join(str(c) for c in (hg.get("chordProgression") or [])[:4])
     groove_feel = str(hg.get("grooveFeel") or "natural pocket groove").replace("_", " ")
 
-    if genre_key == "rnb_neosoul":
+    single_role_only = len(plan.instrumentRoles) == 1
+    single_role_name = str(plan.instrumentRoles[0].get("role", "")) if single_role_only else ""
+    if single_role_only:
+        solo_role_prompts = {
+            "drums": (
+                "Unaccompanied solo acoustic drum kit only: warm punchy kick drum, crisp dry snare and rimshot, "
+                "swung hi-hats and subtle ghost notes in a tight studio room. Strictly solo drums only, no bass, no piano, no guitar, no chords, no melody"
+            ),
+            "bass": (
+                "Unaccompanied solo fingerstyle electric bass guitar only: warm round neck pickup tone, pocket groove and subtle slides. "
+                "Strictly solo bass only, no drums, no percussion, no piano, no guitar, no chords"
+            ),
+            "guitar": (
+                "Unaccompanied solo clean hollow-body electric guitar only: warm tube amp tone with subtle room air, expressive riffs and muted rhythmic phrasing. "
+                "Strictly solo guitar only, no drums, no bass, no piano, no synth, no backing band"
+            ),
+            "keys": (
+                "Unaccompanied solo Fender Rhodes electric piano only: warm bell-like tine chords, soulful neo-soul voicings and melodic phrasing. "
+                "Strictly solo electric piano only, no drums, no bass, no guitar, no backing band"
+            ),
+            "percussion": (
+                "Unaccompanied solo organic studio percussion groove only: shaker, warm congas, bongos, rim clicks and subtle tambourine. "
+                "Strictly solo percussion only, no drum kit kick, no bass, no chords, no melody"
+            ),
+        }
+        ensemble_desc = solo_role_prompts.get(
+            single_role_name,
+            f"Unaccompanied solo {plan.instrumentRoles[0].get('name', single_role_name)} only, no backing band",
+        )
+    elif genre_key == "rnb_neosoul":
         ensemble_desc = (
             "Warm Fender Rhodes electric piano playing rich jazz-soul 9th and 13th chords with subtle stereo tremolo, "
             "deep round finger electric bass locking tightly into the pocket, laid-back dusty acoustic drum kit with crisp rimshot, "
