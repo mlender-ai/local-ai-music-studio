@@ -113,11 +113,15 @@ def resolve_production_instrument(
     if role == "keys" and any(k in low_inst for k in ("그랜드", "grand", "어쿠스틱 피아노", "acoustic piano")):
         candidates.insert(0, {"instrumentRef": "sf-piano-grand", "defaultPreset": "concert_grand"})
     elif role == "keys" and any(k in low_inst for k in ("오르간", "organ", "b3")):
-        candidates.insert(0, {"instrumentRef": "sf-organ-b3", "defaultPreset": "drawbar_organ"})
+        candidates.insert(0, {"instrumentRef": "sf-organ-vintage", "defaultPreset": "drawbar"})
+    elif role == "guitar" and any(k in low_inst for k in ("펑크", "funk", "뮤트", "mute")):
+        candidates.insert(0, {"instrumentRef": "sf-guitar-clean", "defaultPreset": "muted_funk"})
     elif role == "guitar" and any(k in low_inst for k in ("어쿠스틱 기타", "acoustic guitar", "나일론", "nylon")):
-        candidates.insert(0, {"instrumentRef": "sf-guitar-acoustic", "defaultPreset": "nylon_acoustic"})
+        candidates.insert(0, {"instrumentRef": "sf-guitar-clean", "defaultPreset": "acoustic_nylon"})
+    elif role == "guitar" and any(k in low_inst for k in ("클린", "clean", "스트랫", "strat")):
+        candidates.insert(0, {"instrumentRef": "sf-guitar-clean", "defaultPreset": "clean_strat"})
     elif role == "bass" and any(k in low_inst for k in ("업라이트", "upright", "콘트라베이스", "재즈 베이스", "acoustic bass")):
-        candidates.insert(0, {"instrumentRef": "sf-bass-acoustic", "defaultPreset": "upright_bass"})
+        candidates.insert(0, {"instrumentRef": "sf-bass-electric", "defaultPreset": "upright"})
     elif role == "bass" and any(k in low_inst for k in ("서브", "sub", "신스 베이스", "synth bass", "808", "하우스", "house")):
         candidates.insert(0, {"instrumentRef": "pro-synth-analog", "defaultPreset": "deep-sub-bass"})
 

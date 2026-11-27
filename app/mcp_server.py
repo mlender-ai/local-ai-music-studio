@@ -826,6 +826,175 @@ def daw_render_studio_preview(
     return daw_mcp.render_studio_preview(project_id, filename_export_copy)
 
 
+# --- AI-Native DAW Phase 05.2 AI Session & Loop Production MCP Tools (Section 38) ---
+
+@server.tool(name="daw.get_session_context", annotations=READ)
+def daw_get_session_context(
+    project_id: str | None = None,
+    start_beats: float = 0.0,
+    end_beats: float | None = None,
+    focus_instrument: str | None = None,
+) -> dict:
+    """Read compact shared musical SessionContext (BPM, Key, Chord Timeline, Drum Kick/Snare Pocket, Occupied Registers, Protected Layers)."""
+    return daw_mcp.get_session_context(project_id, start_beats, end_beats, focus_instrument)
+
+
+@server.tool(name="daw.get_instrument_capabilities", annotations=READ)
+def daw_get_instrument_capabilities() -> dict:
+    """Inspect honest empirical YuE2 solo capability matrix, Generation Strategies A-E, and Instrument Performance Vocabulary."""
+    return daw_mcp.get_instrument_capabilities()
+
+
+@server.tool(name="daw.generate_layer", annotations=WRITE)
+def daw_generate_layer(
+    target_instrument: str,
+    performance_type: str | None = None,
+    instruction: str = "",
+    start_beats: float = 0.0,
+    bars: int = 8,
+    preferred_strategy: str = "auto",
+    as_alternative_take: bool = False,
+    target_track_id: str | None = None,
+    reference_id: str | None = None,
+    seed: int = 42,
+    project_id: str | None = None,
+) -> dict:
+    """Generate a single isolated, context-aware instrument layer (drums/bass/keys/guitar/percussion/synth) while cryptographically protecting Approved/Locked layers."""
+    return daw_mcp.generate_layer(
+        target_instrument,
+        performance_type,
+        instruction,
+        start_beats,
+        bars,
+        preferred_strategy,
+        as_alternative_take,
+        target_track_id,
+        reference_id,
+        seed,
+        project_id,
+    )
+
+
+@server.tool(name="daw.generate_solo", annotations=WRITE)
+def daw_generate_solo(
+    instrument: str = "guitar",
+    instruction: str = "",
+    start_beats: float = 0.0,
+    bars: int = 8,
+    seed: int = 77,
+    project_id: str | None = None,
+) -> dict:
+    """Generate an expressive Guitar, Piano, or Synth Solo with phrase arc, rests, and pitch-bends without touching existing layers."""
+    return daw_mcp.generate_solo(instrument, instruction, start_beats, bars, seed, project_id)
+
+
+@server.tool(name="daw.generate_bridge", annotations=WRITE)
+def daw_generate_bridge(
+    start_beats: float | None = None,
+    bars: int = 4,
+    include_transition: bool = True,
+    seed: int = 520,
+    project_id: str | None = None,
+) -> dict:
+    """Generate a contrasting reharmonized Bridge section and musical transition while preserving all Main Groove layers untouched."""
+    return daw_mcp.generate_bridge(start_beats, bars, include_transition, seed, project_id)
+
+
+@server.tool(name="daw.generate_transition", annotations=WRITE)
+def daw_generate_transition(
+    boundary_beat: float = 32.0,
+    seed: int = 530,
+    project_id: str | None = None,
+) -> dict:
+    """Create a 2-beat musical transition (drum turnaround fill + chromatic bass pickup) into a section boundary."""
+    return daw_mcp.generate_transition(boundary_beat, seed, project_id)
+
+
+@server.tool(name="daw.switch_layer_take", annotations=WRITE)
+def daw_switch_layer_take(track_id: str, lane_id: str, project_id: str | None = None) -> dict:
+    """Switch active Take Lane on a track (e.g. Guitar Take A Funk <-> Take B Clean) non-destructively without double-playing."""
+    return daw_mcp.switch_layer_take(track_id, lane_id, project_id)
+
+
+@server.tool(name="daw.validate_layer", annotations=READ)
+def daw_validate_layer(track_id: str, project_id: str | None = None) -> dict:
+    """Run 5-Part Musical Quality Gate (Engine, Performance, Layer/Harmony/Loop, Sound, User Listening UNVERIFIED) on a track."""
+    return daw_mcp.validate_layer(track_id, project_id)
+
+
+@server.tool(name="daw.align_loop", annotations=WRITE)
+def daw_align_loop(track_id: str, target_bars: int = 8, project_id: str | None = None) -> dict:
+    """Extract a click-free bar-boundary aligned loop WAV for a track while preserving original files untouched."""
+    return daw_mcp.align_loop(track_id, target_bars, project_id)
+
+
+@server.tool(name="daw.preview_layer", annotations=READ)
+def daw_preview_layer(track_id: str, mode: str = "in_context", project_id: str | None = None) -> dict:
+    """Resolve or render level-matched (-16 LUFS) layer preview WAV in solo, in_context, or before_mix mode."""
+    return daw_mcp.preview_layer(track_id, mode, project_id)
+
+
+@server.tool(name="daw.lock_layer", annotations=WRITE)
+def daw_lock_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict:
+    """Lock a satisfied layer so subsequent layer generations cannot overwrite or alter it."""
+    return daw_mcp.lock_layer(track_id, note, project_id)
+
+
+@server.tool(name="daw.approve_layer", annotations=WRITE)
+def daw_approve_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict:
+    """Approve and protect a layer in the active session."""
+    return daw_mcp.approve_layer(track_id, note, project_id)
+
+
+@server.tool(name="daw.reject_layer", annotations=WRITE)
+def daw_reject_layer(track_id: str, note: str = "", project_id: str | None = None) -> dict:
+    """Mark a candidate layer as Rejected."""
+    return daw_mcp.reject_layer(track_id, note, project_id)
+
+
+@server.tool(name="daw.save_session_asset", annotations=WRITE)
+def daw_save_session_asset(
+    name: str,
+    category: str,
+    instrument: str,
+    performance_type: str,
+    bpm: float = 90.0,
+    key: str = "D minor",
+    bars: int = 8,
+    audio_path: str | None = None,
+    tags: list[str] | None = None,
+    project_id: str | None = None,
+    track_id: str | None = None,
+) -> dict:
+    """Save a verified musical loop, riff, comping, solo, or bridge asset into the persistent Studio Session Library."""
+    return daw_mcp.save_session_asset_tool(
+        name, category, instrument, performance_type, bpm, key, bars, audio_path, tags, project_id, track_id
+    )
+
+
+@server.tool(name="daw.search_session_assets", annotations=READ)
+def daw_search_session_assets(
+    query: str | None = None,
+    category: str | None = None,
+    instrument: str | None = None,
+    key: str | None = None,
+) -> dict:
+    """Search reusable Studio Session Library assets & Performance Recipes by category, instrument, key, or keyword."""
+    return daw_mcp.search_session_assets_tool(query, category, instrument, key)
+
+
+@server.tool(name="daw.submit_performance_feedback", annotations=WRITE)
+def daw_submit_performance_feedback(
+    asset_id: str,
+    rating: str,
+    comment: str = "",
+    detail_tags: list[str] | None = None,
+    project_id: str | None = None,
+) -> dict:
+    """Submit user performance rating (good|average|poor|unused) & tags on a Session Library asset, synced into Taste Profile."""
+    return daw_mcp.submit_performance_feedback_tool(asset_id, rating, comment, detail_tags, project_id)
+
+
 def main():
     server.run(transport="stdio")
 

@@ -18,8 +18,10 @@ import numpy as np
 from scipy import signal
 
 from .sampler import _load_stereo_at_sr, _pitch_shift_resample
-from .soundfont_engine import probe_fluidsynth_engine, render_soundfont_sequence
+from .soundfont_engine import probe_fluidsynth_engine, render_soundfont_oneshots, render_soundfont_sequence
 from .synth_engine import synth_note_for_instrument
+
+_GLOBAL_PAD_SAMPLE_CACHE: dict[tuple[str, str, int, int, int, bool], np.ndarray] = {}
 
 DRUM_RACK_KITS: dict[str, dict[str, Any]] = {
     "house-909": {
@@ -107,6 +109,29 @@ DRUM_RACK_KITS: dict[str, dict[str, Any]] = {
             46: {"name": "Open Metal", "volumeDb": -1.0, "pan": 0.15, "chokeGroup": "hihat"},
         },
     },
+    "percussion-latin-studio": {
+        "name": "Studio Percussion (Shaker / Conga / Bongo / Rim)",
+        "nameKo": "스튜디오 퍼커션 (셰이커 · 콩가 · 봉고 · 림)",
+        "sourceEngine": "soundfont",
+        "sfInstrumentId": "sf-drums-acoustic",
+        "sfPresetId": "standard",
+        "kitToneCutoffHz": 13500.0,
+        "punchDrive": 1.08,
+        "padDefaults": {
+            37: {"name": "Wood Rim Click", "volumeDb": -1.5, "pan": -0.22, "chokeGroup": None},
+            54: {"name": "Tambourine", "volumeDb": -4.0, "pan": 0.32, "chokeGroup": None},
+            60: {"name": "Hi Bongo", "volumeDb": -1.0, "pan": -0.34, "chokeGroup": None},
+            61: {"name": "Lo Bongo", "volumeDb": -1.0, "pan": -0.20, "chokeGroup": None},
+            62: {"name": "Mute Hi Conga", "volumeDb": -0.5, "pan": 0.24, "chokeGroup": "conga"},
+            63: {"name": "Open Hi Conga", "volumeDb": -0.5, "pan": 0.28, "chokeGroup": "conga"},
+            64: {"name": "Low Conga", "volumeDb": 0.0, "pan": 0.18, "chokeGroup": None},
+            69: {"name": "Cabasa", "volumeDb": -3.5, "pan": -0.28, "chokeGroup": None},
+            70: {"name": "Shaker / Maracas", "volumeDb": -3.0, "pan": 0.36, "chokeGroup": None},
+            75: {"name": "Claves", "volumeDb": -3.0, "pan": -0.15, "chokeGroup": None},
+            76: {"name": "Hi Woodblock", "volumeDb": -2.5, "pan": 0.22, "chokeGroup": None},
+            77: {"name": "Lo Woodblock", "volumeDb": -2.5, "pan": -0.22, "chokeGroup": None},
+        },
+    },
 }
 
 
@@ -141,10 +166,30 @@ def render_drum_rack_sequence(
     punch_drive = float(cfg.get("punchDrive", kit.get("punchDrive", 1.15)))
     enable_rr = bool(cfg.get("roundRobin", True))
 
-    # Pre-cache single-hit FluidSynth pad samples at high velocity so we can apply TRUE sample-level Choke Groups,
-    # per-pad pan/pitch/volume, and Round-Robin variation cleanly!
-    pad_sample_cache: dict[tuple[int, int], np.ndarray] = {}
+    # Process-wide cache of single-hit FluidSynth pad samples keyed by (inst, preset, pitch, vel_layer, sr)
+    # Batch-prewarm ALL missing pads in ONE single FluidSynth sfload() call (30x faster!)
     sample_file_cache: dict[str, np.ndarray] = {}
+    if use_sf:
+        missing_pairs: list[tuple[int, int]] = []
+        seen_pairs: set[tuple[int, int]] = set()
+        for n in notes:
+            p = int(n.get("pitch", 36))
+            v = max(1, min(127, int(n.get("velocity", 100))))
+            vl = 48 if v < 60 else (82 if v < 92 else (108 if v < 116 else 124))
+            ckey = (sf_inst_id, sf_preset_id, p, vl, sr, True)
+            if ckey not in _GLOBAL_PAD_SAMPLE_CACHE and (p, vl) not in seen_pairs:
+                seen_pairs.add((p, vl))
+                missing_pairs.append((p, vl))
+        if missing_pairs:
+            batch_hits = render_soundfont_oneshots(
+                missing_pairs,
+                instrument_id=sf_inst_id,
+                preset_id=sf_preset_id,
+                sr=sr,
+                gain=0.85,
+            )
+            for (p, vl), hit_pcm in batch_hits.items():
+                _GLOBAL_PAD_SAMPLE_CACHE[(sf_inst_id, sf_preset_id, p, vl, sr, True)] = hit_pcm
 
     def _get_pad_hit(pitch: int, vel: int, pad_cfg: dict[str, Any]) -> np.ndarray:
         custom_path = pad_cfg.get("samplePath")
@@ -156,8 +201,8 @@ def render_drum_rack_sequence(
 
         # Quantize velocity into 4 dynamic layers (for realistic multi-velocity SoundFont samples!)
         vel_layer = 48 if vel < 60 else (82 if vel < 92 else (108 if vel < 116 else 124))
-        key = (pitch, vel_layer)
-        if key not in pad_sample_cache:
+        key = (sf_inst_id, sf_preset_id, pitch, vel_layer, sr, use_sf)
+        if key not in _GLOBAL_PAD_SAMPLE_CACHE:
             if use_sf:
                 hit_dur = 1.15 if pitch in (46, 49, 51, 52, 57) else 0.55
                 one_note = [{"pitch": pitch, "velocity": vel_layer, "startBeat": 0.0, "durationBeats": hit_dur * (bpm / 60.0)}]
@@ -174,11 +219,11 @@ def render_drum_rack_sequence(
                 env_abs = np.max(np.abs(pcm), axis=1)
                 nz = np.where(env_abs > 1e-4)[0]
                 end_i = int(nz[-1]) + int(0.02 * sr) if len(nz) > 0 else int(0.3 * sr)
-                pad_sample_cache[key] = pcm[: min(len(pcm), max(int(0.08 * sr), end_i))]
+                _GLOBAL_PAD_SAMPLE_CACHE[key] = pcm[: min(len(pcm), max(int(0.08 * sr), end_i))]
             else:
-                pad_sample_cache[key] = synth_note_for_instrument("drum-kit-electronic", pitch, vel_layer, 0.4, sr)
+                _GLOBAL_PAD_SAMPLE_CACHE[key] = synth_note_for_instrument("drum-kit-electronic", pitch, vel_layer, 0.4, sr)
         scale = vel / float(vel_layer)
-        return (pad_sample_cache[key] * scale).astype(np.float32)
+        return (_GLOBAL_PAD_SAMPLE_CACHE[key] * scale).astype(np.float32)
 
     # Sort all drum hits chronologically so Choke Groups truncate ringing voices accurately!
     sorted_notes = sorted(notes, key=lambda n: (float(n.get("startBeat", 0.0)), int(n.get("pitch", 36))))

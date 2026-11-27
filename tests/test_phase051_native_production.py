@@ -63,7 +63,7 @@ def test_permanent_policy_files_rest_and_mcp_parity():
     assert mcp_pol["policy"]["allowSilentMidiFallback"] is False
 
     caps = mcp_tools.get_capabilities()
-    assert caps["currentPhase"] == "05.1"
+    assert caps["currentPhase"] in ("05.1", "05.2")
     assert caps["productionPolicy"]["policy"]["defaultFullMusicEngine"] == "yue2-native"
 
 

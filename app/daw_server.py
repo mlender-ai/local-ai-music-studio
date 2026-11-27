@@ -747,6 +747,58 @@ def post_producer_instruct(project_id: str, body: ProducerInstructBody) -> dict[
             "messageKo": f"편집 가능한 MIDI 세션으로 재구성했습니다: {', '.join(res.get('importedItems', []))}. (1클릭 Undo 지원)",
             "messageEn": f"Reconstructed editable MIDI session: {', '.join(res.get('importedItems', []))}. (1-click Undo supported)",
         }
+    if routed.get("action") == "session_layer_action":
+        from engine.session_lab import (
+            generate_session_bridge,
+            generate_session_layer,
+            generate_session_solo,
+        )
+
+        op = str(routed.get("sessionOp") or "generate_layer")
+        if op == "generate_bridge":
+            br = generate_session_bridge(project_id, bars=int(routed.get("bars", 4)), include_transition=True)
+            saved_p = store.load_project(project_id)
+            return {
+                "supported": True,
+                "action": "session_bridge_created",
+                "bridge": br,
+                "project": saved_p.model_dump(),
+                "messageKo": f"대비되는 화성({br['contrastSummary']['harmonyContrast']})과 전환 필인이 포함된 {br['bars']}마디 브릿지를 생성했습니다. 기존 메인 그루브 레이어는 보호되었습니다.",
+                "messageEn": f"Created {br['bars']}-bar contrasting Bridge with transition while preserving Main Groove layers.",
+            }
+        if op == "generate_solo":
+            solo_res = generate_session_solo(
+                project_id,
+                instrument=str(routed.get("targetInstrument") or "guitar"),
+                instruction=body.instruction,
+                bars=int(routed.get("bars", 8)),
+            )
+            saved_p = store.load_project(project_id)
+            return {
+                "supported": True,
+                "action": "session_layer_created",
+                "layerResult": solo_res,
+                "project": saved_p.model_dump(),
+                "messageKo": f"표현력 있는 {solo_res['trackName']} 레이어를 생성했습니다 (기존 보호 레이어 유지, 3모드 프리뷰 준비 완료).",
+                "messageEn": f"Generated expressive {solo_res['trackName']} layer (protected layers intact, 3-mode previews ready).",
+            }
+        layer_res = generate_session_layer(
+            project_id,
+            target_instrument=str(routed.get("targetInstrument") or "keys"),
+            instruction=body.instruction,
+            bars=int(routed.get("bars", 8)),
+            as_alternative_take=bool(routed.get("asAlternativeTake", False)),
+            reference_id=body.activeReferenceId,
+        )
+        saved_p = store.load_project(project_id)
+        return {
+            "supported": True,
+            "action": "session_layer_created",
+            "layerResult": layer_res,
+            "project": saved_p.model_dump(),
+            "messageKo": f"독립 세션 레이어 '{layer_res['trackName']}' ({layer_res['performanceType']})를 생성했습니다. Solo / 합주 / Before A-B 프리뷰로 확인하세요.",
+            "messageEn": f"Generated independent session layer '{layer_res['trackName']}' ({layer_res['performanceType']}).",
+        }
     if routed.get("action") == "composition_plan":
         ref_id = routed.get("referenceId") or body.activeReferenceId
         plan = create_composition_plan(
@@ -1500,6 +1552,279 @@ def api_get_music_memory(project_id: str) -> dict[str, Any]:
 def api_patch_music_memory(project_id: str, body: PatchMemoryBody) -> dict[str, Any]:
     mem = update_project_music_memory(project_id, patch=body.patch)
     return {"projectId": project_id, "musicMemory": mem}
+
+
+# --- Phase 05.2 AI Session & Loop Production + Studio Session Library REST Endpoints ---
+
+class SessionChordSetupBody(BaseModel):
+    chords: list[dict[str, Any]] | None = None
+    key: str = "D minor"
+    lock: bool = True
+
+
+class GenerateLayerBody(BaseModel):
+    targetInstrument: str = Field(min_length=1, max_length=48)
+    performanceType: str | None = None
+    instruction: str = ""
+    startBeats: float = Field(default=0.0, ge=0.0)
+    bars: int = Field(default=8, ge=1, le=32)
+    preferredStrategy: str = "auto"
+    variationIntensity: str = "moderate"
+    variationOfExisting: bool = False
+    asAlternativeTake: bool = False
+    activateTake: bool = True
+    targetTrackId: str | None = None
+    trackName: str | None = None
+    referenceId: str | None = None
+    seed: int = 42
+
+
+class GenerateSoloBody(BaseModel):
+    instrument: str = "guitar"
+    instruction: str = ""
+    startBeats: float = Field(default=0.0, ge=0.0)
+    bars: int = Field(default=8, ge=1, le=32)
+    seed: int = 77
+
+
+class GenerateBridgeBody(BaseModel):
+    startBeats: float | None = None
+    bars: int = Field(default=4, ge=2, le=16)
+    includeTransition: bool = True
+    seed: int = 520
+
+
+class GenerateTransitionBody(BaseModel):
+    boundaryBeat: float = Field(default=32.0, ge=2.0)
+    seed: int = 530
+
+
+class LayerStateBody(BaseModel):
+    state: str = Field(min_length=1, max_length=32)
+    note: str = ""
+
+
+class AlignLoopBody(BaseModel):
+    targetBars: int = Field(default=8, ge=1, le=32)
+
+
+class SaveSessionAssetBody(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    category: str = "full_session_groove"
+    instrument: str = "drums"
+    performanceType: str = "pocket_groove"
+    bpm: float = 90.0
+    key: str = "D minor"
+    timeSignature: str = "4/4"
+    bars: int = 8
+    chordProgression: list[str] | None = None
+    grooveFeel: str = "neo_soul_pocket"
+    sourceEngine: str = "pro-instrument-performance"
+    generationStrategy: str = "strategy_c_pro_instrument"
+    audioPath: str | None = None
+    midiNotes: list[dict[str, Any]] | None = None
+    instrumentRef: str | None = None
+    instrumentPreset: str | None = None
+    fxChain: list[dict[str, Any]] | None = None
+    qualityGateSummary: dict[str, Any] | None = None
+    tags: list[str] | None = None
+    projectId: str | None = None
+    trackId: str | None = None
+    notes: str = ""
+    recipe: dict[str, Any] | None = None
+
+
+class SessionFeedbackBody(BaseModel):
+    rating: str = Field(min_length=1, max_length=24)
+    comment: str = ""
+    detailTags: list[str] | None = None
+    projectId: str | None = None
+
+
+@app.get("/api/session-lab/capabilities")
+def api_session_lab_capabilities() -> dict[str, Any]:
+    from engine.session_lab import get_instrument_capability_matrix
+
+    return get_instrument_capability_matrix()
+
+
+@app.get("/api/projects/{project_id}/session-context")
+def api_get_session_context(project_id: str, startBeats: float = 0.0, endBeats: float | None = None, focusInstrument: str | None = None) -> dict[str, Any]:
+    from engine.session_lab import build_session_context
+
+    proj = store.load_project(project_id)
+    sec_range = {"startBeats": startBeats, "endBeats": endBeats} if endBeats is not None else None
+    return build_session_context(proj, section_range=sec_range, focus_instrument=focusInstrument)
+
+
+@app.post("/api/projects/{project_id}/session-lab/chords")
+def api_session_ensure_chords(project_id: str, body: SessionChordSetupBody) -> dict[str, Any]:
+    from engine.session_lab import ensure_session_chord_timeline
+
+    return ensure_session_chord_timeline(project_id, chords=body.chords, key=body.key, lock=body.lock)
+
+
+@app.post("/api/projects/{project_id}/session-lab/layers/generate")
+def api_session_generate_layer(project_id: str, body: GenerateLayerBody) -> dict[str, Any]:
+    from engine.session_lab import generate_session_layer
+
+    return generate_session_layer(
+        project_id,
+        target_instrument=body.targetInstrument,
+        performance_type=body.performanceType,
+        instruction=body.instruction,
+        start_beats=body.startBeats,
+        bars=body.bars,
+        preferred_strategy=body.preferredStrategy,
+        variation_intensity=body.variationIntensity,
+        variation_of_existing=body.variationOfExisting,
+        as_alternative_take=body.asAlternativeTake,
+        activate_take=body.activateTake,
+        target_track_id=body.targetTrackId,
+        track_name=body.trackName,
+        reference_id=body.referenceId,
+        seed=body.seed,
+    )
+
+
+@app.post("/api/projects/{project_id}/session-lab/solo")
+def api_session_generate_solo(project_id: str, body: GenerateSoloBody) -> dict[str, Any]:
+    from engine.session_lab import generate_session_solo
+
+    return generate_session_solo(
+        project_id,
+        instrument=body.instrument,
+        instruction=body.instruction,
+        start_beats=body.startBeats,
+        bars=body.bars,
+        seed=body.seed,
+    )
+
+
+@app.post("/api/projects/{project_id}/session-lab/bridge")
+def api_session_generate_bridge(project_id: str, body: GenerateBridgeBody) -> dict[str, Any]:
+    from engine.session_lab import generate_session_bridge
+
+    return generate_session_bridge(
+        project_id,
+        start_beats=body.startBeats,
+        bars=body.bars,
+        include_transition=body.includeTransition,
+        seed=body.seed,
+    )
+
+
+@app.post("/api/projects/{project_id}/session-lab/transition")
+def api_session_generate_transition(project_id: str, body: GenerateTransitionBody) -> dict[str, Any]:
+    from engine.session_lab import generate_session_transition
+
+    return generate_session_transition(project_id, boundary_beat=body.boundaryBeat, seed=body.seed)
+
+
+@app.post("/api/projects/{project_id}/session-lab/layers/{track_id}/state")
+def api_session_set_layer_state(project_id: str, track_id: str, body: LayerStateBody) -> dict[str, Any]:
+    from engine.session_lab import set_layer_state
+
+    return set_layer_state(project_id, track_id, body.state, note=body.note)
+
+
+@app.post("/api/projects/{project_id}/session-lab/layers/{track_id}/takes/{lane_id}/activate")
+def api_session_switch_take(project_id: str, track_id: str, lane_id: str) -> dict[str, Any]:
+    from engine.session_lab import switch_layer_take
+
+    return switch_layer_take(project_id, track_id, lane_id)
+
+
+@app.post("/api/projects/{project_id}/session-lab/layers/{track_id}/validate")
+def api_session_validate_layer(project_id: str, track_id: str) -> dict[str, Any]:
+    from engine.session_lab import validate_session_layer
+
+    return validate_session_layer(project_id, track_id)
+
+
+@app.post("/api/projects/{project_id}/session-lab/layers/{track_id}/align")
+def api_session_align_loop(project_id: str, track_id: str, body: AlignLoopBody | None = None) -> dict[str, Any]:
+    from engine.session_lab import align_session_loop
+
+    b = body or AlignLoopBody()
+    return align_session_loop(project_id, track_id, target_bars=b.targetBars)
+
+
+@app.get("/api/projects/{project_id}/session-lab/layers/{track_id}/preview")
+def api_session_preview_layer(project_id: str, track_id: str, mode: str = "in_context"):
+    from engine.session_lab import get_layer_preview_path
+
+    wav_path = get_layer_preview_path(project_id, track_id, mode=mode)
+    return FileResponse(wav_path, media_type="audio/wav", filename=f"{track_id}_{mode}.wav")
+
+
+@app.get("/api/session-library")
+def api_search_session_library(
+    query: str | None = None,
+    category: str | None = None,
+    instrument: str | None = None,
+    performanceType: str | None = None,
+    key: str | None = None,
+    bpmMin: float | None = None,
+    bpmMax: float | None = None,
+    minRating: str | None = None,
+) -> dict[str, Any]:
+    from engine.session_lab import search_session_assets
+
+    return search_session_assets(
+        query=query,
+        category=category,
+        instrument=instrument,
+        performance_type=performanceType,
+        key=key,
+        bpm_min=bpmMin,
+        bpm_max=bpmMax,
+        min_rating=minRating,
+    )
+
+
+@app.post("/api/session-library")
+def api_save_session_library_asset(body: SaveSessionAssetBody) -> dict[str, Any]:
+    from engine.session_lab import save_session_asset
+
+    return save_session_asset(
+        name=body.name,
+        category=body.category,
+        instrument=body.instrument,
+        performance_type=body.performanceType,
+        bpm=body.bpm,
+        key=body.key,
+        time_signature=body.timeSignature,
+        bars=body.bars,
+        chord_progression=body.chordProgression,
+        groove_feel=body.grooveFeel,
+        source_engine=body.sourceEngine,
+        generation_strategy=body.generationStrategy,
+        audio_path=body.audioPath,
+        midi_notes=body.midiNotes,
+        instrument_ref=body.instrumentRef,
+        instrument_preset=body.instrumentPreset,
+        fx_chain=body.fxChain,
+        quality_gate_summary=body.qualityGateSummary,
+        tags=body.tags,
+        project_id=body.projectId,
+        track_id=body.trackId,
+        notes_text=body.notes,
+        recipe=body.recipe,
+    )
+
+
+@app.post("/api/session-library/{asset_id}/feedback")
+def api_session_library_feedback(asset_id: str, body: SessionFeedbackBody) -> dict[str, Any]:
+    from engine.session_lab import submit_performance_feedback
+
+    return submit_performance_feedback(
+        asset_id,
+        rating=body.rating,
+        comment=body.comment,
+        detail_tags=body.detailTags,
+        project_id=body.projectId,
+    )
 
 
 @app.get("/api/events")
