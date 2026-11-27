@@ -215,6 +215,9 @@ def create_hybrid_session(
     )
 
     # 2. Layer editable MIDI tracks cleanly on top (without altering the native audio track!)
+    # Enforce Permanent Production Instrument Quality Policy (NEVER auto-select PREVIEW voices!)
+    from engine.production.instrument_resolver import resolve_production_instrument
+
     roles = list(layer_roles or ["synth_hook", "pad"])
     plan = create_composition_plan(
         project=updated,
@@ -223,18 +226,21 @@ def create_hybrid_session(
         production_mode="hybrid",
     )
     layered_track_ids: list[str] = []
-    role_defaults = {
-        "synth_hook": ("Hybrid Synth Layer", "synth-fm-hook", "#648ea8", -5.0),
-        "pad": ("Hybrid Pad Texture", "pad-warm-analog", "#9e7389", -7.5),
-        "keys": ("Hybrid Keys Layer", "keys-electric-ep", "#b89458", -5.5),
-        "bass": ("Hybrid Sub Reinforce", "bass-fm-sub", "#867ca8", -6.0),
-        "drums": ("Hybrid Top Perc", "drum-kit-electronic", "#6a997c", -5.0),
-        "guitar": ("Hybrid Guitar Pluck", "guitar-clean-pluck", "#c2925a", -5.5),
+    role_meta = {
+        "synth_hook": ("Hybrid Synth Layer", "#648ea8", -5.0),
+        "pad": ("Hybrid Pad Texture", "#9e7389", -7.5),
+        "keys": ("Hybrid Keys Layer", "#b89458", -5.5),
+        "bass": ("Hybrid Sub Reinforce", "#867ca8", -6.0),
+        "drums": ("Hybrid Top Perc", "#6a997c", -5.0),
+        "guitar": ("Hybrid Guitar Layer", "#c2925a", -5.5),
     }
 
     layer_beats = float(max(4, bars) * bpb)
     for idx, rk in enumerate(roles):
-        name, inst_ref, color, gain_db = role_defaults.get(rk, (f"Hybrid {rk.title()}", "basic-poly-synth", "#648ea8", -6.0))
+        name, color, gain_db = role_meta.get(rk, (f"Hybrid {rk.title()}", "#648ea8", -6.0))
+        resolved_inst = resolve_production_instrument(rk, genre=ref_genre, instruction=instruction)
+        inst_ref = str(resolved_inst["instrumentRef"])
+        inst_preset = resolved_inst.get("preset")
         notes = compose_midi_part(plan, rk, seed=101 + idx * 13, bpb=bpb, force_active=True)
         tid = make_id("trk")
         updated = commands.apply_command(
@@ -242,6 +248,12 @@ def create_hybrid_session(
             "track.add",
             {"id": tid, "name": name, "type": "midi", "instrumentRef": inst_ref, "color": color},
         )
+        if inst_preset:
+            updated = commands.apply_command(
+                updated,
+                "track.setInstrument",
+                {"trackId": tid, "instrumentRef": inst_ref, "preset": inst_preset},
+            )
         updated = commands.apply_command(updated, "track.setGain", {"trackId": tid, "gainDb": gain_db})
         updated = commands.apply_command(
             updated,

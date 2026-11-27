@@ -84,7 +84,14 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
 
   const [subTab, setSubTab] = useState<"chat" | "takes" | "engines">("chat");
   const [composeMode, setComposeMode] = useState<"auto" | "full_music" | "instrument_session" | "loop_midi">("auto");
-  const [prodMode, setProdMode] = useState<"editable_midi" | "neural_audio" | "hybrid">("editable_midi");
+  const [prodMode, setProdMode] = useState<"editable_midi" | "neural_audio" | "hybrid">("neural_audio");
+  const [studioPreviewStatus, setStudioPreviewStatus] = useState<{
+    previewStatus: string;
+    audioUrl: string | null;
+    noteKo: string;
+    needsStudioRender: boolean;
+  } | null>(null);
+  const [renderingStudioPreview, setRenderingStudioPreview] = useState(false);
   const [varIntensity, setVarIntensity] = useState<"subtle" | "moderate" | "creative">("moderate");
   const [runningVariation, setRunningVariation] = useState(false);
   const [targetInst, setTargetInst] = useState<string>("synth_hook");
@@ -95,6 +102,23 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
   const [showDevDetails, setShowDevDetails] = useState(false);
   const [showPayload, setShowPayload] = useState(false);
   const [playingTakeKey, setPlayingTakeKey] = useState<string | null>(null);
+
+  // Sync Studio Preview parity status cleanly whenever project revision changes
+  useEffect(() => {
+    if (!project?.id) return;
+    let cancelled = false;
+    void dawApi
+      .getStudioPreviewStatus(project.id)
+      .then((st) => {
+        if (!cancelled) setStudioPreviewStatus(st);
+      })
+      .catch(() => {
+        // Non-fatal in unit tests / offline mode
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [project?.id, project?.revision, savedRevision]);
 
   // Sync take preview button when audio stops naturally
   useEffect(() => {
@@ -218,9 +242,41 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
   };
 
   const handleGenerate = async (plan: CompositionPlan, overrideEngine?: string) => {
-    const engineChoice = overrideEngine ?? (prodMode === "neural_audio" ? "neural_audio" : "auto");
+    const engineChoice =
+      overrideEngine ??
+      (plan.mode === "full_music"
+        ? prodMode === "editable_midi"
+          ? "local-multitrack-composer"
+          : prodMode === "hybrid"
+            ? "hybrid"
+            : "auto"
+        : "auto");
     const started = await startGenerationFromPlan(plan, engineChoice);
     if (started) setSubTab("takes");
+  };
+
+  const handleToggleStudioPreview = async () => {
+    if (!project?.id || renderingStudioPreview) return;
+    const playKey = "studio-preview";
+    if (playingTakeKey === playKey) {
+      audioEngine.stopReferencePreview();
+      setPlayingTakeKey(null);
+      return;
+    }
+    setRenderingStudioPreview(true);
+    try {
+      const rendered = await dawApi.renderStudioPreview(project.id);
+      setStudioPreviewStatus(rendered);
+      if (rendered.audioUrl) {
+        await audioEngine.playReferencePreview(rendered.audioUrl, 0);
+        setPlayingTakeKey(playKey);
+        showToast("Studio Preview 재생 중 (Export WAV와 100% 동일 경로)");
+      }
+    } catch (err) {
+      showToast(`Studio Preview 실패: ${(err as Error).message}`, "error");
+    } finally {
+      setRenderingStudioPreview(false);
+    }
   };
 
   const handleExecuteArrangement = async (plan: ArrangementEditPlan) => {
@@ -449,13 +505,13 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                 </div>
               </div>
 
-              {/* Production Mode Selector (No Silent Substitution — Section 3.1) */}
-              <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+              {/* Production Mode Selector (YuE2 First Policy — No Silent Substitution) */}
+              <div style={{ display: "flex", gap: 3, flexWrap: "wrap", alignItems: "center" }}>
                 {(
                   [
-                    { id: "editable_midi", label: t("producer.prodModeMidi") },
                     { id: "neural_audio", label: t("producer.prodModeNeural") },
                     { id: "hybrid", label: t("producer.prodModeHybrid") },
+                    { id: "editable_midi", label: t("producer.prodModeMidi") },
                   ] as const
                 ).map((pm) => (
                   <button
@@ -469,6 +525,47 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                   </button>
                 ))}
               </div>
+
+              {/* Studio Preview Parity Status Badge & 1-Click Render/Audition (Phase 05.1 Section 10) */}
+              {studioPreviewStatus && (
+                <div
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, fontSize: 9.5 }}
+                  data-testid="studio-preview-status-bar"
+                >
+                  <span
+                    className="tag-badge"
+                    title={studioPreviewStatus.noteKo}
+                    style={{
+                      fontSize: 9,
+                      color:
+                        studioPreviewStatus.previewStatus === "Studio Preview" ||
+                        studioPreviewStatus.previewStatus === "Original Audio"
+                          ? "#a9e1ba"
+                          : studioPreviewStatus.previewStatus === "Failed"
+                            ? "#f2b8b8"
+                            : "#e5c37a",
+                    }}
+                    data-testid="studio-preview-status-badge"
+                  >
+                    {renderingStudioPreview ? "Rendering" : studioPreviewStatus.previewStatus}
+                  </span>
+                  {studioPreviewStatus.needsStudioRender && (
+                    <button
+                      style={{ height: 19, padding: "0 7px", fontSize: 9.5 }}
+                      disabled={renderingStudioPreview}
+                      onClick={() => void handleToggleStudioPreview()}
+                      data-testid="btn-studio-preview-play"
+                    >
+                      {playingTakeKey === "studio-preview" ? <Square size={9} /> : <Play size={9} />}
+                      {renderingStudioPreview
+                        ? "Rendering..."
+                        : playingTakeKey === "studio-preview"
+                          ? "Stop Preview"
+                          : "Studio Preview"}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Generation Mode Pills */}
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
@@ -564,7 +661,7 @@ export function AIProducerPanel({ width, onCollapse, onOpenReferenceTab }: AIPro
                       const targetPlan = engineUnavailableNotice.plan;
                       setProdMode("editable_midi");
                       dismissEngineUnavailableNotice();
-                      await handleGenerate(targetPlan, "local-midi-composer");
+                      await handleGenerate(targetPlan, "local-multitrack-composer");
                     }}
                   >
                     {t("producer.engineUnavailableSwitch")}

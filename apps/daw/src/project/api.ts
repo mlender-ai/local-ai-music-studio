@@ -786,4 +786,49 @@ export const dawApi = {
       integratedLufs: parseFloat(res.headers.get("X-Export-Lufs") || "-60"),
     };
   },
+
+  // --- Phase 05.1: Permanent Production Policy, Taste Profile & Studio Preview Parity ---
+
+  getProductionPolicy(): Promise<Record<string, unknown>> {
+    return apiFetch("/api/production/policy");
+  },
+
+  getTasteProfile(projectId?: string): Promise<Record<string, unknown>> {
+    const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : "";
+    return apiFetch(`/api/production/taste${q}`);
+  },
+
+  getStudioPreviewStatus(projectId: string): Promise<{
+    projectId: string;
+    projectRevision: number;
+    previewStatus: "Original Audio" | "Realtime Preview" | "Studio Preview" | "Rendering" | "Outdated Preview" | "Failed";
+    needsStudioRender: boolean;
+    currentRenderHash: string;
+    upToDate: boolean;
+    audioAvailable: boolean;
+    audioUrl: string | null;
+    noteKo: string;
+    error: string | null;
+  }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/studio-preview/status`);
+  },
+
+  renderStudioPreview(projectId: string): Promise<{
+    projectId: string;
+    projectRevision: number;
+    previewStatus: "Original Audio" | "Realtime Preview" | "Studio Preview" | "Rendering" | "Outdated Preview" | "Failed";
+    needsStudioRender: boolean;
+    currentRenderHash: string;
+    upToDate: boolean;
+    audioAvailable: boolean;
+    audioUrl: string | null;
+    noteKo: string;
+    error: string | null;
+  }> {
+    return apiFetch(`/api/projects/${encodeURIComponent(projectId)}/studio-preview/render`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+  },
 };

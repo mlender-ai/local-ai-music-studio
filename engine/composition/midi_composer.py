@@ -432,12 +432,13 @@ def _compose_bass(
         eff_root = bass_pc if bass_pc is not None else c_root
         eff_next = n_bass_pc if n_bass_pc is not None else n_root
 
+        chords_locked = bool(plan.harmonyAndGroove.get("chordsLocked")) or bool(chord_tl)
         bass_root = _clamp_midi(36 + eff_root, 31, 44)
         fifth = _clamp_midi(bass_root + 7, 34, 51)
         octave = _clamp_midi(bass_root + 12, 43, 55)
         third = _clamp_midi(bass_root + c_ints[1], 33, 49)
         next_bass = _clamp_midi(36 + eff_next, 31, 44)
-        approach = next_bass - 1 if next_bass > bass_root else next_bass + 2
+        approach = fifth if chords_locked else (next_bass - 1 if next_bass > bass_root else next_bass + 2)
 
         if genre == "house":
             if bar % 2 == 0:

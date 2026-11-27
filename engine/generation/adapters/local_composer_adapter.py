@@ -401,7 +401,8 @@ def execute_local_composition(
             raise RuntimeError("Generation cancelled by user")
         rk = str(role_info["role"])
         rname = str(role_info.get("name") or rk.title())
-        inst_ref = str(role_info.get("instrumentRef") or "basic-poly-synth")
+        inst_ref = str(role_info.get("instrumentRef") or "pro-synth-analog")
+        inst_preset = role_info.get("preset")
         gain_db = float(role_info.get("gainDb", -2.0))
         pan = float(role_info.get("pan", 0.0))
         color = str(role_info.get("color", "#648ea8"))
@@ -418,8 +419,15 @@ def execute_local_composition(
         ch = 9 if rk == "drums" else (idx % 9)
         midi_path.write_bytes(notes_to_midi_bytes(notes, bpm=bpm, ppq=project.ppq, track_name=rname, channel=ch))
 
-        # Render stereo voice into master preview mix
-        part_pcm = _render_part_audio(notes, inst_ref, bpm=bpm, total_beats=total_beats, sr=sr)
+        # Render stereo voice into master preview mix using Production Instrument & Preset!
+        part_pcm = _render_part_audio(
+            notes,
+            inst_ref,
+            bpm=bpm,
+            total_beats=total_beats,
+            sr=sr,
+            instrument_config={"preset": inst_preset} if inst_preset else None,
+        )
         part_gain = db_to_linear(gain_db)
         pan_l, pan_r = equal_power_pan(pan)
         w_len = min(len(part_pcm), mix_samples)
@@ -440,6 +448,7 @@ def execute_local_composition(
                 name=f"{rname} ({ident.get('genre', 'AI').title()})",
                 trackType="midi",
                 instrumentRef=inst_ref,
+                preset=inst_preset,
                 color=color,
                 audioRelativePath=audio_rel,
                 midiRelativePath=f"takes/{take_id}/{midi_filename}",

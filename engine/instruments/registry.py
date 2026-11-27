@@ -241,6 +241,19 @@ def get_instrument_catalog() -> list[dict[str, Any]]:
             }
         )
 
+    # Attach Permanent Production Quality Tier metadata (Phase 05.1 · Section 7) to every instrument
+    from engine.production.instrument_resolver import get_instrument_quality_tier
+
+    for entry in catalog:
+        tier_meta = get_instrument_quality_tier(
+            str(entry["id"]),
+            runtime_available=(entry.get("runtimeAvailability") == "ready"),
+        )
+        entry["qualityTier"] = tier_meta["qualityTier"]
+        entry["autoSelectInProduction"] = tier_meta["autoSelectInProduction"]
+        entry["qualityTierNoteKo"] = tier_meta["descriptionKo"]
+        entry["qualityTierNoteEn"] = tier_meta["descriptionEn"]
+
     return catalog
 
 

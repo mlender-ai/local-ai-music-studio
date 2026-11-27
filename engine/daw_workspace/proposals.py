@@ -299,11 +299,41 @@ def interpret_producer_instruction(
                 "messageEn": f"This request is not supported yet (scheduled for {phase_label}). Currently supported: AI composition, precision transcription, Pro Instruments, EQ/Compressor/Sidechain/Reverb/Delay/Amp FX, Automation, and clip editing.",
             }
 
-    # 0.0 Phase 05 AI Producer Sound Design, Instrument Swap, FX Chain, Sidechain & Automation routing!
-    # Check BEFORE composition routing so "신스 훅 멜로디는 유지하고 아날로그 느낌으로 공간감 넓혀줘" or
-    # "드럼 리듬은 그대로 두고 소리만 빈티지하게" stages exact Instrument/FX/Automation operations preserving MIDI!
-    is_explicit_new_compose = any(k in low for k in ("풀 트랙 만들어", "곡을 만들어", "새 곡", "full track", "compose a song"))
-    if not is_explicit_new_compose:
+    # 0.0 Phase 05 / 05.1 AI Producer Routing Order Guard:
+    # NEVER let full-music or reference-conditioned composition prompts ("세련된 R&B 힙합 인스트루멘탈을 짧게 만들어줘",
+    # "인디 록 만들어줘", "이 레퍼런스처럼 따뜻하고 감각적인 음악 만들어줘") get hijacked by single-track Sound Design!
+    is_new_music_compose = (
+        any(
+            k in low
+            for k in (
+                "인스트루멘털",
+                "인스트루멘탈",
+                "instrumental",
+                "풀 트랙 만들어",
+                "곡을 만들어",
+                "곡 만들어",
+                "음악 만들어",
+                "음악을 만들어",
+                "새 곡",
+                "트랙 만들어",
+                "트랙을 만들어",
+                "인디 록 만들어",
+                "인디록 만들어",
+                "하우스 만들어",
+                "힙합 만들어",
+                "r&b",
+                "알앤비",
+                "네오소울",
+                "full track",
+                "compose a song",
+                "make a track",
+                "make music",
+            )
+        )
+        and any(k in low for k in ("만들어", "작곡", "생성", "compose", "generate", "make", "create"))
+        and not any(k in low for k in ("소리만", "리듬은 그대로", "멜로디는 유지", "먹먹", "이큐", "eq", "컴프", "사이드체인", "필터"))
+    )
+    if not is_new_music_compose:
         from engine.sound_design import plan_sound_design_operations
 
         sd_plan = plan_sound_design_operations(
@@ -312,18 +342,30 @@ def interpret_producer_instruction(
             selection=sel,
             active_reference_id=active_reference_id,
         )
-        if sd_plan and sd_plan.get("matched") and sd_plan.get("operations"):
-            return {
-                "supported": True,
-                "action": "stage_proposal",
-                "soundDesignIntent": sd_plan["intent"],
-                "diagnosis": sd_plan.get("diagnosis"),
-                "preservedNote": sd_plan.get("preservedNote"),
-                "summary": sd_plan["summary"],
-                "operations": sd_plan["operations"],
-                "messageKo": f"음향 진단 기반 프로덕션 변경 제안을 생성했습니다: {sd_plan['summary']} ({sd_plan.get('preservedNote', '')})",
-                "messageEn": f"Staged acoustic sound design proposal: {sd_plan['summary']}",
-            }
+        if sd_plan and sd_plan.get("matched"):
+            if sd_plan.get("operations"):
+                return {
+                    "supported": True,
+                    "action": "stage_proposal",
+                    "soundDesignIntent": sd_plan["intent"],
+                    "diagnosis": sd_plan.get("diagnosis"),
+                    "soundDesignPlan": sd_plan.get("soundDesignPlan"),
+                    "preservedNote": sd_plan.get("preservedNote"),
+                    "summary": sd_plan["summary"],
+                    "operations": sd_plan["operations"],
+                    "messageKo": f"음향 진단 기반 프로덕션 변경 제안을 생성했습니다: {sd_plan['summary']} ({sd_plan.get('preservedNote', '')})",
+                    "messageEn": f"Staged acoustic sound design proposal: {sd_plan['summary']}",
+                }
+            if sd_plan.get("noOpExplanationKo"):
+                return {
+                    "supported": True,
+                    "action": "sound_design_advisory",
+                    "soundDesignIntent": sd_plan["intent"],
+                    "diagnosis": sd_plan.get("diagnosis"),
+                    "soundDesignPlan": sd_plan.get("soundDesignPlan"),
+                    "messageKo": sd_plan["noOpExplanationKo"],
+                    "messageEn": sd_plan.get("noOpExplanationEn") or sd_plan["noOpExplanationKo"],
+                }
 
     # 0. Phase 03.2 Advanced Reference Intelligence routing (Transcription, Chords, Reconstruct, Feature-Locked Compose)
     default_ref_id = active_reference_id or (project.references[0]["id"] if project.references else None)

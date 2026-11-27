@@ -72,12 +72,14 @@ def test_a_full_128bpm_house_production_end_to_end(isolated_phase03_env):
     client = TestClient(app)
     proj = store.create_project(name="Test A House", bpm=128.0, with_default_tracks=False)
 
-    # 1. Create Composition Plan
+    # 1. Create Composition Plan (explicit Editable MIDI path for deterministic Phase 03 MIDI regression test)
     plan_res = client.post(
         f"/api/projects/{proj.id}/composition/plan",
         json={
             "instruction": "128 BPM 어두운 하우스 풀 트랙 만들어줘. 훅이 분명하고 인스트루멘탈로 구성해줘.",
             "mode": "full_music",
+            "productionMode": "editable_midi",
+            "enginePreference": "local-multitrack-composer",
         },
     )
     assert plan_res.status_code == 200
@@ -88,10 +90,10 @@ def test_a_full_128bpm_house_production_end_to_end(isolated_phase03_env):
     assert len(plan["arrangement"]) >= 4
     assert len(plan["instrumentRoles"]) >= 4
 
-    # 2. Generate Take (sync=True for deterministic test verification)
+    # 2. Generate Take (explicit local-multitrack-composer for deterministic MIDI test verification)
     gen_res = client.post(
         f"/api/projects/{proj.id}/generation/jobs",
-        json={"planId": plan["id"], "engine": "auto", "seed": 77, "sync": True},
+        json={"planId": plan["id"], "engine": "local-multitrack-composer", "productionMode": "editable_midi", "seed": 77, "sync": True},
     )
     assert gen_res.status_code == 200
     body = gen_res.json()
@@ -120,13 +122,13 @@ def test_a_full_128bpm_house_production_end_to_end(isolated_phase03_env):
     assert applied["applied"] is True
     assert len(applied["createdTrackIds"]) >= 4
 
-    # 4. Reopen project from disk & verify persistence + schema v1.5.0
+    # 4. Reopen project from disk & verify persistence + Production-tier instruments (Phase 05.1 policy!)
     reopened = store.load_project(proj.id)
     assert reopened.schemaVersion == "1.5.0"
     assert len(reopened.tracks) >= 4
-    assert any(t.instrumentRef == "drum-kit-electronic" for t in reopened.tracks)
-    assert any(t.instrumentRef == "bass-fm-sub" for t in reopened.tracks)
-    assert any(t.instrumentRef == "synth-fm-hook" for t in reopened.tracks)
+    assert any(t.instrumentRef == "pro-drum-rack" for t in reopened.tracks)
+    assert any(t.instrumentRef in ("sf-bass-finger", "pro-synth-analog") for t in reopened.tracks)
+    assert any(t.instrumentRef in ("pro-synth-analog", "pro-synth-fm") for t in reopened.tracks)
 
     # 5. Offline 48 kHz Stereo WAV export of first 16 beats verifies multi-timbre audio is real & clean
     exp = renderer.export_project_wav(reopened, filename="test_a_house.wav", start_beats=0.0, end_beats=16.0)
@@ -154,13 +156,15 @@ def test_b_reference_guided_composition_and_traceability(isolated_phase03_env, t
         selected_influences=["drums_groove", "bass_movement", "arrangement_arc"],
     )
 
-    # Create Reference-guided Plan & verify traceability (appliedFeatures vs unmappedFeatures)
+    # Create Reference-guided Plan & verify traceability (explicit editable MIDI path for deterministic test)
     plan_res = client.post(
         f"/api/projects/{proj.id}/composition/plan",
         json={
             "instruction": "선택한 레퍼런스의 그루브와 전개를 반영한 하우스 트랙 만들어줘.",
             "mode": "full_music",
             "referenceIds": [ref_item["id"]],
+            "productionMode": "editable_midi",
+            "enginePreference": "local-multitrack-composer",
         },
     )
     assert plan_res.status_code == 200
@@ -173,7 +177,7 @@ def test_b_reference_guided_composition_and_traceability(isolated_phase03_env, t
     # Generate Take & verify Reference vs Generated comparison is attached
     gen_res = client.post(
         f"/api/projects/{proj.id}/generation/jobs",
-        json={"planId": plan["id"], "sync": True},
+        json={"planId": plan["id"], "engine": "local-multitrack-composer", "productionMode": "editable_midi", "sync": True},
     )
     assert gen_res.status_code == 200
     take = gen_res.json()["take"]
@@ -252,7 +256,7 @@ def test_c_4bar_synth_hook_preserves_drums_bass_edits_midi_exports_and_undoes(is
     take = gen_res.json()["take"]
     assert len(take["artifacts"]) == 1
     hook_art = take["artifacts"][0]
-    assert hook_art["instrumentRef"] == "synth-fm-hook"
+    assert hook_art["instrumentRef"] in ("pro-synth-analog", "pro-synth-fm")
     assert len(hook_art["notes"]) >= 12
     # Must show real musical variation across bars (not identical 1-bar loop copy-paste!)
     assert take["qualityReport"]["musical"]["parts"][0]["uniqueBarPatterns"] >= 2
@@ -271,7 +275,7 @@ def test_c_4bar_synth_hook_preserves_drums_bass_edits_midi_exports_and_undoes(is
     assert after_apply.tracks[1].clips[0].notes[0].pitch == 41
 
     hook_track = after_apply.tracks[2]
-    assert hook_track.instrumentRef == "synth-fm-hook"
+    assert hook_track.instrumentRef in ("pro-synth-analog", "pro-synth-fm")
     hook_clip = hook_track.clips[0]
     orig_note_count = len(hook_clip.notes)
 
