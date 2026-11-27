@@ -146,8 +146,19 @@ def normalize_chord_for_yue2(chord: str) -> str:
     return f"{root}{mapped}{slash_bass}"
 
 
-def _normalize_abc_section(raw_label: str) -> str:
+def _normalize_abc_section(raw_label: str, *, instrumental: bool = True) -> str:
     low = str(raw_label or "").strip().lower()
+    if instrumental:
+        # Empirical Phase 05.3 finding: in YuE2, `% verse`, `% chorus`, and `% bridge` strongly bias
+        # humming/vocal leakage even with resting `V:Vocal`, whereas `% intro`, `% instrumental`,
+        # `% interlude`, and `% outro` stay cleanly instrumental while following all chords & notes!
+        if "intro" in low or "opening" in low:
+            return "intro"
+        if "outro" in low or "fade" in low:
+            return "outro"
+        if "bridge" in low or "break" in low or "interlude" in low:
+            return "interlude"
+        return "instrumental"
     for allowed in ("intro", "pre-chorus", "chorus", "verse", "bridge", "interlude", "outro", "instrumental"):
         if allowed in low:
             return allowed
@@ -305,6 +316,38 @@ def compile_instrumental_abc_for_plan(
         sections_payload.append(sec_entry)
 
     compile_mod = _load_official_compile_score()
+    np_cfg = dict((plan.generationStrategy or {}).get("nativePerformance") or {})
+    custom_abc_events = np_cfg.get("abcEvents")
+    if compile_mod is not None and isinstance(custom_abc_events, dict) and custom_abc_events.get("bars") and custom_abc_events.get("notes"):
+        official_custom: dict[str, Any] = {
+            "bpm": int(custom_abc_events.get("bpm", bpm)),
+            "key": str(custom_abc_events.get("key", abc_key)),
+            "bars": list(custom_abc_events["bars"]),
+            "notes": list(custom_abc_events["notes"]),
+        }
+        if cot == "full" and custom_abc_events.get("chords"):
+            official_custom["chords"] = [
+                [ev[0], normalize_chord_for_yue2(str(ev[1]))] for ev in custom_abc_events["chords"]
+            ]
+        try:
+            compiled_out = compile_mod.compile_events(official_custom)
+            abc_text = compiled_out[0] if isinstance(compiled_out, tuple) else str(compiled_out)
+            official_check = compiled_out[1] if isinstance(compiled_out, tuple) and len(compiled_out) > 1 else {}
+            ok, issues = check_resting_voice(abc_text)
+            if ok:
+                return {
+                    "abc": abc_text,
+                    "validInstrumentalYuE2": True,
+                    "validationIssues": [],
+                    "officialCheck": official_check,
+                    "source": "official_v6_compile_score_custom_performance",
+                    "cot": cot,
+                    "bars": len(official_custom["bars"]),
+                    "normalizedChords": [c[1] for c in official_custom.get("chords", [])] or chords_norm,
+                }
+        except Exception:
+            pass
+
     if compile_mod is not None:
         official_input: dict[str, Any] = {
             "bpm": int(bpm),
@@ -482,69 +525,127 @@ def build_yue2_request_from_plan(
     chords_hint = " to ".join(str(c) for c in (hg.get("chordProgression") or [])[:4])
     groove_feel = str(hg.get("grooveFeel") or "natural pocket groove").replace("_", " ")
 
-    single_role_only = len(plan.instrumentRoles) == 1
+    np_cfg = dict((plan.generationStrategy or {}).get("nativePerformance") or {})
+    np_type = str(np_cfg.get("performanceType") or "").strip()
+    custom_style_prompt = str(np_cfg.get("stylePrompt") or "").strip()
+
+    NATIVE_PERFORMANCE_STYLE_TEMPLATES: dict[str, str] = {
+        "funk_guitar_riff": (
+            "Featured clean Stratocaster electric guitar up front playing a tight 16th-note palm-muted funk riff, "
+            "crisp syncopated upper-register chord stabs, rhythmic muted scratches and percussive single-note licks "
+            "with warm tube amp sparkle and natural room air. Tight dry pocket drums and elastic fingerstyle bass "
+            "locking tightly underneath without masking the guitar"
+        ),
+        "clean_melodic_guitar": (
+            "Featured vintage clean electric guitar up front playing a memorable soulful indie-R&B melodic riff "
+            "with natural broken arpeggios, smooth slides, hammer-ons, expressive sustain and breathing pauses between phrases, "
+            "warm clean tube tone with subtle vintage chorus, short delay and warm plate room. Understated gentle drums and warm bass supporting"
+        ),
+        "neosoul_piano_rhodes": (
+            "Featured warm Fender Rhodes electric piano up front with bell-like tine overtones playing lush jazz-soul "
+            "major 7th, minor 9th and 13th rootless chord voicings, smooth voice-leading, syncopated comping and delicate melodic fills. "
+            "Soft brushed pocket drums and warm round electric bass locking smoothly below"
+        ),
+        "expressive_piano_solo": (
+            "Featured acoustic warm felt grand piano up front performing an expressive improvised jazz hip-hop and neo-soul instrumental solo: "
+            "clear lyrical opening motif, dynamic call-and-response phrases contrasting quick melodic runs with sustained resonant notes, "
+            "register climb, deliberate breathing rests and emotional resolution. Minimal sparse jazz trio drums and upright-feel bass providing open space"
+        ),
+        "drum_percussion_groove": (
+            "Featured live acoustic funk and soul drum kit with rich organic Latin percussion up front: "
+            "deep punchy syncopated kick, snappy laid-back snare with intricate ghost notes, dynamic open-closed hi-hats, "
+            "interlocking warm congas, shaker and rimshot cross-rhythms, and an expressive musical drum break and turnaround fill. "
+            "Minimal understated dry funk bass pulse only to anchor the groove without overpowering drums and percussion"
+        ),
+        "melodic_bass_riff": (
+            "Featured fingerstyle electric bass guitar up front in the mix playing a punchy syncopated funk and neo-soul melodic bass riff: "
+            "crisp string attack, warm low-mid detail, playful octave leaps, muted ghost notes, smooth fret slides and melodic passing runs. "
+            "Tight crisp acoustic drums and sparse soft electric piano stabs leaving clear room for the bass"
+        ),
+        "expressive_guitar_solo": (
+            "Featured soulful electric guitar solo up front with warm clean-to-edge-of-breakup tube amp tone, long expressive sustain, "
+            "subtle ambient delay and deep room space: blues-soul string bends, lyrical vibrato, smooth slides, "
+            "breathing pauses between phrases, emotional climb to high register and tender cadence resolution. "
+            "Spacious restrained slow-groove drums, warm bass and subtle Rhodes chords creating room for the instrumental solo"
+        ),
+        "musical_bridge": (
+            "Alternative R&B and Neo Soul studio ensemble with clear structural development: warm Rhodes electric piano, "
+            "clean electric guitar motif, deep finger bass and organic pocket drums evolving through a musical turnaround drum fill "
+            "into a contrasting lush reharmonized emotional bridge section with new harmonic lift, rhythmic breath and warm motif return"
+        ),
+    }
+
+    single_role_only = len(plan.instrumentRoles) == 1 and not np_type and not custom_style_prompt
     single_role_name = str(plan.instrumentRoles[0].get("role", "")) if single_role_only else ""
-    if single_role_only:
-        solo_role_prompts = {
-            "drums": (
-                "Unaccompanied solo acoustic drum kit only: warm punchy kick drum, crisp dry snare and rimshot, "
-                "swung hi-hats and subtle ghost notes in a tight studio room. Strictly solo drums only, no bass, no piano, no guitar, no chords, no melody"
-            ),
-            "bass": (
-                "Unaccompanied solo fingerstyle electric bass guitar only: warm round neck pickup tone, pocket groove and subtle slides. "
-                "Strictly solo bass only, no drums, no percussion, no piano, no guitar, no chords"
-            ),
-            "guitar": (
-                "Unaccompanied solo clean hollow-body electric guitar only: warm tube amp tone with subtle room air, expressive riffs and muted rhythmic phrasing. "
-                "Strictly solo guitar only, no drums, no bass, no piano, no synth, no backing band"
-            ),
-            "keys": (
-                "Unaccompanied solo Fender Rhodes electric piano only: warm bell-like tine chords, soulful neo-soul voicings and melodic phrasing. "
-                "Strictly solo electric piano only, no drums, no bass, no guitar, no backing band"
-            ),
-            "percussion": (
-                "Unaccompanied solo organic studio percussion groove only: shaker, warm congas, bongos, rim clicks and subtle tambourine. "
-                "Strictly solo percussion only, no drum kit kick, no bass, no chords, no melody"
-            ),
-        }
-        ensemble_desc = solo_role_prompts.get(
-            single_role_name,
-            f"Unaccompanied solo {plan.instrumentRoles[0].get('name', single_role_name)} only, no backing band",
-        )
-    elif genre_key == "rnb_neosoul":
-        ensemble_desc = (
-            "Warm Fender Rhodes electric piano playing rich jazz-soul 9th and 13th chords with subtle stereo tremolo, "
-            "deep round finger electric bass locking tightly into the pocket, laid-back dusty acoustic drum kit with crisp rimshot, "
-            "soft swung hi-hats and natural room air, and tasteful restrained clean hollow-body electric guitar phrases"
-        )
+    if custom_style_prompt:
+        style = custom_style_prompt
+        if instrumental and "no vocals" not in style.lower():
+            style = style.rstrip(".") + ". Instrumental only, acoustic and electric instruments only, no voice, no vocals, no singing, no humming, no choirs, no vocal samples."
     else:
-        role_names = ", ".join(r.get("name", r.get("role", "")) for r in plan.instrumentRoles)
-        ensemble_desc = f"Natural studio ensemble with {role_names}" if role_names else "Natural organic studio ensemble"
+        if single_role_only:
+            solo_role_prompts = {
+                "drums": (
+                    "Unaccompanied solo acoustic drum kit only: warm punchy kick drum, crisp dry snare and rimshot, "
+                    "swung hi-hats and subtle ghost notes in a tight studio room. Strictly solo drums only, no bass, no piano, no guitar, no chords, no melody"
+                ),
+                "bass": (
+                    "Unaccompanied solo fingerstyle electric bass guitar only: warm round neck pickup tone, pocket groove and subtle slides. "
+                    "Strictly solo bass only, no drums, no percussion, no piano, no guitar, no chords"
+                ),
+                "guitar": (
+                    "Unaccompanied solo clean hollow-body electric guitar only: warm tube amp tone with subtle room air, expressive riffs and muted rhythmic phrasing. "
+                    "Strictly solo guitar only, no drums, no bass, no piano, no synth, no backing band"
+                ),
+                "keys": (
+                    "Unaccompanied solo Fender Rhodes electric piano only: warm bell-like tine chords, soulful neo-soul voicings and melodic phrasing. "
+                    "Strictly solo electric piano only, no drums, no bass, no guitar, no backing band"
+                ),
+                "percussion": (
+                    "Unaccompanied solo organic studio percussion groove only: shaker, warm congas, bongos, rim clicks and subtle tambourine. "
+                    "Strictly solo percussion only, no drum kit kick, no bass, no chords, no melody"
+                ),
+            }
+            ensemble_desc = solo_role_prompts.get(
+                single_role_name,
+                f"Unaccompanied solo {plan.instrumentRoles[0].get('name', single_role_name)} only, no backing band",
+            )
+        elif np_type in NATIVE_PERFORMANCE_STYLE_TEMPLATES:
+            ensemble_desc = NATIVE_PERFORMANCE_STYLE_TEMPLATES[np_type]
+        elif genre_key == "rnb_neosoul":
+            ensemble_desc = (
+                "Warm Fender Rhodes electric piano playing rich jazz-soul 9th and 13th chords with subtle stereo tremolo, "
+                "deep round finger electric bass locking tightly into the pocket, laid-back dusty acoustic drum kit with crisp rimshot, "
+                "soft swung hi-hats and natural room air, and tasteful restrained clean hollow-body electric guitar phrases"
+            )
+        else:
+            role_names = ", ".join(r.get("name", r.get("role", "")) for r in plan.instrumentRoles)
+            ensemble_desc = f"Natural studio ensemble with {role_names}" if role_names else "Natural organic studio ensemble"
 
-    style_parts = [
-        f"Instrumental, {bpm} BPM, {genre_desc}, {ident.get('timeSignature', '4/4')}, {key}" if instrumental else f"{bpm} BPM, {genre_desc}, {ident.get('timeSignature', '4/4')}, {key}",
-        ensemble_desc,
-        f"Mood: {mood}, groove: {groove_feel}",
-    ]
-    if chords_hint:
-        style_parts.append(f"Harmonic movement around {chords_hint}")
-    if motif_desc:
-        style_parts.append(motif_desc)
+        style_parts = [
+            f"Instrumental, {bpm} BPM, {genre_desc}, {ident.get('timeSignature', '4/4')}, {key}" if instrumental else f"{bpm} BPM, {genre_desc}, {ident.get('timeSignature', '4/4')}, {key}",
+            ensemble_desc,
+            f"Mood: {mood}, groove: {groove_feel}",
+        ]
+        if chords_hint:
+            style_parts.append(f"Harmonic movement around {chords_hint}")
+        if motif_desc:
+            style_parts.append(motif_desc)
 
-    # Reflect Reference Blueprint v3 sound/spatial descriptors when bound
+        ref_applied = plan.referenceBinding.appliedFeatures or {}
+        ref_sound = ref_applied.get("referenceSoundProfile") or {}
+        if isinstance(ref_sound, dict) and ref_sound.get("toneSummary"):
+            style_parts.append(f"Reference tonal feel: {ref_sound['toneSummary']}")
+        if ref_applied.get("spectralCentroidTargetHz"):
+            c_hz = float(ref_applied["spectralCentroidTargetHz"])
+            tone_hint = "warm mellow highs" if c_hz < 1300 else ("balanced studio clarity" if c_hz < 2200 else "crisp airy highs")
+            style_parts.append(tone_hint)
+
+        style_parts.append("Balanced clear studio analog mix, crisp presence, realistic organic human timing, natural room space")
+        if instrumental:
+            style_parts.append("Acoustic and electric instruments only, no voice, no vocals, no singing, no humming, no choirs, no vocal samples")
+        style = ". ".join(p.strip().rstrip(".") for p in style_parts if p and p.strip()) + "."
+
     ref_applied = plan.referenceBinding.appliedFeatures or {}
-    ref_sound = ref_applied.get("referenceSoundProfile") or {}
-    if isinstance(ref_sound, dict) and ref_sound.get("toneSummary"):
-        style_parts.append(f"Reference tonal feel: {ref_sound['toneSummary']}")
-    if ref_applied.get("spectralCentroidTargetHz"):
-        c_hz = float(ref_applied["spectralCentroidTargetHz"])
-        tone_hint = "warm mellow highs" if c_hz < 1300 else ("balanced studio clarity" if c_hz < 2200 else "crisp airy highs")
-        style_parts.append(tone_hint)
-
-    style_parts.append("Balanced clear studio analog mix, crisp presence, realistic organic human timing, natural room space")
-    if instrumental:
-        style_parts.append("Acoustic and electric instruments only, no voice, no vocals, no humming, no choirs, no vocal samples")
-    style = ". ".join(p.strip().rstrip(".") for p in style_parts if p and p.strip()) + "."
 
     abc_source = "user_abc" if abc_score else None
     if abc_score is None:
@@ -595,6 +696,141 @@ def build_yue2_request_from_plan(
     if abc_source:
         req["_metaAbcSource"] = abc_source
     return req
+
+
+_PANNS_LOCK = threading.Lock()
+_PANNS_SINGLETON: tuple[Any, dict[str, int]] | None = None
+_PANNS_VOCAL_CLASSES = ("Speech", "Singing", "Vocal music", "Humming", "Chant", "Shout", "Choir", "Rapping", "Whispering")
+_PANNS_INST_CLASSES = (
+    "Electric guitar", "Guitar", "Acoustic guitar", "Piano", "Electric piano",
+    "Bass guitar", "Drum kit", "Percussion", "Snare drum", "Bass drum",
+    "Funk", "Soul music", "Jazz", "Rhythm and blues", "Music",
+)
+
+
+def _load_panns_classifier() -> tuple[Any, dict[str, int]] | None:
+    """Lazily load local PANNs MobileNetV1 AudioSet classifier from shared runtime registry (zero personal paths)."""
+    global _PANNS_SINGLETON
+    if _PANNS_SINGLETON is not None:
+        return _PANNS_SINGLETON
+    with _PANNS_LOCK:
+        if _PANNS_SINGLETON is not None:
+            return _PANNS_SINGLETON
+        try:
+            reg = get_runtime_registry()
+            vqa = reg.get("vocalQaModels") or {}
+            panns_ckpt_str = vqa.get("pannsPath") or vqa.get("pannsModelPath")
+            if not panns_ckpt_str:
+                return None
+            ck = Path(panns_ckpt_str)
+            panns_dir = ck.parent
+            if not ck.is_file() or not (panns_dir / "models.py").is_file() or not (panns_dir / "classes.csv").is_file():
+                return None
+            import csv
+            import types
+            import torch
+            from torch import nn
+            from torch.nn import functional as F
+
+            torch.set_num_threads(2)
+            weights = torch.load(ck, map_location="cpu", weights_only=True)["model"]
+
+            class _Spectrogram(nn.Module):
+                def __init__(self, n_fft, hop_length, **kwargs):
+                    super().__init__()
+                    self.stft = nn.Module()
+                    self.stft.conv_real = nn.Conv1d(1, n_fft // 2 + 1, n_fft, bias=False, stride=hop_length)
+                    self.stft.conv_imag = nn.Conv1d(1, n_fft // 2 + 1, n_fft, bias=False, stride=hop_length)
+                    self.pad = n_fft // 2
+
+                def forward(self, x):
+                    z = F.pad(x[:, None], (self.pad, self.pad), mode="reflect")
+                    return (self.stft.conv_real(z).square() + self.stft.conv_imag(z).square()).transpose(1, 2)[:, None]
+
+            class _LogmelFilterBank(nn.Module):
+                def __init__(self, n_fft, n_mels, **kwargs):
+                    super().__init__()
+                    self.melW = nn.Parameter(torch.empty(n_fft // 2 + 1, n_mels))
+
+                def forward(self, x):
+                    return 10 * torch.log10(torch.clamp(x @ self.melW, min=1e-10))
+
+            class _SpecAugmentation(nn.Identity):
+                def __init__(self, **kwargs):
+                    super().__init__()
+
+            if "torchlibrosa" not in sys.modules:
+                sys.modules["torchlibrosa"] = types.ModuleType("torchlibrosa")
+                sys.modules["torchlibrosa.stft"] = types.SimpleNamespace(
+                    Spectrogram=_Spectrogram, LogmelFilterBank=_LogmelFilterBank
+                )
+                sys.modules["torchlibrosa.augmentation"] = types.SimpleNamespace(SpecAugmentation=_SpecAugmentation)
+            if str(panns_dir) not in sys.path:
+                sys.path.insert(0, str(panns_dir))
+            spec = importlib.util.spec_from_file_location("panns_v7_models", str(panns_dir / "models.py"))
+            if not spec or not spec.loader:
+                return None
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            net = mod.MobileNetV1(32000, 1024, 320, 64, 50, 14000, 527).eval()
+            net.load_state_dict(weights, strict=True)
+            with (panns_dir / "classes.csv").open(encoding="utf-8") as fh:
+                indices = {row["display_name"]: int(row["index"]) for row in csv.DictReader(fh)}
+            _PANNS_SINGLETON = (net, indices)
+            return _PANNS_SINGLETON
+        except Exception:
+            return None
+
+
+def run_panns_audio_tags(audio: np.ndarray, sr: int) -> dict[str, Any] | None:
+    """Run local PANNs MobileNetV1 AudioSet 527-class tagging on sliding windows (returns vocal & instrument max probs)."""
+    loaded = _load_panns_classifier()
+    if loaded is None or len(audio) < max(1, sr // 2):
+        return None
+    net, indices = loaded
+    try:
+        import math as _math
+        import torch
+
+        mono = audio.mean(axis=1).astype(np.float32) if audio.ndim == 2 else audio.astype(np.float32)
+        g = _math.gcd(int(sr), 32000)
+        resampled = signal.resample_poly(mono, 32000 // g, int(sr) // g).astype(np.float32)
+        win = 8 * 32000
+        hop = 4 * 32000
+        starts = list(range(0, max(1, len(resampled) - win + 1), hop)) or [0]
+        if len(resampled) > win and starts[-1] + win < len(resampled):
+            starts.append(len(resampled) - win)
+
+        max_vocal_by_cls: dict[str, float] = {k: 0.0 for k in _PANNS_VOCAL_CLASSES if k in indices}
+        max_inst_by_cls: dict[str, float] = {k: 0.0 for k in _PANNS_INST_CLASSES if k in indices}
+        with torch.inference_mode():
+            for st in starts:
+                seg = resampled[st : st + win]
+                if len(seg) < 32000:
+                    seg = np.pad(seg, (0, 32000 - len(seg)))
+                out = net(torch.from_numpy(seg[None]))["clipwise_output"][0].numpy()
+                for k in max_vocal_by_cls:
+                    max_vocal_by_cls[k] = max(max_vocal_by_cls[k], float(out[indices[k]]))
+                for k in max_inst_by_cls:
+                    max_inst_by_cls[k] = max(max_inst_by_cls[k], float(out[indices[k]]))
+
+        max_vocal_prob = max(max_vocal_by_cls.values(), default=0.0)
+        top_vocal_cls = max(max_vocal_by_cls, key=lambda k: max_vocal_by_cls[k]) if max_vocal_by_cls else "None"
+        top_insts = sorted(
+            ((k, round(v, 4)) for k, v in max_inst_by_cls.items() if v >= 0.05),
+            key=lambda kv: kv[1],
+            reverse=True,
+        )[:8]
+        return {
+            "available": True,
+            "windowsChecked": len(starts),
+            "maxVocalProb": round(max_vocal_prob, 4),
+            "topVocalClass": top_vocal_cls,
+            "vocalProbs": {k: round(v, 4) for k, v in max_vocal_by_cls.items() if v >= 0.02},
+            "topInstrumentTags": dict(top_insts),
+        }
+    except Exception:
+        return None
 
 
 def screen_vocal_leakage(
@@ -746,49 +982,97 @@ def screen_vocal_leakage(
                         "vocalStemSyllabicMod": round(v_mod, 3),
                     }
                 )
-        if demucs_flagged or flagged_windows:
+        # Corroborate Demucs vocal stem with local PANNs AudioSet MobileNetV1 when available
+        # (accurately distinguishes melodic guitar/rhodes stem bleed from real singing/humming/speech!)
+        panns_mix = run_panns_audio_tags(stereo, sr)
+        panns_stem = run_panns_audio_tags(demucs_vocal_arr, demucs_vocal_sr)
+        panns_v_mix = float((panns_mix or {}).get("maxVocalProb", 0.0))
+        panns_v_stem = float((panns_stem or {}).get("maxVocalProb", 0.0))
+        panns_corroborated = panns_mix is not None and panns_stem is not None
+        panns_payload = (
+            {"mix": panns_mix, "vocalStem": panns_stem}
+            if panns_corroborated
+            else ({"mix": panns_mix} if panns_mix else None)
+        )
+
+        panns_reject = panns_corroborated and (
+            (max_v_db > -34.0 and panns_v_stem >= 0.16) or panns_v_mix >= 0.28
+        )
+        if demucs_flagged or flagged_windows or panns_reject:
             return {
                 "checked": True,
                 "status": "REJECT",
                 "suspectedVocal": True,
                 "autoApprovedInstrumental": False,
-                "method": "demucs_isolated_vocal_stem_screen",
+                "method": "demucs_plus_panns_vocal_screen" if panns_corroborated else "demucs_isolated_vocal_stem_screen",
                 "windowsChecked": len(v_starts),
                 "maxVocalStemRmsDbfs": round(max_v_db, 2),
                 "maxVocalToMixRatio": round(max_v_ratio, 3),
                 "vocalBandCenterRatio": round(max_center_ratio, 3),
                 "syllabicModulationPeak": round(max_mod_score, 3),
+                "pannsAudioTags": panns_payload,
                 "flaggedWindows": demucs_flagged or flagged_windows,
-                "note": f"Demucs 분리 보컬 스템에서 유의미한 보컬/허밍 에너지 감지(최대 {max_v_db:.1f} dBFS) — 무보컬 승인 거부(REJECT).",
+                "note": (
+                    f"Demucs 보컬 스템({max_v_db:.1f} dBFS) + PANNs 보컬 확률(stem={panns_v_stem:.3f}, mix={panns_v_mix:.3f})에서 "
+                    "보컬/허밍 감지 — 무보컬 승인 거부(REJECT)."
+                    if panns_corroborated
+                    else f"Demucs 분리 보컬 스템에서 유의미한 보컬/허밍 에너지 감지(최대 {max_v_db:.1f} dBFS) — 무보컬 승인 거부(REJECT)."
+                ),
             }
-        if max_v_db < -38.0 and max_v_ratio < 0.06:
+        if max_v_db < -38.0 and max_v_ratio < 0.06 and (not panns_corroborated or panns_v_mix < 0.14):
             return {
                 "checked": True,
                 "status": "PASS",
                 "suspectedVocal": False,
                 "autoApprovedInstrumental": True,
-                "method": "demucs_isolated_vocal_stem_screen",
+                "method": "demucs_plus_panns_corroborated" if panns_corroborated else "demucs_isolated_vocal_stem_screen",
                 "windowsChecked": len(v_starts),
                 "maxVocalStemRmsDbfs": round(max_v_db, 2),
                 "maxVocalToMixRatio": round(max_v_ratio, 3),
                 "vocalBandCenterRatio": round(max_center_ratio, 3),
                 "syllabicModulationPeak": round(max_mod_score, 3),
+                "pannsAudioTags": panns_payload,
                 "flaggedWindows": [],
                 "note": f"Demucs 분리 보컬 스템 전 구간 정숙 확인(최대 {max_v_db:.1f} dBFS, 비율 {max_v_ratio:.3f}) — 무보컬 통과(PASS).",
+            }
+        if panns_corroborated and panns_v_stem < 0.08 and panns_v_mix < 0.10:
+            return {
+                "checked": True,
+                "status": "PASS",
+                "suspectedVocal": False,
+                "autoApprovedInstrumental": True,
+                "method": "demucs_plus_panns_corroborated",
+                "windowsChecked": len(v_starts),
+                "maxVocalStemRmsDbfs": round(max_v_db, 2),
+                "maxVocalToMixRatio": round(max_v_ratio, 3),
+                "vocalBandCenterRatio": round(max_center_ratio, 3),
+                "syllabicModulationPeak": round(max_mod_score, 3),
+                "pannsAudioTags": panns_payload,
+                "flaggedWindows": [],
+                "note": (
+                    f"Demucs 스템 잔여 에너지({max_v_db:.1f} dBFS)를 PANNs AudioSet 분류기로 교차 검증한 결과 "
+                    f"보컬 확률 매우 낮음(stem={panns_v_stem:.3f}, mix={panns_v_mix:.3f}, 악기 블리드 확인) — 무보컬 통과(PASS)."
+                ),
             }
         return {
             "checked": True,
             "status": "UNCERTAIN",
             "suspectedVocal": False,
             "autoApprovedInstrumental": False,
-            "method": "demucs_isolated_vocal_stem_screen",
+            "method": "demucs_plus_panns_vocal_screen" if panns_corroborated else "demucs_isolated_vocal_stem_screen",
             "windowsChecked": len(v_starts),
             "maxVocalStemRmsDbfs": round(max_v_db, 2),
             "maxVocalToMixRatio": round(max_v_ratio, 3),
             "vocalBandCenterRatio": round(max_center_ratio, 3),
             "syllabicModulationPeak": round(max_mod_score, 3),
+            "pannsAudioTags": panns_payload,
             "flaggedWindows": [],
-            "note": f"Demucs 보컬 스템 경계 에너지(최대 {max_v_db:.1f} dBFS, 비율 {max_v_ratio:.3f}) — 수동 청취 확인 필요(UNCERTAIN).",
+            "note": (
+                f"Demucs 보컬 스템({max_v_db:.1f} dBFS) / PANNs 경계 구간(stem={panns_v_stem:.3f}, mix={panns_v_mix:.3f}) — "
+                "수동 청취 확인 필요(UNCERTAIN)."
+                if panns_corroborated
+                else f"Demucs 보컬 스템 경계 에너지(최대 {max_v_db:.1f} dBFS, 비율 {max_v_ratio:.3f}) — 수동 청취 확인 필요(UNCERTAIN)."
+            ),
         }
 
     if flagged_windows:

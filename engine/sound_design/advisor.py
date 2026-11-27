@@ -20,12 +20,16 @@ from engine.daw_workspace.schema import Project, Track, make_id
 
 
 def diagnose_track_audio(project: Project, track_id: str, max_beats: float = 16.0) -> dict[str, Any]:
-    """Render up to 16 beats of a single track and measure real acoustic spectrum, mud, brightness & dynamics."""
+    """Render up to 16 beats of a single track (starting at its first clip) and measure real spectrum, mud, brightness & dynamics."""
     trk = next((t for t in project.tracks if t.id == track_id), None)
     if trk is None:
         raise ValueError(f"Track not found: {track_id}")
-    end_b = min(float(project.lengthBeats), max(4.0, max_beats))
-    pcm, sr, meters = renderer.render_single_track_pre_fader(project, trk, start_beats=0.0, end_beats=end_b)
+    clip_starts = [float(c.timelineStartBeats) for c in trk.clips]
+    clip_ends = [float(c.timelineStartBeats + c.durationBeats) for c in trk.clips]
+    start_b = min(clip_starts) if clip_starts else 0.0
+    max_end = max(clip_ends) if clip_ends else float(project.lengthBeats)
+    end_b = min(max_end, start_b + max(4.0, max_beats))
+    pcm, sr, meters = renderer.render_single_track_pre_fader(project, trk, start_beats=start_b, end_beats=end_b)
     mono = pcm.mean(axis=1).astype(np.float64)
     rms = float(np.sqrt(np.mean(mono * mono))) if len(mono) else 0.0
     if rms < 1e-5:

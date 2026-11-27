@@ -1,7 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "policyId": "ai-native-daw-permanent-production-policy",
   "defaultFullMusicEngine": "yue2-native",
+  "defaultPerformanceEngine": "yue2-native",
+  "nativePerformanceFirst": true,
+  "midiPerformerExplicitOptInOnly": true,
   "allowSilentMidiFallback": false,
   "allowPreviewInstrumentsInProduction": false,
   "preserveNativeAudio": true,

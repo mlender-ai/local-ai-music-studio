@@ -348,6 +348,17 @@ def interpret_producer_instruction(
     if not is_new_music_compose and not is_mixer_or_fx_cmd and not is_bar_range_arr:
         bars_m = re.search(r"(\d+)\s*(?:마디|bars?)", low)
         parsed_bars = max(4, min(16, int(bars_m.group(1)))) if bars_m else 8
+        # Phase 05.3 Permanent Policy (Section 18):
+        # General musical performance requests ("기타 리프 만들어줘", "피아노 솔로 만들어줘", "독특한 드럼 그루브 만들어줘",
+        # "베이스 리프 만들어줘", "브릿지 만들어줘") route by default to Native Performance Mode (`yue2-native` via composition_plan).
+        # Phase 05.2 MIDI Performer (`session_layer_action`) is ONLY used when the user EXPLICITLY asks for editable MIDI / MIDI layers!
+        explicit_midi_layer_req = any(
+            k in low
+            for k in (
+                "midi", "미디", "편집 가능", "editable", "피아노 롤", "piano roll",
+                "레이어", "layer", "테이크", "take lane", "트랙으로 추가",
+            )
+        )
 
         # 0.0a Musical Bridge Generation (distinct from "9마디부터 브리지 구간 만들어줘" section marker!)
         if (
@@ -355,14 +366,30 @@ def interpret_producer_instruction(
             and any(k in low for k in ("만들어", "추가", "구성", "넣어", "create", "generate", "build"))
             and not any(k in low for k in ("구간", "마커", "marker", "section"))
         ):
+            if explicit_midi_layer_req:
+                return {
+                    "supported": True,
+                    "action": "session_layer_action",
+                    "sessionOp": "generate_bridge",
+                    "bars": 4 if not bars_m else parsed_bars,
+                    "instruction": text,
+                    "messageKo": "명시적 MIDI 레이어 요청에 따라 기존 메인 그루브를 유지하면서 MIDI 브릿지를 생성합니다.",
+                    "messageEn": "Generating an editable MIDI Bridge section per explicit MIDI request.",
+                }
+            from engine.session_lab.library import find_approved_native_recipes
+
             return {
                 "supported": True,
-                "action": "session_layer_action",
-                "sessionOp": "generate_bridge",
-                "bars": 4 if not bars_m else parsed_bars,
+                "action": "composition_plan",
                 "instruction": text,
-                "messageKo": "기존 메인 그루브를 유지하면서 대비되는 화성과 전환(Transition)이 포함된 브릿지를 생성합니다.",
-                "messageEn": "Generating a contrasting Bridge section & musical transition while preserving Main Groove layers.",
+                "nativePerformance": {
+                    "performanceType": "musical_bridge",
+                    "featuredInstrument": "ensemble",
+                    "isolationNoticeKo": "YuE2 Native Audio로 모티프 전개와 화성 전환이 살아있는 브릿지 합주를 설계합니다. 편집 가능한 MIDI 트랙을 원하시면 '편집 가능한 MIDI로'라고 명시해 주세요.",
+                    "matchedApprovedRecipes": find_approved_native_recipes(performance_type="musical_bridge"),
+                },
+                "messageKo": "YuE2 Native Performance 모드로 음악적 브릿지 및 모티프 전개 계획(Composition Plan)을 설계합니다.",
+                "messageEn": "Designing a YuE2 Native Performance Plan for Musical Bridge & Motif Development.",
             }
 
         # 0.0b Musical Solo Performance (Guitar Solo / Piano Solo / Synth Solo)
@@ -370,20 +397,35 @@ def interpret_producer_instruction(
             solo_inst = "keys" if any(k in low for k in ("피아노", "건반", "로즈", "piano", "keys")) else (
                 "synth" if any(k in low for k in ("신스", "synth")) else "guitar"
             )
+            if explicit_midi_layer_req:
+                return {
+                    "supported": True,
+                    "action": "session_layer_action",
+                    "sessionOp": "generate_solo",
+                    "targetInstrument": solo_inst,
+                    "bars": parsed_bars,
+                    "instruction": text,
+                    "messageKo": f"명시적 MIDI 레이어 요청에 따라 {solo_inst} MIDI 솔로 레이어를 생성합니다.",
+                    "messageEn": f"Generating an editable {solo_inst} MIDI solo layer per explicit request.",
+                }
+            from engine.session_lab.library import find_approved_native_recipes
+
+            perf_type = "expressive_piano_solo" if solo_inst == "keys" else "expressive_guitar_solo"
             return {
                 "supported": True,
-                "action": "session_layer_action",
-                "sessionOp": "generate_solo",
-                "targetInstrument": solo_inst,
-                "bars": parsed_bars,
+                "action": "composition_plan",
                 "instruction": text,
-                "messageKo": f"기존 세션의 화성과 그루브를 유지하면서 표현력 있는 {solo_inst} 솔로 레이어를 생성합니다.",
-                "messageEn": f"Generating an expressive {solo_inst} solo layer over the existing session.",
+                "nativePerformance": {
+                    "performanceType": perf_type,
+                    "featuredInstrument": solo_inst,
+                    "isolationNoticeKo": f"'{solo_inst}' 솔로가 중심인 YuE2 Native Audio 연주를 생성합니다. 완전 독립 악기 분리는 제한적이며 스템 추출 시 블리드가 생길 수 있습니다. 편집 가능한 MIDI를 원하시면 명시적으로 요청해 주세요.",
+                    "matchedApprovedRecipes": find_approved_native_recipes(performance_type=perf_type, instrument=solo_inst),
+                },
+                "messageKo": f"YuE2 Native Performance 모드로 '{solo_inst}' 솔로 연주 계획을 설계합니다.",
+                "messageEn": f"Designing a YuE2 Native Performance Plan featuring {solo_inst} solo.",
             }
 
-        # 0.0c Single-Instrument Session Layer Generation / Style Swap (Drums, Bass, Rhodes/Piano, Guitar, Percussion)
-        # Match the TARGET instrument (rightmost mention closest to action verb) so context phrases like
-        # "현재 드럼과 베이스에 어울리는 Neo Soul 건반 연주를 추가해줘" accurately target `keys`, NOT `bass`!
+        # 0.0c Single-Instrument Performance Request -> Native Performance Mode by default, MIDI Performer ONLY when explicitly requested!
         role_keywords: list[tuple[str, tuple[str, ...]]] = [
             ("percussion", ("퍼커션", "percussion", "셰이커", "콩가", "봉고")),
             ("guitar", ("기타", "guitar")),
@@ -408,17 +450,41 @@ def interpret_producer_instruction(
             )
         )
         if layer_inst and is_layer_intent and not any(k in low for k in ("신스 훅", "신스훅", "synth hook", "레퍼런스", "reference")):
-            as_alt = any(k in low for k in ("바꿔", "대신", "다른 버전", "테이크", "swap", "change", "alternative", "take"))
+            if explicit_midi_layer_req:
+                as_alt = any(k in low for k in ("바꿔", "대신", "다른 버전", "테이크", "swap", "change", "alternative", "take"))
+                return {
+                    "supported": True,
+                    "action": "session_layer_action",
+                    "sessionOp": "generate_layer",
+                    "targetInstrument": layer_inst,
+                    "bars": parsed_bars,
+                    "asAlternativeTake": as_alt,
+                    "instruction": text,
+                    "messageKo": f"명시적 MIDI 요청에 따라 기존 승인·잠금 레이어를 보호하면서 '{layer_inst}' MIDI 레이어를 생성합니다.",
+                    "messageEn": f"Generating editable '{layer_inst}' MIDI layer per explicit request.",
+                }
+            from engine.session_lab.library import find_approved_native_recipes
+
+            perf_map = {
+                "guitar": "funk_guitar_riff" if any(k in low for k in ("펑키", "펑크", "funk", "뮤트")) else "clean_melodic_guitar",
+                "keys": "neosoul_piano_rhodes",
+                "drums": "drum_percussion_groove",
+                "percussion": "drum_percussion_groove",
+                "bass": "melodic_bass_riff",
+            }
+            resolved_perf = perf_map.get(layer_inst, "neosoul_piano_rhodes")
             return {
                 "supported": True,
-                "action": "session_layer_action",
-                "sessionOp": "generate_layer",
-                "targetInstrument": layer_inst,
-                "bars": parsed_bars,
-                "asAlternativeTake": as_alt,
+                "action": "composition_plan",
                 "instruction": text,
-                "messageKo": f"기존 승인·잠금 레이어를 보호하면서 '{layer_inst}' 독립 연주 레이어를 생성합니다.",
-                "messageEn": f"Generating isolated '{layer_inst}' performance layer while protecting existing approved/locked layers.",
+                "nativePerformance": {
+                    "performanceType": resolved_perf,
+                    "featuredInstrument": layer_inst,
+                    "isolationNoticeKo": f"'{layer_inst}'가 음악적 중심인 YuE2 Native Audio 연주를 설계합니다. 완전 독립 악기 생성은 제한적이며 스템 추출 시 블리드·음질 저하 가능성이 있습니다. 노트 편집이 필요하면 '편집 가능한 MIDI로'라고 명시해 주세요.",
+                    "matchedApprovedRecipes": find_approved_native_recipes(performance_type=resolved_perf, instrument=layer_inst),
+                },
+                "messageKo": f"YuE2 Native Performance 모드로 '{layer_inst}' 중심 연주 계획을 설계합니다.",
+                "messageEn": f"Designing a YuE2 Native Performance Plan featuring '{layer_inst}'.",
             }
 
     if not is_new_music_compose:
